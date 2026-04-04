@@ -37,22 +37,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
 
         {/* Header */}
-        <header className="fixed top-0 inset-x-0 z-50 bg-white/92 backdrop-blur-xl border-b border-border transition-shadow">
+        <header className="fixed top-0 inset-x-0 z-50 bg-primary/95 backdrop-blur-xl border-b border-white/5 transition-all">
           <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-16">
             {/* Logo */}
-            <Link href="/" className="text-xl font-extrabold text-primary">
-              {SITE_NAME.split(' ')[0]}<span className="text-accent">{SITE_NAME.split(' ')[1]}</span>
+            <Link href="/" className="font-display text-xl font-black text-white flex items-center gap-2">
+              {SITE_NAME}
+              <span className="w-2 h-2 rounded-full bg-accent inline-block" />
             </Link>
 
             {/* Nav Links */}
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-text-mid">
+            <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-white/70">
               {/* Cities Dropdown */}
               <div className="relative group">
-                <span className="cursor-pointer hover:text-primary">المدن</span>
-                <div className="absolute top-full right-0 pt-2 hidden group-hover:block z-50">
-                  <div className="bg-white rounded-xl shadow-xl border border-border p-4 min-w-48 grid gap-1">
+                <span className="cursor-pointer hover:text-accent transition-colors">المدن</span>
+                <div className="absolute top-full right-0 pt-3 hidden group-hover:block z-50">
+                  <div className="bg-primary-light/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 p-4 min-w-52 grid gap-1">
                     {cities.map(c => (
-                      <Link key={c.slug} href={`/sa/${c.slug}`} className="px-3 py-2 rounded-lg hover:bg-bg text-sm font-medium">
+                      <Link key={c.slug} href={`/sa/${c.slug}`} className="px-4 py-2.5 rounded-xl hover:bg-white/10 text-sm font-medium text-white/80 hover:text-accent transition-colors">
                         {c.nameAr}
                       </Link>
                     ))}
@@ -62,11 +63,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
               {/* Categories Dropdown */}
               <div className="relative group">
-                <span className="cursor-pointer hover:text-primary">الفئات</span>
-                <div className="absolute top-full right-0 pt-2 hidden group-hover:block z-50">
-                  <div className="bg-white rounded-xl shadow-xl border border-border p-4 min-w-48 grid gap-1">
+                <span className="cursor-pointer hover:text-accent transition-colors">الفئات</span>
+                <div className="absolute top-full right-0 pt-3 hidden group-hover:block z-50">
+                  <div className="bg-primary-light/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 p-4 min-w-52 grid gap-1">
                     {categories.map(c => (
-                      <Link key={c.slug} href={`/sa/riyadh/${c.slug}`} className="px-3 py-2 rounded-lg hover:bg-bg text-sm font-medium">
+                      <Link key={c.slug} href={`/sa/riyadh/${c.slug}`} className="px-4 py-2.5 rounded-xl hover:bg-white/10 text-sm font-medium text-white/80 hover:text-accent transition-colors">
                         {c.icon} {c.nameAr}
                       </Link>
                     ))}
@@ -74,13 +75,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </div>
 
-              <Link href="#faq" className="hover:text-primary">الأسئلة</Link>
-            </nav>
+              <Link href="#faq" className="hover:text-accent transition-colors">الأسئلة</Link>
 
-            {/* CTA */}
-            <Link href="#form" className="bg-primary text-white px-6 py-2.5 rounded-lg text-sm font-bold hover:bg-primary-light transition-colors">
-              احصل على عرض
-            </Link>
+              {/* CTA */}
+              <Link href="#form" className="bg-accent text-primary px-6 py-2.5 rounded-full text-sm font-bold hover:shadow-[0_6px_20px_rgba(212,168,83,0.4)] hover:-translate-y-0.5 transition-all">
+                احصل على عرض
+              </Link>
+            </nav>
           </div>
         </header>
 
@@ -90,22 +91,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </main>
 
         {/* Footer */}
-        <footer className="bg-primary-dark text-white/60 pt-12 pb-6 px-6">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <footer className="bg-primary text-white/50 pt-16 pb-8 px-6">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-white/8">
             {/* Brand */}
             <div>
-              <p className="text-white text-lg font-extrabold mb-4">
-                {SITE_NAME.split(' ')[0]}<span className="text-accent">{SITE_NAME.split(' ')[1]}</span>
+              <p className="font-display text-white text-lg font-black mb-4 flex items-center gap-2">
+                {SITE_NAME}
+                <span className="w-2 h-2 rounded-full bg-accent inline-block" />
               </p>
               <p className="text-sm leading-relaxed max-w-xs">
-                أول منصة مقارنة لإيجار المركبات بالمملكة العربية السعودية.
+                منصة مقارنة لإيجار المركبات بالمملكة العربية السعودية. نجمع لك أفضل العروض من الشركات المرخصة.
               </p>
             </div>
 
             {/* Cities */}
             <div>
-              <p className="text-white font-bold mb-4">المدن</p>
-              <div className="grid gap-1 text-sm">
+              <p className="font-display text-white font-bold mb-4 text-sm">المدن</p>
+              <div className="grid gap-2 text-sm">
                 {cities.map(c => (
                   <Link key={c.slug} href={`/sa/${c.slug}`} className="hover:text-accent transition-colors">
                     {c.nameAr}
@@ -116,34 +118,35 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* Services */}
             <div>
-              <p className="text-white font-bold mb-4">خدمات</p>
-              <div className="grid gap-1 text-sm">
-                <Link href="/monthly" className="hover:text-accent">شهري</Link>
-                <Link href="/weekly" className="hover:text-accent">أسبوعي</Link>
-                <Link href="/airport" className="hover:text-accent">المطار</Link>
-                <Link href="/no-deposit" className="hover:text-accent">بدون تأمين</Link>
+              <p className="font-display text-white font-bold mb-4 text-sm">خدمات</p>
+              <div className="grid gap-2 text-sm">
+                <Link href="/monthly" className="hover:text-accent transition-colors">شهري</Link>
+                <Link href="/weekly" className="hover:text-accent transition-colors">أسبوعي</Link>
+                <Link href="/airport" className="hover:text-accent transition-colors">المطار</Link>
+                <Link href="/no-deposit" className="hover:text-accent transition-colors">بدون تأمين</Link>
               </div>
             </div>
 
             {/* Links */}
             <div>
-              <p className="text-white font-bold mb-4">روابط</p>
-              <div className="grid gap-1 text-sm">
-                <Link href="/about" className="hover:text-accent">من نحن</Link>
-                <Link href="/partners" className="hover:text-accent">للشركاء</Link>
-                <Link href="/privacy" className="hover:text-accent">سياسة الخصوصية</Link>
+              <p className="font-display text-white font-bold mb-4 text-sm">روابط</p>
+              <div className="grid gap-2 text-sm">
+                <Link href="/about" className="hover:text-accent transition-colors">من نحن</Link>
+                <Link href="/partners" className="hover:text-accent transition-colors">للشركاء</Link>
+                <Link href="/privacy" className="hover:text-accent transition-colors">سياسة الخصوصية</Link>
               </div>
             </div>
           </div>
 
-          <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-white/10 text-center text-xs">
-            © {new Date().getFullYear()} {SITE_NAME}
+          <div className="max-w-7xl mx-auto pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-xs">
+            <span>© {new Date().getFullYear()} {SITE_NAME}. جميع الحقوق محفوظة</span>
+            <span>صُنع بـ ❤️ في السعودية</span>
           </div>
         </footer>
 
         {/* Mobile CTA */}
-        <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-border p-3">
-          <Link href="#form" className="block w-full text-center bg-accent text-primary-dark py-3.5 rounded-xl font-extrabold text-base">
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-primary/95 backdrop-blur-xl border-t border-white/10 p-3">
+          <Link href="#form" className="block w-full text-center bg-accent text-primary py-3.5 rounded-2xl font-display font-black text-base hover:shadow-lg transition-all">
             احصل على عرض تأجير
           </Link>
         </div>

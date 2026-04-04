@@ -57,24 +57,27 @@ export default async function AirportPage({ params }: { params: Promise<{ airpor
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Hero */}
-      <section className="pt-28 pb-16 px-6 bg-gradient-to-br from-primary-dark via-primary to-primary-light">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-12 items-center">
+      <section className="pt-28 pb-20 px-6 bg-gradient-to-br from-primary via-primary-light to-primary relative overflow-hidden">
+        <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="hero-glow w-[400px] h-[400px] -top-24 -right-24 absolute" />
+
+        <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-14 items-center">
           <div className="text-center lg:text-right">
-            <nav className="text-white/60 text-sm mb-4" aria-label="التنقل">
-              <Link href="/" className="hover:text-white">الرئيسية</Link>
-              <span className="mx-2">/</span>
-              <Link href={`/sa/${city.slug}`} className="hover:text-white">{city.nameAr}</Link>
-              <span className="mx-2">/</span>
-              <span className="text-white">{ap.code}</span>
+            <nav className="text-white/40 text-sm mb-5" aria-label="التنقل">
+              <Link href="/" className="hover:text-accent transition-colors">الرئيسية</Link>
+              <span className="mx-2 text-white/20">/</span>
+              <Link href={`/sa/${city.slug}`} className="hover:text-accent transition-colors">{city.nameAr}</Link>
+              <span className="mx-2 text-white/20">/</span>
+              <span className="text-white/80">{ap.code}</span>
             </nav>
-            <h1 className="text-3xl md:text-4xl font-extrabold text-white leading-tight mb-4">
-              تأجير سيارة من {ap.nameAr}
+            <h1 className="font-display text-3xl md:text-4xl font-black text-white leading-tight mb-5">
+              تأجير سيارة من <span className="text-accent">{ap.nameAr}</span>
             </h1>
-            <p className="text-lg text-white/85 max-w-lg leading-relaxed mx-auto lg:mx-0 mb-6">{info}</p>
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start text-sm text-white/90">
-              <span className="bg-white/15 px-4 py-2 rounded-full">✈️ {ap.code}</span>
-              <span className="bg-white/15 px-4 py-2 rounded-full">من {city.minPrice} ر.س/يوم</span>
-              <span className="bg-white/15 px-4 py-2 rounded-full">استلام فوري</span>
+            <p className="text-lg text-white/60 max-w-lg leading-relaxed mx-auto lg:mx-0 mb-8">{info}</p>
+            <div className="flex flex-wrap gap-3 justify-center lg:justify-start text-sm">
+              <span className="bg-accent/15 border border-accent/30 text-accent px-5 py-2.5 rounded-full font-bold">✈️ {ap.code}</span>
+              <span className="bg-white/10 border border-white/10 text-white/80 px-5 py-2.5 rounded-full">من {city.minPrice} ر.س/يوم</span>
+              <span className="bg-white/10 border border-white/10 text-white/80 px-5 py-2.5 rounded-full">استلام فوري</span>
             </div>
           </div>
           <div id="form"><LeadForm /></div>
@@ -82,15 +85,18 @@ export default async function AirportPage({ params }: { params: Promise<{ airpor
       </section>
 
       {/* Categories */}
-      <section className="py-12 px-6">
+      <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-xl font-extrabold text-center mb-6">فئات سيارات متوفرة في {city.nameAr}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          <div className="text-center mb-12">
+            <div className="section-tag mb-4">🚗 الفئات المتوفرة</div>
+            <h2 className="font-display text-2xl font-black">فئات سيارات متوفرة في {city.nameAr}</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
             {categories.map(cat => (
               <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`}
-                className="bg-card border border-border rounded-xl p-4 text-center hover:border-primary transition-all">
-                <span className="text-2xl">{cat.icon}</span>
-                <p className="text-sm font-bold mt-1">{cat.nameAr}</p>
+                className="bg-white border border-border/50 rounded-2xl p-5 text-center hover:border-accent hover:-translate-y-1 hover:shadow-lg transition-all">
+                <span className="text-3xl">{cat.icon}</span>
+                <p className="font-display text-sm font-bold mt-2">{cat.nameAr}</p>
               </Link>
             ))}
           </div>
@@ -98,17 +104,20 @@ export default async function AirportPage({ params }: { params: Promise<{ airpor
       </section>
 
       {/* FAQ */}
-      <section className="py-12 px-6 bg-white" id="faq">
+      <section className="py-20 px-6 bg-white" id="faq">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl font-extrabold text-center mb-8">أسئلة عن التأجير من {ap.nameAr}</h2>
-          <div className="divide-y divide-border">
+          <div className="text-center mb-12">
+            <div className="section-tag mb-4">❓ أسئلة شائعة</div>
+            <h2 className="font-display text-xl font-black">أسئلة عن التأجير من {ap.nameAr}</h2>
+          </div>
+          <div className="grid gap-3">
             {apFAQs.map((faq, i) => (
-              <details key={i} className="group">
-                <summary className="flex justify-between items-center py-5 cursor-pointer font-bold text-sm list-none">
+              <details key={i} className="group bg-bg rounded-xl border border-border/50 overflow-hidden hover:shadow-md transition-shadow">
+                <summary className="flex justify-between items-center p-5 cursor-pointer font-bold text-sm list-none">
                   {faq.q}
-                  <svg className="w-5 h-5 text-text-mid shrink-0 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                  <svg className="w-5 h-5 text-accent shrink-0 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
                 </summary>
-                <p className="pb-5 text-sm text-text-mid leading-relaxed">{faq.a}</p>
+                <p className="px-5 pb-5 text-sm text-text-mid leading-relaxed">{faq.a}</p>
               </details>
             ))}
           </div>
@@ -116,15 +125,15 @@ export default async function AirportPage({ params }: { params: Promise<{ airpor
       </section>
 
       {/* Other airports */}
-      <section className="py-8 px-6">
+      <section className="py-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-xl font-extrabold text-center mb-6">مطارات أخرى</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <h2 className="font-display text-xl font-black text-center mb-8">مطارات أخرى</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {airports.filter(a => a.slug !== ap.slug).map(a => (
               <Link key={a.slug} href={`/sa/airports/${a.slug}`}
-                className="bg-card border border-border rounded-xl p-4 text-center hover:border-primary transition-all">
-                <p className="font-bold text-sm">{a.nameAr.replace(' الدولي', '')}</p>
-                <p className="text-sm text-text-mid">{a.code}</p>
+                className="bg-white border border-border/50 rounded-2xl p-5 text-center hover:border-accent hover:-translate-y-1 hover:shadow-lg transition-all">
+                <p className="font-display text-xl font-black text-accent mb-1">{a.code}</p>
+                <p className="text-sm text-text-mid">{a.nameAr.replace(' الدولي', '')}</p>
               </Link>
             ))}
           </div>

@@ -1,24 +1,23 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  content: [
-    "./src/**/*.{js,ts,jsx,tsx,mdx}",
-  ],
+  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
       colors: {
-        primary: { DEFAULT: '#1B4332', light: '#2D6A4F', dark: '#0B2920' },
-        accent: { DEFAULT: '#E8A838', hover: '#D49A2F' },
+        primary: { DEFAULT: '#0D1B2A', light: '#1B3A5C', dark: '#070F17' },
+        accent: { DEFAULT: '#D4A853', hover: '#B8912E', light: '#F0D78C' },
         success: '#1A7A42',
         bg: '#FAFAF7',
         card: '#FFFFFF',
-        border: '#E8E8E3',
-        'text-main': '#1A1A1A',
-        'text-mid': '#5A5A5A',
-        'text-light': '#6B6B6B',
+        border: '#E5E7EB',
+        'text-main': '#1A1A2E',
+        'text-mid': '#6B7280',
+        'text-light': '#9CA3AF',
       },
       fontFamily: {
-        sans: ['Tahoma', 'Noto Sans Arabic', 'Segoe UI', 'Arial', 'sans-serif'],
+        sans: ['Tajawal', 'sans-serif'],
+        display: ['Cairo', 'sans-serif'],
       },
     },
   },

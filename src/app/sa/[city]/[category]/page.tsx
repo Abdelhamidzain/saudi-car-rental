@@ -25,7 +25,6 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   }
 }
 
-// Lexical pools for unique content per combination
 const categoryDescriptions: Record<string, (cityName: string) => string> = {
   economy: (c) => `وفّر ميزانيتك مع أفضل عروض تأجير سيارات اقتصادية في ${c}. موديلات مثل هيونداي اكسنت وتويوتا يارس ونيسان صني — مثالية للتنقل اليومي والرحلات القصيرة داخل المدينة.`,
   sedan: (c) => `استمتع بالراحة مع تأجير سيارات سيدان في ${c}. خيارات متنوعة من تويوتا كامري وهيونداي سوناتا وكيا K5 — مناسبة للعائلات الصغيرة ورجال الأعمال.`,
@@ -41,7 +40,6 @@ export default async function CategoryPage({ params }: { params: Promise<{ city:
   const cat = getCategoryBySlug((await params).category)
   if (!city || !cat) notFound()
 
-  const cityAirports = getAirportsForCity(city.slug)
   const descFn = categoryDescriptions[cat.slug]
   const desc = descFn ? descFn(city.nameAr) : `تأجير سيارات ${cat.nameAr} في ${city.nameAr} بأفضل الأسعار.`
   const otherCats = categories.filter(c => c.slug !== cat.slug)
@@ -70,40 +68,46 @@ export default async function CategoryPage({ params }: { params: Promise<{ city:
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Hero */}
-      <section className="pt-28 pb-16 px-6 bg-gradient-to-br from-primary-dark via-primary to-primary-light">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-12 items-center">
+      <section className="pt-28 pb-20 px-6 bg-gradient-to-br from-primary via-primary-light to-primary relative overflow-hidden">
+        <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="hero-glow w-[400px] h-[400px] -top-24 -right-24 absolute" />
+
+        <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-14 items-center">
           <div className="text-center lg:text-right">
-            <nav className="text-white/60 text-sm mb-4" aria-label="التنقل">
-              <Link href="/" className="hover:text-white">الرئيسية</Link>
-              <span className="mx-2">/</span>
-              <Link href={`/sa/${city.slug}`} className="hover:text-white">{city.nameAr}</Link>
-              <span className="mx-2">/</span>
-              <span className="text-white">{cat.nameAr}</span>
+            <nav className="text-white/40 text-sm mb-5" aria-label="التنقل">
+              <Link href="/" className="hover:text-accent transition-colors">الرئيسية</Link>
+              <span className="mx-2 text-white/20">/</span>
+              <Link href={`/sa/${city.slug}`} className="hover:text-accent transition-colors">{city.nameAr}</Link>
+              <span className="mx-2 text-white/20">/</span>
+              <span className="text-white/80">{cat.nameAr}</span>
             </nav>
-            <h1 className="text-3xl md:text-5xl font-extrabold text-white leading-tight mb-4">
-              تأجير سيارات {cat.nameAr} في {city.nameAr}
+            <h1 className="font-display text-3xl md:text-5xl font-black text-white leading-tight mb-5">
+              تأجير سيارات {cat.nameAr} في <span className="text-accent">{city.nameAr}</span>
             </h1>
-            <p className="text-lg text-white/85 max-w-lg leading-relaxed mx-auto lg:mx-0 mb-6">{desc}</p>
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start text-sm text-white/90">
-              <span className="bg-white/15 px-4 py-2 rounded-full">من {cat.minPrice} ر.س/يوم</span>
-              <span className="bg-white/15 px-4 py-2 rounded-full">{cat.icon} {cat.nameAr}</span>
-              <span className="bg-white/15 px-4 py-2 rounded-full">تأمين شامل</span>
+            <p className="text-lg text-white/60 max-w-lg leading-relaxed mx-auto lg:mx-0 mb-8">{desc}</p>
+            <div className="flex flex-wrap gap-3 justify-center lg:justify-start text-sm">
+              <span className="bg-accent/15 border border-accent/30 text-accent px-5 py-2.5 rounded-full font-bold">من {cat.minPrice} ر.س/يوم</span>
+              <span className="bg-white/10 border border-white/10 text-white/80 px-5 py-2.5 rounded-full">{cat.icon} {cat.nameAr}</span>
+              <span className="bg-white/10 border border-white/10 text-white/80 px-5 py-2.5 rounded-full">تأمين شامل</span>
             </div>
           </div>
           <div id="form"><LeadForm /></div>
         </div>
       </section>
 
-      {/* Other categories in same city */}
-      <section className="py-12 px-6">
+      {/* Other categories */}
+      <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-xl font-extrabold text-center mb-6">فئات أخرى في {city.nameAr}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="text-center mb-12">
+            <div className="section-tag mb-4">🚗 فئات أخرى</div>
+            <h2 className="font-display text-2xl font-black">فئات أخرى في {city.nameAr}</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {otherCats.map(c => (
               <Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}
-                className="bg-card border border-border rounded-xl p-4 text-center hover:border-primary transition-all">
-                <span className="text-2xl">{c.icon}</span>
-                <p className="text-sm font-bold mt-1">{c.nameAr}</p>
+                className="bg-white border border-border/50 rounded-2xl p-5 text-center hover:border-accent hover:-translate-y-1 hover:shadow-lg transition-all">
+                <span className="text-3xl">{c.icon}</span>
+                <p className="font-display text-sm font-bold mt-2">{c.nameAr}</p>
                 <p className="text-xs text-text-mid">من {c.minPrice} ر.س</p>
               </Link>
             ))}
@@ -111,15 +115,15 @@ export default async function CategoryPage({ params }: { params: Promise<{ city:
         </div>
       </section>
 
-      {/* Same category in other cities */}
-      <section className="py-8 px-6 bg-white">
+      {/* Same category other cities */}
+      <section className="py-16 px-6 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-xl font-extrabold text-center mb-6">تأجير {cat.nameAr} في مدن أخرى</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <h2 className="font-display text-xl font-black text-center mb-8">تأجير {cat.nameAr} في مدن أخرى</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {otherCities.map(c => (
               <Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`}
-                className="bg-bg border border-border rounded-xl p-4 text-center hover:border-primary transition-all">
-                <p className="font-bold">{c.nameAr}</p>
+                className="bg-bg border border-border/50 rounded-2xl p-5 text-center hover:border-accent hover:-translate-y-1 hover:shadow-lg transition-all">
+                <p className="font-display font-bold">{c.nameAr}</p>
                 <p className="text-xs text-text-mid mt-1">من {cat.minPrice} ر.س</p>
               </Link>
             ))}
@@ -128,17 +132,20 @@ export default async function CategoryPage({ params }: { params: Promise<{ city:
       </section>
 
       {/* FAQ */}
-      <section className="py-12 px-6" id="faq">
+      <section className="py-20 px-6" id="faq">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-xl font-extrabold text-center mb-8">أسئلة عن تأجير {cat.nameAr} في {city.nameAr}</h2>
-          <div className="divide-y divide-border">
+          <div className="text-center mb-12">
+            <div className="section-tag mb-4">❓ أسئلة شائعة</div>
+            <h2 className="font-display text-xl font-black">أسئلة عن تأجير {cat.nameAr} في {city.nameAr}</h2>
+          </div>
+          <div className="grid gap-3">
             {catFAQs.map((faq, i) => (
-              <details key={i} className="group">
-                <summary className="flex justify-between items-center py-5 cursor-pointer font-bold text-sm list-none">
+              <details key={i} className="group bg-white rounded-xl border border-border/50 overflow-hidden hover:shadow-md transition-shadow">
+                <summary className="flex justify-between items-center p-5 cursor-pointer font-bold text-sm list-none">
                   {faq.q}
-                  <svg className="w-5 h-5 text-text-mid shrink-0 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+                  <svg className="w-5 h-5 text-accent shrink-0 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
                 </summary>
-                <p className="pb-5 text-sm text-text-mid leading-relaxed">{faq.a}</p>
+                <p className="px-5 pb-5 text-sm text-text-mid leading-relaxed">{faq.a}</p>
               </details>
             ))}
           </div>
