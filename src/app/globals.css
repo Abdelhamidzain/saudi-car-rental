@@ -1,11 +1,24 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #1B4332;
+  --color-primary-light: #2D6A4F;
+  --color-primary-dark: #0B2920;
+  --color-accent: #E8A838;
+  --color-accent-hover: #D49A2F;
+  --color-bg: #FAFAF7;
+  --color-card: #FFFFFF;
+  --color-border: #E8E8E3;
+  --color-success: #1A7A42;
+  --color-text-main: #1A1A1A;
+  --color-text-mid: #5A5A5A;
+  --color-text-light: #6B6B6B;
+  --font-sans: Tahoma, 'Noto Sans Arabic', 'Segoe UI', Arial, sans-serif;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { scroll-behavior: smooth; }
-body { background: #FAFAF7; color: #1A1A1A; line-height: 1.7; overflow-x: hidden; }
+body { background: var(--color-bg); color: var(--color-text-main); line-height: 1.7; overflow-x: hidden; }
 a { text-decoration: none; color: inherit; }
 button { cursor: pointer; font-family: inherit; border: none; outline: none; }
 input, select { font-family: inherit; outline: none; }
-
-/* Animations */
-@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
