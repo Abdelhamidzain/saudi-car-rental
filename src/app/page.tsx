@@ -57,7 +57,7 @@ export default function HomePage() {
             {cities.map(city => (
               <Link key={city.slug} href={`/sa/${city.slug}`}
                 className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all group">
-                <div className="h-0 pb-[56%] bg-gradient-to-br from-primary-dark to-primary-light relative">
+                <div className="h-40 bg-gradient-to-br from-primary-dark to-primary-light relative">
                   <div className="absolute bottom-3 right-4 text-xl font-extrabold text-white drop-shadow-lg">{city.nameAr}</div>
                 </div>
                 <div className="p-4 flex justify-between items-center bg-white">
