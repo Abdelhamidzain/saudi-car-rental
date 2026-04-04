@@ -8,8 +8,8 @@ export function generateStaticParams() {
   return cities.map(c => ({ city: c.slug }))
 }
 
-export function generateMetadata({ params }: { params: { city: string } }): Metadata {
-  const city = getCityBySlug(params.city)
+export async function generateMetadata({ params }: { params: Promise<{ city: string }> }): Promise<Metadata> {
+  const city = getCityBySlug((await params).city)
   if (!city) return {}
   return {
     title: `تأجير سيارات في ${city.nameAr} — أسعار من ${city.minPrice} ريال/يوم`,
@@ -18,8 +18,8 @@ export function generateMetadata({ params }: { params: { city: string } }): Meta
   }
 }
 
-export default function CityPage({ params }: { params: { city: string } }) {
-  const city = getCityBySlug(params.city)
+export default async function CityPage({ params }: { params: Promise<{ city: string }> }) {
+  const city = getCityBySlug((await params).city)
   if (!city) notFound()
 
   const cityAirports = getAirportsForCity(city.slug)

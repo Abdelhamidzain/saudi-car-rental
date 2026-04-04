@@ -14,9 +14,9 @@ export function generateStaticParams() {
   return params
 }
 
-export function generateMetadata({ params }: { params: { city: string; category: string } }): Metadata {
-  const city = getCityBySlug(params.city)
-  const cat = getCategoryBySlug(params.category)
+export async function generateMetadata({ params }: { params: Promise<{ city: string; category: string }> }): Promise<Metadata> {
+  const city = getCityBySlug((await params).city)
+  const cat = getCategoryBySlug((await params).category)
   if (!city || !cat) return {}
   return {
     title: `تأجير سيارات ${cat.nameAr} في ${city.nameAr} — من ${cat.minPrice} ريال/يوم`,
@@ -36,9 +36,9 @@ const categoryDescriptions: Record<string, (cityName: string) => string> = {
   van: (c) => `نقل جماعي مريح مع تأجير فان في ${c}. هاي إيس وأوركيا وستاركس — الحل الأمثل للمجموعات السياحية وفرق العمل والمناسبات الكبيرة.`,
 }
 
-export default function CategoryPage({ params }: { params: { city: string; category: string } }) {
-  const city = getCityBySlug(params.city)
-  const cat = getCategoryBySlug(params.category)
+export default async function CategoryPage({ params }: { params: Promise<{ city: string; category: string }> }) {
+  const city = getCityBySlug((await params).city)
+  const cat = getCategoryBySlug((await params).category)
   if (!city || !cat) notFound()
 
   const cityAirports = getAirportsForCity(city.slug)

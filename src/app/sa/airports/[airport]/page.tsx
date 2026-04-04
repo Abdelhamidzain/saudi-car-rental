@@ -8,8 +8,8 @@ export function generateStaticParams() {
   return airports.map(a => ({ airport: a.slug }))
 }
 
-export function generateMetadata({ params }: { params: { airport: string } }): Metadata {
-  const ap = getAirportBySlug(params.airport)
+export async function generateMetadata({ params }: { params: Promise<{ airport: string }> }): Promise<Metadata> {
+  const ap = getAirportBySlug((await params).airport)
   if (!ap) return {}
   const city = getCityBySlug(ap.citySlug)
   return {
@@ -27,8 +27,8 @@ const airportInfo: Record<string, string> = {
   'taif': 'مطار الطائف الدولي يخدم المصطافين والزوار القادمين لمدينة الورد. قريب من الباحة وبلجرشي مما يجعله نقطة انطلاق ممتازة لجولات الجنوب.',
 }
 
-export default function AirportPage({ params }: { params: { airport: string } }) {
-  const ap = getAirportBySlug(params.airport)
+export default async function AirportPage({ params }: { params: Promise<{ airport: string }> }) {
+  const ap = getAirportBySlug((await params).airport)
   if (!ap) notFound()
   const city = getCityBySlug(ap.citySlug)
   if (!city) notFound()
