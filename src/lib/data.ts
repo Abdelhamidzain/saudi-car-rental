@@ -267,7 +267,7 @@ export function generateCarSEOContent(car: CarModel, city: City, cat: Category) 
   const ap = airports.find(a => a.citySlug === city.slug)
   const weeklyPrice = Math.round(car.dailyPrice * 7 * 0.85)
 
-  const uniqueIntro = `تبحث عن تأجير ${car.nameAr} ${car.year} في ${city.nameAr}؟ منصتنا تجمع لك أفضل العروض لإيجار ${car.nameAr} من المكاتب المرخصة في ${city.nameAr}. تبدأ الأسعار من ${car.dailyPrice} ريال سعودي لليوم الواحد ومن ${car.monthlyPrice} ريال للإيجار الشهري. ${car.nameAr} من ${car.brandAr} تتميز بـ${car.description.split('.')[0]}.`
+  const uniqueIntro = `تبحث عن تأجير ${car.nameAr} ${car.year} في ${city.nameAr}؟ منصتنا تجمع لك أفضل العروض من المكاتب المرخصة بأسعار تبدأ من ${car.dailyPrice} ريال سعودي لليوم الواحد ومن ${car.monthlyPrice} ريال للإيجار الشهري. هذا الموديل من ${car.brandAr} يتميز بـ${car.description.split('.')[0]}.`
 
   const cityTips = `عند استئجار ${car.nameAr} في ${city.nameAr} تذكر أن المدينة تتميز بـ${ctx.terrain}. المناخ في ${city.nameAr}: ${ctx.climate}. من أبرز الوجهات التي يمكنك زيارتها: ${ctx.landmarks}. ${ctx.rentalTip}.`
 

@@ -83,7 +83,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
         <div className="ssr-links-grid">
           {categories.map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr} {city.nameAr}</Link>)}
         </div>
-        <div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من مطارات أخرى</div>
+        <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من مطارات أخرى</div>
         <div className="ssr-links-grid">
           {airports.filter(a=>a.slug!==ap.slug).map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>{a.code} — {a.nameAr.replace(' الدولي','')}</Link>)}
         </div>
