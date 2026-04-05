@@ -247,4 +247,14 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 ::-webkit-scrollbar-track{background:rgba(0,0,0,0.03)}
 ::-webkit-scrollbar-thumb{background:#D4A853;border-radius:3px}
 
+/* ===== CITY SELECTOR ===== */
+.city-selector-btn{display:flex;align-items:center;gap:8px;padding:7px 16px;border-radius:10px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap;margin-right:16px}
+.city-selector-btn:hover{border-color:rgba(212,168,83,0.4);color:#D4A853;background:rgba(212,168,83,0.1)}
+.city-selector-btn svg{color:#D4A853;flex-shrink:0}
+.city-option{display:flex;justify-content:space-between;align-items:center;width:100%;padding:10px 16px;border-radius:10px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,0.7);background:none;border:none;cursor:pointer;transition:all .15s;font-family:inherit;text-align:right}
+.city-option:hover{background:rgba(255,255,255,0.08);color:#fff}
+.city-option-active{background:rgba(212,168,83,0.12)!important;color:#D4A853!important}
+.city-option-price{font-size:.7rem;font-weight:400;color:rgba(255,255,255,0.35)}
+.city-option-active .city-option-price{color:rgba(212,168,83,0.6)}
+
 /* FIX: CLS — font fallback sizing to prevent FOUT shift */
