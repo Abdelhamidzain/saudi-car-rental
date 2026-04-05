@@ -15,15 +15,12 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
   const city=getCityBySlug((await params).city); if(!city) notFound()
   const ap=getAirportsForCity(city.slug), partners=getPartnersForCity(city.slug), others=cities.filter(c=>c.slug!==city.slug)
   const guide = cityGuides[city.slug] || cityGuides.riyadh
-const faqs=[
-    {q:\`كم يكلف تأجير سيارات في \${city.nameAr}؟\`,a:\`تبدأ الأسعار في \${city.nameAr} من \${city.minPrice} ريال يومياً للمركبات الاقتصادية. السيدان المتوسطة تبدأ من 135 ريال بينما الفئة الفاخرة تبدأ من 359 ريال يومياً مع التأمين الأساسي.\`},
-    {q:\`ما أفضل شركات تأجير السيارات في \${city.nameAr}؟\`,a:\`نعرض عروض \${partners.length} شركة معتمدة في \${city.nameAr} منها \${partners.slice(0,2).map(p=>p.name).join(' و')}. جميعها حاصلة على ترخيص هيئة النقل العام بالمملكة العربية السعودية.\`},
-    {q:\`هل يوجد خدمة توصيل واستلام من المطار؟\`,a:ap.length>0?\`نعم، غالبية الشركات المعتمدة توفر خدمة التوصيل والاستلام من \${ap[0].nameAr} مباشرة عند وصول العميل دون أي تكلفة إضافية.\`:\`نعم، معظم المكاتب المرخصة في \${city.nameAr} توفر خدمة التوصيل للموقع المطلوب.\`},
-    {q:\`هل تأجير سيارة يشمل التأمين والوقود؟\`,a:\`جميع العروض تشمل تغطية تأمينية أساسية ضد الغير. الوقود عادة على حساب المستأجر ويتم تسليم المركبة بخزان ممتلئ وإرجاعها بنفس المستوى.\`},
-    {q:\`ما الوثائق والشروط المطلوبة للاستئجار؟\`,a:\`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر ساري المفعول والحد الأدنى للعمر واحد وعشرون عاماً. بعض المكاتب تطلب ضماناً مالياً مسترداً عند استلام المركبة الفاخرة.\`},
-  ].nameAr} مباشرة عند وصولك.`:`نعم، معظم مكاتب تأجير سيارات في ${city.nameAr} توفر خدمة التوصيل للعميل.`},
-    {q:`هل تأجير سيارة في ${city.nameAr} يشمل التأمين والوقود؟`,a:`جميع عروض تأجير السيارات تشمل التأمين الأساسي ضد الغير. الوقود عادة على حساب المستأجر ويتم تسليم المركبة بخزان ممتلئ.`},
-    {q:`ما شروط تأجير سيارات في ${city.nameAr}؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر والحد الأدنى للعمر 21 سنة. بعض شركات تأجير السيارات تطلب ضماناً مالياً مسترداً عند تأجير سيارة فاخرة.`},
+  const faqs=[
+    {q:`كم يكلف تأجير سيارات في ${city.nameAr}؟`,a:`تبدأ الأسعار في ${city.nameAr} من ${city.minPrice} ريال يومياً للمركبات الاقتصادية. السيدان المتوسطة تبدأ من 135 ريال بينما الفئة الفاخرة تبدأ من 359 ريال يومياً مع التأمين الأساسي.`},
+    {q:`ما أفضل شركات تأجير السيارات في ${city.nameAr}؟`,a:`نعرض عروض ${partners.length} شركة معتمدة في ${city.nameAr} منها ${partners.slice(0,2).map(p=>p.name).join(' و')}. جميعها حاصلة على ترخيص هيئة النقل العام بالمملكة العربية السعودية.`},
+    {q:`هل يوجد خدمة توصيل واستلام من المطار؟`,a:ap.length>0?`نعم، غالبية الشركات المعتمدة توفر خدمة التوصيل والاستلام من ${ap[0].nameAr} مباشرة عند وصول العميل دون أي تكلفة إضافية.`:`نعم، معظم المكاتب المرخصة في ${city.nameAr} توفر خدمة التوصيل للموقع المطلوب.`},
+    {q:`هل تأجير سيارة يشمل التأمين والوقود؟`,a:`جميع العروض تشمل تغطية تأمينية أساسية ضد الغير. الوقود عادة على حساب المستأجر ويتم تسليم المركبة بخزان ممتلئ وإرجاعها بنفس المستوى.`},
+    {q:`ما الوثائق والشروط المطلوبة للاستئجار؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر ساري المفعول والحد الأدنى للعمر واحد وعشرون عاماً. بعض المكاتب تطلب ضماناً مالياً مسترداً عند استلام المركبة الفاخرة.`},
   ]
   const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`}]),generateFAQSchema(faqs)]}
 
@@ -78,7 +75,7 @@ const faqs=[
     </div></section>
 
     {ap.length>0&&<section className="section section-white"><div className="container">
-      <div className="section-header"><div className="section-tag">✈️ المطارات</div><h2 className="section-title">تأجير سيارة من مطارات {city.nameAr}</h2></div>
+      <div className="section-header"><div className="section-tag">✈️ المطارات</div><h2 className="section-title">استئجار مركبة من مطارات {city.nameAr}</h2></div>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:16}}>{ap.map(a=>(
         <Link key={a.slug} href={`/sa/airports/${a.slug}`} className="link-card-white link-card" style={{padding:'20px 32px'}}>
           <div className="airport-code" style={{color:'#D4A853'}}>{a.code}</div><div className="link-card-sub">{a.nameAr.replace(' الدولي','')}</div>
