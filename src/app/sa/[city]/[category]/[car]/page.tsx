@@ -84,8 +84,8 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
               <h1 className="hero-title">تأجير سيارة {car.nameAr} في <span>{city.nameAr}</span></h1>
               <p className="hero-subtitle">{seo.uniqueIntro}</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
-                <span className="pill pill-accent">من {car.dailyPrice} ر.س/يوم</span>
-                <span className="pill pill-accent">{car.monthlyPrice} ر.س/شهر</span>
+                <span className="pill pill-accent">من {car.dailyPrice} ريال/يوم</span>
+                <span className="pill pill-accent">{car.monthlyPrice} ريال/شهر</span>
                 <span className="pill pill-glass">{car.seats} مقاعد • {car.transmissionAr}</span>
                 <span className="pill pill-glass">{car.fuelAr} • {car.year}</span>
                 <span className="pill pill-glass">{cat.icon} {cat.nameAr}</span>
@@ -108,19 +108,19 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
             <div className="feature-card" style={{ borderTop: '3px solid #D4A853' }}>
               <div className="feature-icon">📅</div>
               <div className="feature-title">الإيجار اليومي</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#D4A853', fontFamily: "'Cairo', sans-serif" }}>{car.dailyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ر.س/يوم</span></div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#D4A853', fontFamily: "'Cairo', sans-serif" }}>{car.dailyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ريال/يوم</span></div>
               <div className="feature-desc">تأمين أساسي + كيلومترات محدودة</div>
             </div>
             <div className="feature-card" style={{ borderTop: '3px solid #1B3A5C' }}>
               <div className="feature-icon">📆</div>
               <div className="feature-title">الإيجار الأسبوعي</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#1B3A5C', fontFamily: "'Cairo', sans-serif" }}>{seo.weeklyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ر.س/أسبوع</span></div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#1B3A5C', fontFamily: "'Cairo', sans-serif" }}>{seo.weeklyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ريال/أسبوع</span></div>
               <div className="feature-desc">خصم 15% — تأمين أساسي</div>
             </div>
             <div className="feature-card" style={{ borderTop: '3px solid #0D1B2A' }}>
               <div className="feature-icon">🗓️</div>
               <div className="feature-title">الإيجار الشهري</div>
-              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0D1B2A', fontFamily: "'Cairo', sans-serif" }}>{car.monthlyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ر.س/شهر</span></div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0D1B2A', fontFamily: "'Cairo', sans-serif" }}>{car.monthlyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ريال/شهر</span></div>
               <div className="feature-desc">خصم 40% — تأمين شامل + كيلومترات مفتوحة</div>
             </div>
           </div>
@@ -201,7 +201,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
               {similarCars.map(c => (
                 <Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`} style={{ textDecoration: 'none', display: 'block', position: 'relative', borderRadius: 16, overflow: 'hidden', height: 200, background: `linear-gradient(135deg, ${grad.from}, ${grad.to})`, transition: 'transform .4s, box-shadow .4s' }}>
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(13,27,42,0.9) 0%, rgba(13,27,42,0.2) 60%)' }} />
-                  <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, background: 'rgba(212,168,83,0.9)', color: '#0D1B2A', padding: '5px 14px', borderRadius: 50, fontSize: '.7rem', fontWeight: 700 }}>من {c.dailyPrice} ر.س/يوم</div>
+                  <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, background: 'rgba(212,168,83,0.9)', color: '#0D1B2A', padding: '5px 14px', borderRadius: 50, fontSize: '.7rem', fontWeight: 700 }}>من {c.dailyPrice} ريال/يوم</div>
                   <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, padding: 20, zIndex: 2 }}>
                     <div style={{ fontFamily: "'Cairo', sans-serif", fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>{c.nameAr}</div>
                     <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
@@ -227,7 +227,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
             {otherCities.map(c => (
               <Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}/${car.slug}`} className="link-card">
                 <div className="link-card-name">تأجير {car.nameAr} {c.nameAr}</div>
-                <div className="link-card-sub">من {car.dailyPrice} ر.س/يوم</div>
+                <div className="link-card-sub">من {car.dailyPrice} ريال/يوم</div>
               </Link>
             ))}
           </div>

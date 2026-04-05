@@ -35,7 +35,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
         <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{cat.nameAr}</span></div>
         <h1 className="hero-title">تأجير سيارات {cat.nameAr} في <span>{city.nameAr}</span></h1>
         <p className="hero-subtitle">{desc}</p>
-        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ر.س/يوم</span><span className="pill pill-glass">{cat.icon} {cat.icon} {cat.nameAr}</span><span className="pill pill-glass">شركات مرخصة</span></div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ريال/يوم</span><span className="pill pill-glass">{cat.icon} {cat.icon} {cat.nameAr}</span><span className="pill pill-glass">شركات مرخصة</span></div>
       </div><div id="form"><LazyLeadForm/></div></div></div>
     </section>
 
@@ -48,7 +48,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
         return(
         <Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`} style={{textDecoration:'none',display:'block',position:'relative',borderRadius:16,overflow:'hidden',height:210,background:`linear-gradient(135deg,${grad.from},${grad.to})`,transition:'transform .4s,box-shadow .4s'}}>
           <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(13,27,42,0.9) 0%,rgba(13,27,42,0.15) 60%)'}}/>
-          <div style={{position:'absolute',top:16,left:16,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'5px 14px',borderRadius:50,fontSize:'.7rem',fontWeight:700}}>من {c.dailyPrice} ر.س/يوم</div>
+          <div style={{position:'absolute',top:16,left:16,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'5px 14px',borderRadius:50,fontSize:'.7rem',fontWeight:700}}>من {c.dailyPrice} ريال/يوم</div>
           <div style={{position:'absolute',top:16,right:16,zIndex:2,fontSize:'1.8rem'}}>{cat.icon}</div>
           <div style={{position:'absolute',bottom:0,right:0,left:0,padding:20,zIndex:2}}>
             <div style={{fontFamily:"'Cairo',sans-serif",fontSize:'1.25rem',fontWeight:800,color:'#fff'}}>{c.nameAr}</div>
@@ -66,14 +66,14 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
     <section className="section"><div className="container">
       <div className="section-header"><div className="section-tag">🚗 فئات أخرى</div><h2 className="section-title">فئات أخرى متوفرة في {city.nameAr}</h2></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:16}}>{otherCats.map(c=>(
-        <Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`} className="cat-card"><div style={{fontSize:'2rem'}}>{c.icon}</div><div className="cat-name">{c.nameAr}</div><div className="cat-price">من <strong>{c.minPrice}</strong> ر.س</div></Link>
+        <Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`} className="cat-card"><div style={{fontSize:'2rem'}}>{c.icon}</div><div className="cat-name">{c.nameAr}</div><div className="cat-price">من {c.minPrice} ريال</div></Link>
       ))}</div>
     </div></section>
 
     <section className="section section-white"><div className="container">
       <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير سيارات {cat.nameAr} في مدن أخرى</h2>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:16}}>{otherCities.map(c=>(
-        <Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`} className="link-card"><div className="link-card-name">{c.nameAr}</div><div className="link-card-sub">من {cat.minPrice} ر.س</div></Link>
+        <Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`} className="link-card"><div className="link-card-name">{c.nameAr}</div><div className="link-card-sub">من {cat.minPrice} ريال</div></Link>
       ))}</div>
     </div></section>
 

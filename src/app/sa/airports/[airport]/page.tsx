@@ -41,7 +41,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
         <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{ap.code}</span></div>
         <h1 className="hero-title">تأجير سيارات من <span>{ap.nameAr}</span></h1>
         <p className="hero-subtitle">{info[ap.slug]||`تتوفر خدمات الإيجار في ${ap.nameAr} من شركات المكاتب المعتمدة. احجز الآن واستلم سيارتك فور وصولك.`}</p>
-        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">✈️ {ap.code}</span><span className="pill pill-accent">من {city.minPrice} ر.س/يوم</span><span className="pill pill-glass">استلام فوري</span><span className="pill pill-glass">المكاتب المعتمدة</span></div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">✈️ {ap.code}</span><span className="pill pill-accent">من {city.minPrice} ريال/يوم</span><span className="pill pill-glass">استلام فوري</span><span className="pill pill-glass">المكاتب المعتمدة</span></div>
       </div><div id="form"><LazyLeadForm/></div></div></div>
     </section>
 
@@ -63,7 +63,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
     <section className="section"><div className="container">
       <div className="section-header"><div className="section-tag">🚗 فئات المركبات المتاحة</div><h2 className="section-title">فئات سيارات للتأجير من {city.nameAr}</h2><p className="section-sub">اختر فئة السيارة المناسبة لرحلتك من {ap.nameAr}</p></div>
       <div className="cats-grid">{categories.map(cat=>(
-        <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`} className="cat-card"><div style={{fontSize:'2rem'}}>{cat.icon}</div><div className="cat-name">{cat.nameAr}</div><div className="cat-price">من <strong>{cat.minPrice}</strong> ر.س</div></Link>
+        <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`} className="cat-card"><div style={{fontSize:'2rem'}}>{cat.icon}</div><div className="cat-name">{cat.nameAr}</div><div className="cat-price">من {cat.minPrice} ريال</div></Link>
       ))}</div>
     </div></section>
 

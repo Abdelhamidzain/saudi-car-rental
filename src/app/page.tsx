@@ -41,7 +41,7 @@ export default function HomePage() {
             {cities.map((city,i)=>(
               <Link key={city.slug} href={`/sa/${city.slug}`} className={`city-card ${i===0?'city-card-large':''}`}>
                 <div className="city-overlay"/>
-                <div className="city-price">من {city.minPrice} ر.س</div>
+                <div className="city-price">من {city.minPrice} ريال</div>
                 <div className="city-content">
                   <div className="city-name">{city.nameAr}</div>
                   <div className="city-meta">
@@ -93,7 +93,7 @@ export default function HomePage() {
               <Link key={cat.slug} href={`/sa/riyadh/${cat.slug}`} className="cat-card">
                 <div className="cat-emoji">{cat.icon}</div>
                 <div className="cat-name">{cat.nameAr}</div>
-                <div className="cat-price">من <strong>{cat.minPrice} ر.س</strong> / يوم</div>
+                <div className="cat-price">من {cat.minPrice} ريال يومياً</div>
               </Link>
             ))}
           </div>
@@ -115,7 +115,7 @@ export default function HomePage() {
               return(
                 <Link key={c.slug} href={`/sa/riyadh/${c.category}/${c.slug}`} style={{textDecoration:'none',display:'block',position:'relative',borderRadius:16,overflow:'hidden',height:190,background:`linear-gradient(135deg,${grad.from},${grad.to})`,transition:'transform .4s,box-shadow .4s'}}>
                   <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(13,27,42,0.9) 0%,rgba(13,27,42,0.15) 60%)'}}/>
-                  <div style={{position:'absolute',top:14,left:14,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'4px 12px',borderRadius:50,fontSize:'.65rem',fontWeight:700}}>من {c.dailyPrice} ر.س</div>
+                  <div style={{position:'absolute',top:14,left:14,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'4px 12px',borderRadius:50,fontSize:'.65rem',fontWeight:700}}>من {c.dailyPrice} ريال</div>
                   <div style={{position:'absolute',top:14,right:14,zIndex:2,fontSize:'1.5rem'}}>{catObj?.icon}</div>
                   <div style={{position:'absolute',bottom:0,right:0,left:0,padding:18,zIndex:2}}>
                     <div style={{fontFamily:"'Cairo',sans-serif",fontSize:'1.1rem',fontWeight:800,color:'#fff'}}>{c.nameAr}</div>

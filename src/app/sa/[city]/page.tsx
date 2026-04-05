@@ -32,7 +32,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
           <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><span className="current">{city.nameAr}</span></div>
           <h1 className="hero-title">تأجير سيارات في <span>{city.nameAr}</span></h1>
           <p className="hero-subtitle">{city.description}</p>
-          <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-glass">{city.partnerCount} شركة معتمدة</span><span className="pill pill-accent">من {city.minPrice} ر.س/يوم</span>{ap.length>0&&<span className="pill pill-glass">✈️ توصيل المطار</span>}</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-glass">{city.partnerCount} شركة معتمدة</span><span className="pill pill-accent">من {city.minPrice} ريال/يوم</span>{ap.length>0&&<span className="pill pill-glass">✈️ توصيل المطار</span>}</div>
         </div>
         <div id="form"><LazyLeadForm/></div>
       </div></div>
@@ -41,7 +41,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
     <section className="section"><div className="container">
       <div className="section-header"><div className="section-tag">🚗 الفئات المتوفرة</div><h2 className="section-title">فئات السيارات المتوفرة في {city.nameAr}</h2></div>
       <div className="cats-grid">{categories.map(cat=>(
-        <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`} className="cat-card"><div className="cat-emoji">{cat.icon}</div><div className="cat-name">{cat.nameAr}</div><div className="cat-price">من <strong>{cat.minPrice} ر.س</strong></div></Link>
+        <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`} className="cat-card"><div className="cat-emoji">{cat.icon}</div><div className="cat-name">{cat.nameAr}</div><div className="cat-price">من <strong>{cat.minPrice}</strong> ريال</div></Link>
       ))}</div>
     </div></section>
 
@@ -62,7 +62,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
         return(
           <Link key={c.slug} href={`/sa/${city.slug}/${c.category}/${c.slug}`} style={{textDecoration:'none',display:'block',position:'relative',borderRadius:16,overflow:'hidden',height:190,background:`linear-gradient(135deg,${grad.from},${grad.to})`,transition:'transform .4s,box-shadow .4s'}}>
             <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(13,27,42,0.9) 0%,rgba(13,27,42,0.15) 60%)'}}/>
-            <div style={{position:'absolute',top:14,left:14,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'4px 12px',borderRadius:50,fontSize:'.65rem',fontWeight:700}}>من {c.dailyPrice} ر.س</div>
+            <div style={{position:'absolute',top:14,left:14,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'4px 12px',borderRadius:50,fontSize:'.65rem',fontWeight:700}}>من {c.dailyPrice} ريال</div>
             <div style={{position:'absolute',top:14,right:14,zIndex:2,fontSize:'1.5rem'}}>{catObj?.icon}</div>
             <div style={{position:'absolute',bottom:0,right:0,left:0,padding:18,zIndex:2}}>
               <div style={{fontFamily:"'Cairo',sans-serif",fontSize:'1.1rem',fontWeight:800,color:'#fff'}}>{c.nameAr}</div>
@@ -90,7 +90,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
     <section className="section section-white"><div className="container">
       <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير سيارات في مدن أخرى</h2>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:16}}>{others.map(c=>(
-        <Link key={c.slug} href={`/sa/${c.slug}`} className="link-card"><div className="link-card-name">{c.nameAr}</div><div className="link-card-sub">من {c.minPrice} ر.س</div></Link>
+        <Link key={c.slug} href={`/sa/${c.slug}`} className="link-card"><div className="link-card-name">{c.nameAr}</div><div className="link-card-sub">من {c.minPrice} ريال</div></Link>
       ))}</div>
     </div></section>
   </>)
