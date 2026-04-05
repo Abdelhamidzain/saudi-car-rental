@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { cities, categories, airports, SITE_URL } from '@/lib/data'
+import { cities, categories, airports, carModels, SITE_URL } from '@/lib/data'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
@@ -14,6 +14,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     // Category pages per city
     for (const cat of categories) {
       entries.push({ url: `${SITE_URL}/sa/${city.slug}/${cat.slug}`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 })
+    }
+    // Car model pages per city
+    for (const car of carModels) {
+      entries.push({ url: `${SITE_URL}/sa/${city.slug}/${car.category}/${car.slug}`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 })
     }
   }
 

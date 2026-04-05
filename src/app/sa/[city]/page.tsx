@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
+import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, carModels, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export function generateStaticParams() { return cities.map(c=>({city:c.slug})) }
@@ -42,7 +42,25 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       ))}</div>
     </div></section>
 
-    {ap.length>0&&<section className="section section-white"><div className="container">
+    {/* POPULAR CARS */}
+    <section className="section section-white"><div className="container">
+      <div className="section-header"><div className="section-tag">⭐ الأكثر طلباً</div><h2 className="section-title">السيارات الأكثر طلباً في {city.nameAr}</h2><p className="section-sub">أشهر الموديلات المتوفرة للتأجير</p></div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:16}}>{carModels.filter((_,i)=>i%3===0||i<7).slice(0,8).map(c=>{
+        const catObj=categories.find(ct=>ct.slug===c.category)
+        return(
+          <Link key={c.slug} href={`/sa/${city.slug}/${c.category}/${c.slug}`} className="feature-card" style={{textAlign:'right',textDecoration:'none',padding:20}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
+              <span style={{fontSize:'1.5rem'}}>{catObj?.icon}</span>
+              <span className="pill pill-accent" style={{fontSize:'.65rem',padding:'3px 10px'}}>من {c.dailyPrice} ر.س</span>
+            </div>
+            <div className="feature-title" style={{fontSize:'.95rem',marginBottom:2}}>{c.nameAr}</div>
+            <div style={{fontSize:'.75rem',color:'#6B7280'}}>{c.brandAr} • {c.seats} مقاعد • {c.transmissionAr}</div>
+          </Link>
+        )
+      })}</div>
+    </div></section>
+
+    {ap.length>0&&<section className="section"><div className="container">
       <div className="section-header"><div className="section-tag">✈️ المطارات</div><h2 className="section-title">تأجير سيارة من مطارات {city.nameAr}</h2></div>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:16}}>{ap.map(a=>(
         <Link key={a.slug} href={`/sa/airports/${a.slug}`} className="link-card-white link-card" style={{padding:'20px 32px'}}>

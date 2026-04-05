@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, getCityBySlug, getCategoryBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
+import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export function generateStaticParams() { const p:{city:string;category:string}[]=[]; for(const c of cities) for(const cat of categories) p.push({city:c.slug,category:cat.slug}); return p }
@@ -24,6 +24,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
   const city=getCityBySlug((await params).city),cat=getCategoryBySlug((await params).category); if(!city||!cat) notFound()
   const desc=(descs[cat.slug]||(c=>`تأجير ${cat.nameAr} في ${c}.`))(city.nameAr)
   const otherCats=categories.filter(c=>c.slug!==cat.slug), otherCities=cities.filter(c=>c.slug!==city.slug).slice(0,4)
+  const cars=getCarsByCategory(cat.slug)
   const faqs=[{q:`كم سعر تأجير ${cat.nameAr} في ${city.nameAr}؟`,a:`يبدأ من ${cat.minPrice} ريال يومياً.`},{q:`هل تتوفر للإيجار الشهري؟`,a:`نعم، بتخفيض 30-40%.`},{q:`ما المستندات المطلوبة؟`,a:`رخصة قيادة سارية وهوية أو جواز سفر.`}]
   const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`},{name:cat.nameAr,url:`/sa/${city.slug}/${cat.slug}`}]),generateFAQSchema(faqs)]}
 
@@ -37,6 +38,25 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
         <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ر.س/يوم</span><span className="pill pill-glass">{cat.icon} {cat.nameAr}</span><span className="pill pill-glass">تأمين شامل</span></div>
       </div><div id="form"><LazyLeadForm/></div></div></div>
     </section>
+
+    {/* CAR MODELS */}
+    {cars.length > 0 && (
+    <section className="section section-white"><div className="container">
+      <div className="section-header"><div className="section-tag">{cat.icon} السيارات المتوفرة</div><h2 className="section-title">سيارات {cat.nameAr} للتأجير في {city.nameAr}</h2><p className="section-sub">اختر الموديل المناسب وقارن الأسعار</p></div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:20}}>{cars.map(c=>(
+        <Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`} className="feature-card" style={{textAlign:'right',textDecoration:'none'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+            <div style={{fontSize:'2rem'}}>{cat.icon}</div>
+            <span className="pill pill-accent" style={{fontSize:'.7rem',padding:'4px 12px'}}>من {c.dailyPrice} ر.س</span>
+          </div>
+          <div className="feature-title" style={{marginBottom:4}}>{c.nameAr}</div>
+          <div style={{fontSize:'.8rem',color:'#6B7280',marginBottom:8}}>{c.brandAr} • {c.year}</div>
+          <div style={{fontSize:'.75rem',color:'#9CA3AF',lineHeight:1.6}}>{c.seats} مقاعد • {c.transmissionAr} • {c.fuelAr}</div>
+          <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid #E5E7EB',fontSize:'.8rem',color:'#D4A853',fontWeight:700}}>عرض التفاصيل ←</div>
+        </Link>
+      ))}</div>
+    </div></section>
+    )}
 
     <section className="section"><div className="container">
       <div className="section-header"><div className="section-tag">🚗 فئات أخرى</div><h2 className="section-title">فئات أخرى في {city.nameAr}</h2></div>
