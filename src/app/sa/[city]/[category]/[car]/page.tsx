@@ -39,11 +39,11 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
 
   const faqs = [
     { q: `كم سعر تأجير سيارة ${car.nameAr} في ${city.nameAr}؟`, a: `يبدأ سعر تأجير سيارات ${cat.nameAr} من فئة ${car.nameAr} ${car.year} في ${city.nameAr} من ${car.dailyPrice} ريال سعودي لليوم الواحد. الإيجار الأسبوعي يبدأ من ${seo.weeklyPrice} ريال بخصم 15%، والشهري من ${car.monthlyPrice} ريال بخصم حتى 40%. جميع أسعار تأجير السيارات تشمل التأمين الأساسي.` },
-    { q: `ما مواصفات ${car.nameAr} ${car.year} المتوفرة لتأجير سيارات ${cat.nameAr}؟`, a: `${car.nameAr} موديل ${car.year} من ${car.brandAr}: سعة ${car.seats} مقاعد، ناقل حركة ${car.transmissionAr}، وقود ${car.fuelAr}. تشمل التجهيزات: ${car.features.join('، ')}. ${car.description}` },
-    { q: `هل تأجير سيارة ${car.nameAr} في ${city.nameAr} يشمل التأمين؟`, a: `نعم، جميع عروض تأجير السيارات تشمل التأمين الأساسي ضد الغير وكيلومترات محددة يومياً. يمكنك ترقية التأمين لشامل عند تأجير سيارات ${cat.nameAr} شهرياً.` },
+    { q: `ما مواصفات ${car.nameAr} ${car.year} المتوفرة لاستئجار مركبات ${cat.nameAr}؟`, a: `${car.nameAr} موديل ${car.year} من ${car.brandAr}: سعة ${car.seats} مقاعد، ناقل حركة ${car.transmissionAr}، وقود ${car.fuelAr}. تشمل التجهيزات: ${car.features.join('، ')}. ${car.description}` },
+    { q: `هل تأجير سيارة ${car.nameAr} في ${city.nameAr} يشمل التأمين؟`, a: `نعم، جميع عروض الإيجار تشمل التأمين الأساسي ضد الغير وكيلومترات محددة يومياً. يمكنك ترقية التأمين لشامل عند تأجير سيارات ${cat.nameAr} شهرياً.` },
     { q: `هل يمكن استلام ${car.nameAr} من المطار عند تأجير سيارات في ${city.nameAr}؟`, a: cityAirports.length > 0 ? `نعم، معظم شركات تأجير السيارات في ${city.nameAr} توفر خدمة التوصيل والاستلام من ${cityAirports[0].nameAr} (${cityAirports[0].code}). حدد ذلك عند تقديم طلب تأجير سيارة عبر النموذج.` : `نعم، خدمة توصيل تأجير السيارات متاحة من أقرب مطار. حدد ذلك عند تقديم طلبك.` },
-    { q: `ما شروط تأجير سيارة ${car.nameAr} في ${city.nameAr}؟`, a: `شروط تأجير سيارات ${cat.nameAr}: رخصة قيادة سعودية أو دولية سارية المفعول، هوية وطنية أو جواز سفر ساري، العمر لا يقل عن 21 سنة. بعض شركات تأجير السيارات قد تطلب ضماناً مالياً قابلاً للاسترداد.` },
-    { q: `كم عدد شركات تأجير السيارات المتوفرة لـ${car.nameAr} في ${city.nameAr}؟`, a: `نعرض عروض تأجير سيارة ${car.nameAr} من ${partners.length > 0 ? partners.length : city.partnerCount} شركة تأجير سيارات مرخصة في ${city.nameAr}${partners.length > 0 ? ` منها ${partners.slice(0, 3).map(p => p.name).join(' و')}` : ''}. جميع الشركات حاصلة على ترخيص هيئة النقل العام.` },
+    { q: `ما شروط تأجير سيارة ${car.nameAr} في ${city.nameAr}؟`, a: `شروط تأجير سيارات ${cat.nameAr}: رخصة قيادة سعودية أو دولية سارية المفعول، هوية وطنية أو جواز سفر ساري، العمر لا يقل عن 21 سنة. بعض الشركات المؤجرة قد تطلب ضماناً مالياً قابلاً للاسترداد.` },
+    { q: `كم عدد شركات تأجير السيارات المتوفرة لـ${car.nameAr} في ${city.nameAr}؟`, a: `نعرض عروض تأجير سيارة ${car.nameAr} من ${partners.length > 0 ? partners.length : city.partnerCount} مكتب إيجار معتمد في ${city.nameAr}${partners.length > 0 ? ` منها ${partners.slice(0, 3).map(p => p.name).join(' و')}` : ''}. جميع الشركات حاصلة على ترخيص هيئة النقل العام.` },
   ]
 
   const jsonLd = {
@@ -100,9 +100,9 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
       <section className="section section-white">
         <div className="container">
           <div className="section-header">
-            <div className="section-tag">💰 أسعار تأجير سيارة {car.nameAr}</div>
-            <h2 className="section-title">أسعار تأجير سيارات {cat.nameAr} — {car.nameAr} {car.year} في {city.nameAr}</h2>
-            <p className="section-sub">أسعار تنافسية من شركات تأجير السيارات المرخصة — يومي وأسبوعي وشهري</p>
+            <div className="section-tag">💰 أسعار إيجار {car.nameAr}</div>
+            <h2 className="section-title">أسعار إيجار {car.nameAr} {car.year} في {city.nameAr}</h2>
+            <p className="section-sub">أسعار تنافسية من الشركات المعتمدة — يومي وأسبوعي وشهري</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, maxWidth: 800, margin: '0 auto' }}>
             <div className="feature-card" style={{ borderTop: '3px solid #D4A853' }}>
@@ -133,7 +133,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         <div className="container">
           <div className="section-header">
             <div className="section-tag">📋 مواصفات {car.brandAr}</div>
-            <h2 className="section-title">مواصفات {car.nameAr} {car.year} — تأجير السيارات</h2>
+            <h2 className="section-title">مواصفات {car.nameAr} {car.year} — المواصفات الفنية</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16, maxWidth: 800, margin: '0 auto' }}>
             {[
@@ -159,7 +159,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         <div className="container">
           <div className="section-header">
             <div className="section-tag section-tag-dark">✨ لماذا {car.nameAr}؟</div>
-            <h2 className="section-title section-title-white">مميزات تأجير سيارة {car.nameAr} في {city.nameAr}</h2>
+            <h2 className="section-title section-title-white">مميزات استئجار {car.nameAr} في {city.nameAr}</h2>
             <p className="section-sub section-sub-light">تجهيزات ومميزات تجعل رحلتك أكثر راحة وأماناً</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, maxWidth: 900, margin: '0 auto' }}>
@@ -179,7 +179,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         <div className="container">
           <div className="section-header">
             <div className="section-tag">🏙️ نصائح القيادة في {city.nameAr}</div>
-            <h2 className="section-title">نصائح تأجير سيارات {cat.nameAr} — {car.nameAr} في {city.nameAr}</h2>
+            <h2 className="section-title">نصائح إيجار {car.nameAr} في {city.nameAr}</h2>
           </div>
           <div style={{ maxWidth: 800, margin: '0 auto' }}>
             <p style={{ fontSize: '.95rem', color: '#4B5563', lineHeight: 2, marginBottom: 24 }}>{seo.cityTips}</p>
@@ -193,8 +193,8 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         <section className="section">
           <div className="container">
             <div className="section-header">
-              <div className="section-tag">{cat.icon} سيارات {cat.nameAr} أخرى</div>
-              <h2 className="section-title">تأجير سيارات {cat.nameAr} أخرى في {city.nameAr}</h2>
+              <div className="section-tag">{cat.icon} {cat.nameAr} أخرى</div>
+              <h2 className="section-title">{cat.nameAr} أخرى في {city.nameAr}</h2>
               <p className="section-sub">قارن بين موديلات فئة {cat.nameAr} واختر الأنسب لرحلتك</p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
@@ -221,7 +221,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         <div className="container">
           <div className="section-header">
             <div className="section-tag">🏙️ مدن أخرى</div>
-            <h2 className="section-title">تأجير سيارة {car.nameAr} في مدن أخرى</h2>
+            <h2 className="section-title">إيجار {car.nameAr} في مدن أخرى</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
             {otherCities.map(c => (
@@ -239,7 +239,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         <div className="container-sm">
           <div className="section-header">
             <div className="section-tag">❓ أسئلة شائعة</div>
-            <h2 className="section-title">أسئلة شائعة عن تأجير سيارات {cat.nameAr} — {car.nameAr} في {city.nameAr}</h2>
+            <h2 className="section-title">أسئلة شائعة عن إيجار {car.nameAr} في {city.nameAr}</h2>
           </div>
           <div className="faq-list">
             {faqs.map((f, i) => (
@@ -258,8 +258,8 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
           <div className="cta-box">
             <div className="hero-glow" style={{ width: 288, height: 288, top: -80, right: -80 }} />
             <div className="hero-glow" style={{ width: 192, height: 192, bottom: -60, left: -60 }} />
-            <div className="cta-title">تأجير سيارة {car.nameAr} في {city.nameAr} — احجز الآن</div>
-            <div className="cta-desc">قدّم طلب تأجير سيارات {cat.nameAr} — {car.nameAr} خلال ثوانٍ واستلم أفضل عرض سعر من شركات تأجير السيارات المرخصة في {city.nameAr}</div>
+            <div className="cta-title">احجز {car.nameAr} الآن في {city.nameAr}</div>
+            <div className="cta-desc">قدّم طلب إيجار {car.nameAr} خلال ثوانٍ واستلم أفضل عرض سعر من الشركات المعتمدة في {city.nameAr}</div>
             <Link href="#form" className="cta-btn">قدّم طلبك مجاناً ←</Link>
           </div>
         </div>

@@ -15,11 +15,11 @@ export async function generateMetadata({params}:{params:Promise<{airport:string}
 }
 
 const info:Record<string,string>={
-  'king-khalid':`يقع مطار الملك خالد الدولي شمال الرياض ويخدم أكثر من 30 مليون مسافر سنوياً. تتوفر خدمات تأجير سيارات مباشرة في صالات الوصول من خلال عدة شركات تأجير سيارات مرخصة. يمكنك حجز سيارة واستلامها فور وصولك.`,
-  'king-abdulaziz':`يعد مطار الملك عبدالعزيز الدولي البوابة الجوية لمدينة جدة ونقطة العبور الرئيسية للحجاج والمعتمرين. تتوفر مكاتب تأجير سيارات في جميع صالات المطار مع إمكانية تأجير سيارة بأسعار تنافسية تبدأ من 99 ريال يومياً.`,
-  'king-fahd':`مطار الملك فهد الدولي هو أكبر مطار مساحةً في العالم ويخدم المنطقة الشرقية. يوفر المطار خدمات تأجير السيارات عبر شركات معتمدة متعددة مع خيارات تأجير سيارات اقتصادية وفاخرة.`,
+  'king-khalid':`يقع مطار الملك خالد الدولي شمال الرياض ويخدم أكثر من 30 مليون مسافر سنوياً. تتوفر خدمات تأجير سيارات مباشرة في صالات الوصول من خلال عدة مكاتب إيجار مرخصة. يمكنك حجز سيارة واستلامها فور وصولك.`,
+  'king-abdulaziz':`يعد مطار الملك عبدالعزيز الدولي البوابة الجوية لمدينة جدة ونقطة العبور الرئيسية للحجاج والمعتمرين. تتوفر مكاتب إيجار في جميع صالات المطار مع إمكانية إيجار مركبة بأسعار تنافسية تبدأ من 99 ريال يومياً.`,
+  'king-fahd':`مطار الملك فهد الدولي هو أكبر مطار مساحةً في العالم ويخدم المنطقة الشرقية. يوفر المطار خدمات خدمات الإيجار عبر شركات معتمدة متعددة مع خيارات تأجير سيارات اقتصادية وفاخرة.`,
   'prince-mohammed':`مطار الأمير محمد بن عبدالعزيز يخدم زوار المسجد النبوي والمدينة المنورة. تتوفر خدمة تأجير سيارة مباشرة عند الوصول مع إمكانية التوصيل لأي موقع داخل المدينة.`,
-  'taif':`مطار الطائف الدولي يخدم المصطافين والزوار القادمين لمدينة الورد والهدا والشفا. تتوفر خدمات تأجير سيارات بأسعار مناسبة مع خيارات دفع رباعي للتنقل في المناطق الجبلية.`
+  'taif':`مطار الطائف الدولي يخدم المصطافين والزوار القادمين لمدينة الورد والهدا والشفا. تتوفر خدمات استئجار مركبات بأسعار مناسبة مع خيارات دفع رباعي للتنقل في المناطق الجبلية.`
 }
 
 export default async function AirportPage({params}:{params:Promise<{airport:string}>}) {
@@ -27,9 +27,9 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
   const city=getCityBySlug(ap.citySlug); if(!city) notFound()
   const faqs=[
     {q:`كم سعر تأجير سيارات من ${ap.nameAr}؟`,a:`تبدأ أسعار تأجير السيارات من ${ap.nameAr} من ${city.minPrice} ريال يومياً للفئة الاقتصادية. تختلف الأسعار حسب نوع السيارة ومدة الإيجار والموسم.`},
-    {q:`هل توجد مكاتب تأجير سيارات داخل ${ap.nameAr}؟`,a:`نعم، تتوفر عدة مكاتب تأجير سيارات مرخصة في صالات الوصول بـ${ap.nameAr}. يمكنك تأجير سيارة واستلامها مباشرة عند وصولك.`},
+    {q:`هل توجد مكاتب إيجار داخل ${ap.nameAr}؟`,a:`نعم، تتوفر عدة مكاتب إيجار مركبات مرخصة في صالات الوصول بـ${ap.nameAr}. يمكنك تأجير سيارة واستلامها مباشرة عند وصولك.`},
     {q:`كيف أحجز تأجير سيارة من ${ap.nameAr}؟`,a:`قدّم طلبك عبر النموذج أعلاه واختر تاريخ الاستلام من ${ap.nameAr}. سيتواصل معك أحد شركائنا بأفضل عرض تأجير سيارة خلال دقائق.`},
-    {q:`هل يمكن تسليم السيارة في مطار مختلف؟`,a:`نعم، بعض شركات تأجير السيارات توفر خدمة الاستلام من مطار والتسليم في مطار آخر مقابل رسوم إضافية بسيطة.`},
+    {q:`هل يمكن تسليم السيارة في مطار مختلف؟`,a:`نعم، بعض الشركات المعتمدة توفر خدمة الاستلام من مطار والتسليم في مطار آخر مقابل رسوم إضافية بسيطة.`},
     {q:`ما المستندات المطلوبة لتأجير سيارة من المطار؟`,a:`تحتاج رخصة قيادة سارية وهوية وطنية أو جواز سفر. بعض شركات تأجير السيارات قد تطلب ضماناً مالياً مسترداً.`},
   ]
   const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:`تأجير سيارات ${city.nameAr}`,url:`/sa/${city.slug}`},{name:`تأجير سيارات ${ap.code}`,url:`/sa/airports/${ap.slug}`}]),generateFAQSchema(faqs)]}
@@ -40,20 +40,20 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
       <div className="container"><div className="hero-inner"><div className="hero-text">
         <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{ap.code}</span></div>
         <h1 className="hero-title">تأجير سيارات من <span>{ap.nameAr}</span></h1>
-        <p className="hero-subtitle">{info[ap.slug]||`تتوفر خدمات تأجير سيارات في ${ap.nameAr} من شركات تأجير السيارات المرخصة. احجز الآن واستلم سيارتك فور وصولك.`}</p>
-        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">✈️ {ap.code}</span><span className="pill pill-accent">من {city.minPrice} ر.س/يوم</span><span className="pill pill-glass">تأجير سيارة فوري</span><span className="pill pill-glass">تأجير السيارات المرخصة</span></div>
+        <p className="hero-subtitle">{info[ap.slug]||`تتوفر خدمات الإيجار في ${ap.nameAr} من شركات المكاتب المعتمدة. احجز الآن واستلم سيارتك فور وصولك.`}</p>
+        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">✈️ {ap.code}</span><span className="pill pill-accent">من {city.minPrice} ر.س/يوم</span><span className="pill pill-glass">استلام فوري</span><span className="pill pill-glass">المكاتب المعتمدة</span></div>
       </div><div id="form"><LazyLeadForm/></div></div></div>
     </section>
 
     {/* WHY RENT FROM AIRPORT */}
     <section className="section section-white"><div className="container">
-      <div className="section-header"><div className="section-tag">✨ لماذا تأجير سيارات من المطار</div><h2 className="section-title">مميزات تأجير سيارة من {ap.nameAr}</h2><p className="section-sub">وفّر وقتك واستلم سيارتك مباشرة — بدون انتظار</p></div>
+      <div className="section-header"><div className="section-tag">✨ لماذا الاستئجار من المطار</div><h2 className="section-title">مميزات تأجير سيارة من {ap.nameAr}</h2><p className="section-sub">وفّر وقتك واستلم سيارتك مباشرة — بدون انتظار</p></div>
       <div className="features-grid">
         {[
           {icon:'✈️',title:'استلام فوري من المطار',desc:`استلم سيارتك من صالة الوصول في ${ap.nameAr} مباشرة بدون انتظار تاكسي أو نقل عام`},
-          {icon:'💰',title:'أسعار تأجير سيارات تنافسية',desc:`أسعار تأجير السيارات تبدأ من ${city.minPrice} ريال يومياً — قارن العروض واختر الأنسب`},
-          {icon:'🔄',title:'تسليم مرن عند المغادرة',desc:'أعد السيارة لمكتب تأجير السيارات في المطار قبل رحلتك مباشرة بدون عناء'},
-          {icon:'✅',title:'شركات تأجير سيارات مرخصة',desc:'جميع شركاء تأجير سيارات حاصلون على ترخيص هيئة النقل العام في المملكة'},
+          {icon:'💰',title:'أسعار إيجار تنافسية',desc:`أسعار الإيجار تبدأ من ${city.minPrice} ريال يومياً — قارن العروض واختر الأنسب`},
+          {icon:'🔄',title:'تسليم مرن عند المغادرة',desc:'أعد السيارة لمكتب الإيجار في المطار قبل رحلتك مباشرة بدون عناء'},
+          {icon:'✅',title:'مكاتب إيجار مرخصة',desc:'جميع شركاء حاصلون على ترخيص هيئة النقل العام في المملكة'},
         ].map((f,i)=>(
           <div key={i} className="feature-card"><div className="feature-icon">{f.icon}</div><div className="feature-title">{f.title}</div><div className="feature-desc">{f.desc}</div></div>
         ))}
@@ -61,7 +61,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
     </div></section>
 
     <section className="section"><div className="container">
-      <div className="section-header"><div className="section-tag">🚗 فئات تأجير السيارات</div><h2 className="section-title">فئات سيارات للتأجير من {city.nameAr}</h2><p className="section-sub">اختر فئة السيارة المناسبة لرحلتك من {ap.nameAr}</p></div>
+      <div className="section-header"><div className="section-tag">🚗 فئات المركبات المتاحة</div><h2 className="section-title">فئات سيارات للتأجير من {city.nameAr}</h2><p className="section-sub">اختر فئة السيارة المناسبة لرحلتك من {ap.nameAr}</p></div>
       <div className="cats-grid">{categories.map(cat=>(
         <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`} className="cat-card"><div style={{fontSize:'2rem'}}>{cat.icon}</div><div className="cat-name">{cat.nameAr}</div><div className="cat-price">من <strong>{cat.minPrice}</strong> ر.س</div></Link>
       ))}</div>
@@ -77,7 +77,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
       <div className="cta-box">
         <div className="hero-glow" style={{width:288,height:288,top:-80,right:-80}}/>
         <div className="cta-title">احجز تأجير سيارة من {ap.nameAr} الآن</div>
-        <div className="cta-desc">قدّم طلب تأجير سيارات واستلم سيارتك فور وصولك — تأجير السيارات أسهل مع منصتنا</div>
+        <div className="cta-desc">قدّم طلب استئجار مركبة واستلم سيارتك فور وصولك — تأجير السيارات أسهل مع منصتنا</div>
         <Link href="#form" className="cta-btn">قدّم طلبك مجاناً ←</Link>
       </div>
     </div></section>

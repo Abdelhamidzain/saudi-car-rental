@@ -47,7 +47,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
 
     {/* CITY GUIDE — UNIQUE CONTENT */}
     <section className="section section-white"><div className="container">
-      <div className="section-header"><div className="section-tag">📖 دليل تأجير السيارات</div><h2 className="section-title">دليل تأجير سيارات في {city.nameAr}</h2><p className="section-sub">كل ما تحتاج معرفته قبل استئجار مركبة في {city.nameAr}</p></div>
+      <div className="section-header"><div className="section-tag">📖 دليل الاستئجار</div><h2 className="section-title">دليل استئجار المركبات في {city.nameAr}</h2><p className="section-sub">كل ما تحتاج معرفته قبل استئجار مركبة في {city.nameAr}</p></div>
       <div style={{maxWidth:800,margin:'0 auto'}}>
         {guide.map((p,i)=>(<p key={i} style={{fontSize:'.95rem',color:'#4B5563',lineHeight:2,marginBottom:20}}>{p}</p>))}
       </div>
