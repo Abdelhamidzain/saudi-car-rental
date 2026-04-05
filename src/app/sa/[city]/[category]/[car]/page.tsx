@@ -260,16 +260,16 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         <div className="container">
           <div className="ssr-links-title">تأجير سيارات {cat.nameAr} أخرى في {city.nameAr}</div>
           <div className="ssr-links-grid">
-            {similarCars.slice(0,4).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`}>تأجير سيارة {c.nameAr}</Link>)}
+            {similarCars.slice(0,4).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`}>{c.nameAr}</Link>)}
           </div>
-          <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات في {city.nameAr}</div>
+          <div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من فئات أخرى</div>
           <div className="ssr-links-grid">
-            {categories.filter(c=>c.slug!==cat.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>تأجير سيارات {c.nameAr}</Link>)}
-            <Link href={`/sa/${city.slug}`}>جميع عروض تأجير سيارة في {city.nameAr}</Link>
+            {categories.filter(c=>c.slug!==cat.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr} {city.nameAr}</Link>)}
           </div>
-          <div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارات في مدن أخرى</div>
+          <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات في مدن أخرى</div>
           <div className="ssr-links-grid">
-            {otherCities.map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}/${car.slug}`}>تأجير سيارة {car.nameAr} في {c.nameAr}</Link>)}
+            {otherCities.map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}/${car.slug}`}>{car.nameAr} — {c.nameAr}</Link>)}
+            <Link href={`/sa/${city.slug}`}>جميع العروض في {city.nameAr}</Link>
           </div>
         </div>
       </div>

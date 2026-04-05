@@ -95,15 +95,15 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       <div className="container">
         <div className="ssr-links-title">تأجير سيارات {city.nameAr} حسب الفئة</div>
         <div className="ssr-links-grid">
-          {categories.map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>تأجير سيارة {c.nameAr} في {city.nameAr}</Link>)}
+          {categories.map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr} {city.nameAr}</Link>)}
         </div>
         <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات في مدن أخرى</div>
         <div className="ssr-links-grid">
-          {others.map(c=><Link key={c.slug} href={`/sa/${c.slug}`}>تأجير سيارات {c.nameAr}</Link>)}
+          {others.map((c,i)=><Link key={c.slug} href={`/sa/${c.slug}`}>{i===0?'تأجير سيارة':'إيجار مركبات'} {c.nameAr}</Link>)}
         </div>
-        {ap.length>0&&<><div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من المطار</div>
+        {ap.length>0&&<><div className="ssr-links-title" style={{marginTop:20}}>الاستلام من المطار</div>
         <div className="ssr-links-grid">
-          {ap.map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>تأجير سيارات من {a.nameAr.replace(' الدولي','')}</Link>)}
+          {ap.map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>{a.code} — {a.nameAr.replace(' الدولي','')}</Link>)}
         </div></>}
       </div>
     </div>

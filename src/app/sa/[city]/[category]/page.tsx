@@ -91,11 +91,11 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
       <div className="container">
         <div className="ssr-links-title">تأجير سيارات {cat.nameAr} في مدن أخرى</div>
         <div className="ssr-links-grid">
-          {cities.filter(c=>c.slug!==city.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`}>تأجير سيارة {cat.nameAr} في {c.nameAr}</Link>)}
+          {cities.filter(c=>c.slug!==city.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`}>{cat.icon} {cat.nameAr} {c.nameAr}</Link>)}
         </div>
-        <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من فئات أخرى في {city.nameAr}</div>
+        <div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من فئات أخرى في {city.nameAr}</div>
         <div className="ssr-links-grid">
-          {categories.filter(c=>c.slug!==cat.slug).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>تأجير سيارات {c.nameAr}</Link>)}
+          {categories.filter(c=>c.slug!==cat.slug).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr}</Link>)}
         </div>
       </div>
     </div>
