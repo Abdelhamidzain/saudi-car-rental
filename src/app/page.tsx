@@ -169,6 +169,24 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* SSR INTERNAL LINKS — visible to crawler */}
+      <div className="ssr-links">
+        <div className="container">
+          <div className="ssr-links-title">تأجير سيارات في المدن الرئيسية</div>
+          <div className="ssr-links-grid">
+            {cities.map(c=><Link key={c.slug} href={`/sa/${c.slug}`}>تأجير سيارات في {c.nameAr}</Link>)}
+          </div>
+          <div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة حسب الفئة</div>
+          <div className="ssr-links-grid">
+            {categories.map(c=><Link key={c.slug} href={`/sa/riyadh/${c.slug}`}>تأجير سيارات {c.nameAr}</Link>)}
+          </div>
+          <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من المطارات</div>
+          <div className="ssr-links-grid">
+            {airports.map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>تأجير سيارة من {a.nameAr.replace(' الدولي','')}</Link>)}
+          </div>
+        </div>
+      </div>
+
       <NoSSR>
       {/* CTA */}
       <section className="section section-white">

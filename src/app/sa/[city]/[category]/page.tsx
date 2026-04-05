@@ -85,5 +85,19 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
       <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة عن تأجير سيارات {cat.nameAr} في {city.nameAr}</h2></div>
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
+
+    {/* SSR INTERNAL LINKS */}
+    <div className="ssr-links">
+      <div className="container">
+        <div className="ssr-links-title">تأجير سيارات {cat.nameAr} في مدن أخرى</div>
+        <div className="ssr-links-grid">
+          {cities.filter(c=>c.slug!==city.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`}>تأجير سيارة {cat.nameAr} في {c.nameAr}</Link>)}
+        </div>
+        <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من فئات أخرى في {city.nameAr}</div>
+        <div className="ssr-links-grid">
+          {categories.filter(c=>c.slug!==cat.slug).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>تأجير سيارات {c.nameAr}</Link>)}
+        </div>
+      </div>
+    </div>
   </>)
 }

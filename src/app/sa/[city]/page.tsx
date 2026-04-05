@@ -90,6 +90,24 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
 
+    {/* SSR INTERNAL LINKS */}
+    <div className="ssr-links">
+      <div className="container">
+        <div className="ssr-links-title">تأجير سيارات {city.nameAr} حسب الفئة</div>
+        <div className="ssr-links-grid">
+          {categories.map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>تأجير سيارة {c.nameAr} في {city.nameAr}</Link>)}
+        </div>
+        <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات في مدن أخرى</div>
+        <div className="ssr-links-grid">
+          {others.map(c=><Link key={c.slug} href={`/sa/${c.slug}`}>تأجير سيارات {c.nameAr}</Link>)}
+        </div>
+        {ap.length>0&&<><div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من المطار</div>
+        <div className="ssr-links-grid">
+          {ap.map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>تأجير سيارات من {a.nameAr.replace(' الدولي','')}</Link>)}
+        </div></>}
+      </div>
+    </div>
+
     <NoSSR>
     <section className="section section-white"><div className="container">
       <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير سيارات في مدن أخرى</h2>

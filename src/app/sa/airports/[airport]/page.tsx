@@ -76,6 +76,20 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
 
+    {/* SSR INTERNAL LINKS */}
+    <div className="ssr-links">
+      <div className="container">
+        <div className="ssr-links-title">تأجير سيارات في {city.nameAr}</div>
+        <div className="ssr-links-grid">
+          {categories.map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>تأجير سيارة {c.nameAr} في {city.nameAr}</Link>)}
+        </div>
+        <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من مطارات أخرى</div>
+        <div className="ssr-links-grid">
+          {airports.filter(a=>a.slug!==ap.slug).map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>تأجير سيارات من {a.nameAr.replace(' الدولي','')}</Link>)}
+        </div>
+      </div>
+    </div>
+
     <NoSSR>
     {/* CTA */}
     <section className="section"><div className="container">
