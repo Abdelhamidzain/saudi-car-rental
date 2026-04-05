@@ -210,16 +210,21 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 .mobile-cta a{display:block;width:100%;text-align:center;background:#D4A853;color:#0D1B2A;padding:14px;border-radius:16px;font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-weight:800;font-size:1rem}
 
 
-/* ===== CITY SWITCHER ===== */
-.city-switcher{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:4px 0;margin-right:16px}
-.city-switcher::-webkit-scrollbar{display:none}
-.city-chip{white-space:nowrap;padding:5px 14px;border-radius:50px;font-size:.75rem;font-weight:600;color:rgba(255,255,255,0.55);background:transparent;border:1px solid rgba(255,255,255,0.1);transition:all .2s;text-decoration:none;flex-shrink:0}
-.city-chip:hover{color:#D4A853;border-color:rgba(212,168,83,0.3)}
-.city-chip-active{background:rgba(212,168,83,0.15);border-color:rgba(212,168,83,0.4);color:#D4A853}
+/* ===== CITY NAV DROPDOWN ===== */
+.city-nav{position:relative;margin-right:16px}
+.city-nav-btn{display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:10px;font-size:.8rem;font-weight:600;color:rgba(255,255,255,0.8);background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);cursor:pointer;transition:all .2s;font-family:inherit;white-space:nowrap}
+.city-nav-btn:hover{border-color:rgba(212,168,83,0.3);color:#D4A853}
+.city-nav-btn svg{color:#D4A853}
+.city-nav-dropdown{position:absolute;top:calc(100% + 8px);right:0;z-index:60;background:rgba(13,27,42,0.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.4);padding:8px;min-width:220px;animation:dropIn .2s ease}
+@keyframes dropIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.city-nav-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:10px;font-size:.85rem;font-weight:600;color:rgba(255,255,255,0.7);transition:all .15s;text-decoration:none}
+.city-nav-item:hover{background:rgba(255,255,255,0.08);color:#fff}
+.city-nav-item-active{background:rgba(212,168,83,0.12);color:#D4A853}
+.city-nav-meta{font-size:.7rem;font-weight:400;color:rgba(255,255,255,0.35)}
+.city-nav-item-active .city-nav-meta{color:rgba(212,168,83,0.6)}
 
-/* ===== HEADER LAYOUT WITH SWITCHER ===== */
-.header-right{display:flex;align-items:center;gap:0}
-@media(max-width:767px){.city-switcher{max-width:200px}}
+/* ===== HEADER LAYOUT ===== */
+.header-right{display:flex;align-items:center}
 
 /* ===== UTILITIES ===== */
 .text-accent{color:#D4A853}
