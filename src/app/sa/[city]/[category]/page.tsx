@@ -7,17 +7,17 @@ import { LazyLeadForm } from '@/components/lazy-lead-form'
 export function generateStaticParams() { const p:{city:string;category:string}[]=[]; for(const c of cities) for(const cat of categories) p.push({city:c.slug,category:cat.slug}); return p }
 export async function generateMetadata({params}:{params:Promise<{city:string;category:string}>}):Promise<Metadata> {
   const city=getCityBySlug((await params).city),cat=getCategoryBySlug((await params).category); if(!city||!cat) return {}
-  return { title:`تأجير سيارات ${cat.nameAr} في ${city.nameAr} — من ${cat.minPrice} ريال/يوم`, description:`قارن عروض إيجار سيارات ${cat.nameAr} في ${city.nameAr}.`, alternates:{canonical:`/sa/${city.slug}/${cat.slug}`} }
+  return { title:`تأجير سيارات ${cat.nameAr} في ${city.nameAr} — من ${cat.minPrice} ريال/يوم | تأجير سيارة`, description:`تأجير سيارات ${cat.nameAr} في ${city.nameAr} بأفضل سعر. قارن عروض تأجير السيارات من شركات التأجير المرخصة. أسعار تأجير سيارة ${cat.nameAr} تبدأ من ${cat.minPrice} ريال يومياً.`, alternates:{canonical:`/sa/${city.slug}/${cat.slug}`} }
 }
 
 const descs:Record<string,(c:string)=>string>={
-  economy:c=>`وفّر ميزانيتك مع تأجير سيارات اقتصادية في ${c}. هيونداي اكسنت وتويوتا يارس.`,
-  sedan:c=>`استمتع بالراحة مع سيارات سيدان في ${c}. تويوتا كامري وهيونداي سوناتا.`,
-  suv:c=>`استكشف ${c} مع دفع رباعي. فورتشنر وباترول.`,
-  luxury:c=>`سيارات فاخرة في ${c}. مرسيدس ولكزس وبي ام دبليو.`,
-  '7-seater':c=>`سيارات 7 مقاعد في ${c}. إنوفا وفورتشنر وستاريا.`,
-  pickup:c=>`بيك أب في ${c}. هايلكس ونافارا.`,
-  van:c=>`فان في ${c}. هاي إيس — للمجموعات السياحية.`,
+  economy:c=>`وفّر ميزانيتك مع تأجير سيارات اقتصادية في ${c}. تأجير سيارة اقتصادية مثل هيونداي اكسنت وتويوتا يارس بأسعار تبدأ من 75 ريال يومياً. قارن عروض تأجير السيارات الاقتصادية واحصل على أفضل سعر.`,
+  sedan:c=>`تأجير سيارات سيدان في ${c} بأفضل الأسعار. احجز تأجير سيارة سيدان مثل تويوتا كامري وهيونداي سوناتا. قارن عروض تأجير السيارات من الشركات المرخصة.`,
+  suv:c=>`تأجير سيارات دفع رباعي في ${c}. تأجير سيارة SUV مثل فورتشنر وباترول للرحلات البرية. أفضل عروض تأجير السيارات ذات الدفع الرباعي.`,
+  luxury:c=>`تأجير سيارات فاخرة في ${c} — مرسيدس ولكزس وبي ام دبليو. تأجير سيارة فاخرة لرجال الأعمال والمناسبات. أسعار تأجير السيارات الفاخرة تنافسية.`,
+  '7-seater':c=>`تأجير سيارات 7 مقاعد في ${c} للعائلات. تأجير سيارة عائلية مثل إنوفا وستاريا وكارنيفال. عروض تأجير السيارات العائلية بأسعار مناسبة.`,
+  pickup:c=>`تأجير سيارات بيك أب في ${c} — هايلكس ونافارا. تأجير سيارة بيك أب للعمل والرحلات البرية. أسعار تأجير السيارات تبدأ من 139 ريال.`,
+  van:c=>`تأجير سيارات فان في ${c} للمجموعات. تأجير سيارة فان هاي إيس للسياحة ورحلات العمرة. عروض تأجير السيارات الجماعية بأسعار منافسة.`,
 }
 
 export default async function CategoryPage({params}:{params:Promise<{city:string;category:string}>}) {
@@ -25,7 +25,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
   const desc=(descs[cat.slug]||(c=>`تأجير ${cat.nameAr} في ${c}.`))(city.nameAr)
   const otherCats=categories.filter(c=>c.slug!==cat.slug), otherCities=cities.filter(c=>c.slug!==city.slug).slice(0,4)
   const cars=getCarsByCategory(cat.slug)
-  const faqs=[{q:`كم سعر تأجير ${cat.nameAr} في ${city.nameAr}؟`,a:`يبدأ من ${cat.minPrice} ريال يومياً.`},{q:`هل تتوفر للإيجار الشهري؟`,a:`نعم، بتخفيض 30-40%.`},{q:`ما المستندات المطلوبة؟`,a:`رخصة قيادة سارية وهوية أو جواز سفر.`}]
+  const faqs=[{q:`كم سعر تأجير سيارات ${cat.nameAr} في ${city.nameAr}؟`,a:`يبدأ سعر تأجير السيارات من فئة ${cat.nameAr} في ${city.nameAr} من ${cat.minPrice} ريال يومياً. تأجير سيارة ${cat.nameAr} شهرياً يوفر خصماً يصل 40%.`},{q:`هل تأجير سيارة ${cat.nameAr} يشمل التأمين؟`,a:`نعم، جميع عروض تأجير السيارات تشمل التأمين الأساسي. يمكنك ترقيته لتأمين شامل عند تأجير سيارات ${cat.nameAr}.`},{q:`ما المستندات المطلوبة لتأجير سيارات ${cat.nameAr}؟`,a:`يلزم رخصة قيادة سارية وهوية أو جواز سفر لإتمام تأجير سيارة من أي شركة تأجير السيارات المرخصة.`}]
   const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`},{name:cat.nameAr,url:`/sa/${city.slug}/${cat.slug}`}]),generateFAQSchema(faqs)]}
 
   return (<>
@@ -35,14 +35,14 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
         <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{cat.nameAr}</span></div>
         <h1 className="hero-title">تأجير سيارات {cat.nameAr} في <span>{city.nameAr}</span></h1>
         <p className="hero-subtitle">{desc}</p>
-        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ر.س/يوم</span><span className="pill pill-glass">{cat.icon} {cat.nameAr}</span><span className="pill pill-glass">تأمين شامل</span></div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ر.س/يوم</span><span className="pill pill-glass">{cat.icon} تأجير سيارة {cat.nameAr}</span><span className="pill pill-glass">تأجير السيارات المرخصة</span></div>
       </div><div id="form"><LazyLeadForm/></div></div></div>
     </section>
 
     {/* CAR MODELS */}
     {cars.length > 0 && (
     <section className="section section-white"><div className="container">
-      <div className="section-header"><div className="section-tag">{cat.icon} السيارات المتوفرة</div><h2 className="section-title">سيارات {cat.nameAr} للتأجير في {city.nameAr}</h2><p className="section-sub">اختر الموديل المناسب وقارن أسعار تأجير {cat.nameAr}</p></div>
+      <div className="section-header"><div className="section-tag">{cat.icon} السيارات المتوفرة</div><h2 className="section-title">تأجير سيارات {cat.nameAr} في {city.nameAr}</h2><p className="section-sub">اختر الموديل المناسب وقارن أسعار تأجير السيارات من فئة {cat.nameAr}</p></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:20}}>{cars.map(c=>{
         const grad=categoryGradients[cat.slug]||categoryGradients.economy
         return(
@@ -64,21 +64,21 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
     )}
 
     <section className="section"><div className="container">
-      <div className="section-header"><div className="section-tag">🚗 فئات أخرى</div><h2 className="section-title">فئات أخرى في {city.nameAr}</h2></div>
+      <div className="section-header"><div className="section-tag">🚗 تأجير سيارات أخرى</div><h2 className="section-title">فئات تأجير السيارات الأخرى في {city.nameAr}</h2></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:16}}>{otherCats.map(c=>(
         <Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`} className="cat-card"><div style={{fontSize:'2rem'}}>{c.icon}</div><div className="cat-name">{c.nameAr}</div><div className="cat-price">من <strong>{c.minPrice}</strong> ر.س</div></Link>
       ))}</div>
     </div></section>
 
     <section className="section section-white"><div className="container">
-      <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير {cat.nameAr} في مدن أخرى</h2>
+      <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير سيارات {cat.nameAr} في مدن أخرى</h2>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:16}}>{otherCities.map(c=>(
         <Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`} className="link-card"><div className="link-card-name">{c.nameAr}</div><div className="link-card-sub">من {cat.minPrice} ر.س</div></Link>
       ))}</div>
     </div></section>
 
     <section className="section" id="faq"><div className="container-sm">
-      <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة عن تأجير {cat.nameAr} في {city.nameAr}</h2></div>
+      <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة عن تأجير سيارات {cat.nameAr} في {city.nameAr}</h2></div>
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
   </>)
