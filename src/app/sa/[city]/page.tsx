@@ -90,6 +90,12 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
 
+    {/* GUIDE INTRO — SSR for unique content */}
+    <section className="section section-white"><div className="container">
+      <h2 className="section-title" style={{textAlign:'center',marginBottom:24}}>دليل استئجار المركبات</h2>
+      <p style={{maxWidth:800,margin:'0 auto',fontSize:'.95rem',color:'#4B5563',lineHeight:2,textAlign:'center'}}>{guide[0]}</p>
+    </div></section>
+
     {/* SSR INTERNAL LINKS */}
     <div className="ssr-links">
       <div className="container">
