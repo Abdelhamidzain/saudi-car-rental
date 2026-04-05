@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
+import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, categoryGradients, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export function generateStaticParams() { const p:{city:string;category:string}[]=[]; for(const c of cities) for(const cat of categories) p.push({city:c.slug,category:cat.slug}); return p }
@@ -42,19 +42,24 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
     {/* CAR MODELS */}
     {cars.length > 0 && (
     <section className="section section-white"><div className="container">
-      <div className="section-header"><div className="section-tag">{cat.icon} السيارات المتوفرة</div><h2 className="section-title">سيارات {cat.nameAr} للتأجير في {city.nameAr}</h2><p className="section-sub">اختر الموديل المناسب وقارن الأسعار</p></div>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:20}}>{cars.map(c=>(
-        <Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`} className="feature-card" style={{textAlign:'right',textDecoration:'none'}}>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
-            <div style={{fontSize:'2rem'}}>{cat.icon}</div>
-            <span className="pill pill-accent" style={{fontSize:'.7rem',padding:'4px 12px'}}>من {c.dailyPrice} ر.س</span>
+      <div className="section-header"><div className="section-tag">{cat.icon} السيارات المتوفرة</div><h2 className="section-title">سيارات {cat.nameAr} للتأجير في {city.nameAr}</h2><p className="section-sub">اختر الموديل المناسب وقارن أسعار تأجير {cat.nameAr}</p></div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:20}}>{cars.map(c=>{
+        const grad=categoryGradients[cat.slug]||categoryGradients.economy
+        return(
+        <Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`} style={{textDecoration:'none',display:'block',position:'relative',borderRadius:16,overflow:'hidden',height:210,background:`linear-gradient(135deg,${grad.from},${grad.to})`,transition:'transform .4s,box-shadow .4s'}}>
+          <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(13,27,42,0.9) 0%,rgba(13,27,42,0.15) 60%)'}}/>
+          <div style={{position:'absolute',top:16,left:16,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'5px 14px',borderRadius:50,fontSize:'.7rem',fontWeight:700}}>من {c.dailyPrice} ر.س/يوم</div>
+          <div style={{position:'absolute',top:16,right:16,zIndex:2,fontSize:'1.8rem'}}>{cat.icon}</div>
+          <div style={{position:'absolute',bottom:0,right:0,left:0,padding:20,zIndex:2}}>
+            <div style={{fontFamily:"'Cairo',sans-serif",fontSize:'1.25rem',fontWeight:800,color:'#fff'}}>{c.nameAr}</div>
+            <div style={{display:'flex',gap:12,marginTop:6,flexWrap:'wrap'}}>
+              <span style={{fontSize:'.7rem',color:'rgba(255,255,255,0.75)'}}>{c.brandAr} • {c.year}</span>
+              <span style={{fontSize:'.7rem',color:'rgba(255,255,255,0.75)'}}>{c.seats} مقاعد • {c.transmissionAr}</span>
+            </div>
+            <div style={{marginTop:10,paddingTop:10,borderTop:'1px solid rgba(255,255,255,0.1)',fontSize:'.75rem',color:'#D4A853',fontWeight:700}}>عرض التفاصيل والسعر ←</div>
           </div>
-          <div className="feature-title" style={{marginBottom:4}}>{c.nameAr}</div>
-          <div style={{fontSize:'.8rem',color:'#6B7280',marginBottom:8}}>{c.brandAr} • {c.year}</div>
-          <div style={{fontSize:'.75rem',color:'#9CA3AF',lineHeight:1.6}}>{c.seats} مقاعد • {c.transmissionAr} • {c.fuelAr}</div>
-          <div style={{marginTop:12,paddingTop:12,borderTop:'1px solid #E5E7EB',fontSize:'.8rem',color:'#D4A853',fontWeight:700}}>عرض التفاصيل ←</div>
         </Link>
-      ))}</div>
+      )})}</div>
     </div></section>
     )}
 

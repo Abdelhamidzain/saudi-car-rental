@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { cities, categories, airports, carModels, homeFAQs, generateFAQSchema, SITE_NAME } from '@/lib/data'
+import { cities, categories, airports, carModels, categoryGradients, homeFAQs, generateFAQSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export default function HomePage() {
@@ -106,19 +106,21 @@ export default function HomePage() {
           <div className="section-header">
             <div className="section-tag">⭐ الأكثر طلباً</div>
             <h2 className="section-title">السيارات الأكثر طلباً للتأجير</h2>
-            <p className="section-sub">أشهر الموديلات المتوفرة في المملكة</p>
+            <p className="section-sub">أشهر الموديلات المتوفرة للإيجار في المملكة العربية السعودية</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:16}}>
             {carModels.filter((_,i)=>[0,1,5,6,10,15,20,25].includes(i)).slice(0,8).map(c=>{
               const catObj=categories.find(ct=>ct.slug===c.category)
+              const grad=categoryGradients[c.category]||categoryGradients.economy
               return(
-                <Link key={c.slug} href={`/sa/riyadh/${c.category}/${c.slug}`} className="feature-card" style={{textAlign:'right',textDecoration:'none',padding:20}}>
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:10}}>
-                    <span style={{fontSize:'1.5rem'}}>{catObj?.icon}</span>
-                    <span className="pill pill-accent" style={{fontSize:'.65rem',padding:'3px 10px'}}>من {c.dailyPrice} ر.س</span>
+                <Link key={c.slug} href={`/sa/riyadh/${c.category}/${c.slug}`} style={{textDecoration:'none',display:'block',position:'relative',borderRadius:16,overflow:'hidden',height:190,background:`linear-gradient(135deg,${grad.from},${grad.to})`,transition:'transform .4s,box-shadow .4s'}}>
+                  <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(13,27,42,0.9) 0%,rgba(13,27,42,0.15) 60%)'}}/>
+                  <div style={{position:'absolute',top:14,left:14,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'4px 12px',borderRadius:50,fontSize:'.65rem',fontWeight:700}}>من {c.dailyPrice} ر.س</div>
+                  <div style={{position:'absolute',top:14,right:14,zIndex:2,fontSize:'1.5rem'}}>{catObj?.icon}</div>
+                  <div style={{position:'absolute',bottom:0,right:0,left:0,padding:18,zIndex:2}}>
+                    <div style={{fontFamily:"'Cairo',sans-serif",fontSize:'1.1rem',fontWeight:800,color:'#fff'}}>{c.nameAr}</div>
+                    <div style={{fontSize:'.7rem',color:'rgba(255,255,255,0.7)',marginTop:4}}>{c.brandAr} • {c.seats} مقاعد • {c.transmissionAr}</div>
                   </div>
-                  <div className="feature-title" style={{fontSize:'.95rem',marginBottom:2}}>{c.nameAr}</div>
-                  <div style={{fontSize:'.75rem',color:'#6B7280'}}>{c.brandAr} • {c.seats} مقاعد • {c.transmissionAr}</div>
                 </Link>
               )
             })}

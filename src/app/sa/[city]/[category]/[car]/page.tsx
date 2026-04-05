@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, carModels, getCityBySlug, getCategoryBySlug, getCarBySlug, getCarsByCategory, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME, SITE_URL } from '@/lib/data'
+import { cities, categories, carModels, getCityBySlug, getCategoryBySlug, getCarBySlug, getCarsByCategory, getAirportsForCity, getPartnersForCity, generateFAQSchema, generateBreadcrumbSchema, generateCarSEOContent, categoryGradients, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export function generateStaticParams() {
@@ -16,8 +16,8 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   const { city: cs, category: cats, car: cars } = await params
   const city = getCityBySlug(cs), cat = getCategoryBySlug(cats), car = getCarBySlug(cars)
   if (!city || !cat || !car) return {}
-  const title = `تأجير ${car.nameAr} في ${city.nameAr} — من ${car.dailyPrice} ريال/يوم`
-  const desc = `احجز ${car.nameAr} ${car.year} في ${city.nameAr}. ${car.transmissionAr} • ${car.seats} مقاعد • ${car.fuelAr}. أسعار تبدأ من ${car.dailyPrice} ريال يومياً و${car.monthlyPrice} ريال شهرياً. قارن العروض واحصل على أفضل سعر.`
+  const title = `تأجير ${car.nameAr} في ${city.nameAr} — من ${car.dailyPrice} ريال/يوم | ${SITE_NAME}`
+  const desc = `احجز ${car.nameAr} ${car.year} في ${city.nameAr} بأفضل سعر. ${car.transmissionAr} • ${car.seats} مقاعد • ${car.fuelAr}. أسعار تأجير ${car.nameAr} تبدأ من ${car.dailyPrice} ريال يومياً و${car.monthlyPrice} ريال شهرياً. قارن عروض إيجار ${car.brandAr} من شركات التأجير المرخصة في ${city.nameAr}.`
   return {
     title, description: desc,
     alternates: { canonical: `/sa/${city.slug}/${cat.slug}/${car.slug}` },
@@ -32,40 +32,36 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
 
   const similarCars = getCarsByCategory(cat.slug).filter(c => c.slug !== car.slug)
   const otherCities = cities.filter(c => c.slug !== city.slug).slice(0, 5)
+  const cityAirports = getAirportsForCity(city.slug)
+  const partners = getPartnersForCity(city.slug)
+  const seo = generateCarSEOContent(car, city, cat)
+  const grad = categoryGradients[cat.slug] || categoryGradients.economy
 
   const faqs = [
-    { q: `كم سعر تأجير ${car.nameAr} في ${city.nameAr}؟`, a: `يبدأ سعر تأجير ${car.nameAr} من ${car.dailyPrice} ريال يومياً و${car.monthlyPrice} ريال شهرياً في ${city.nameAr}. السعر يشمل التأمين الأساسي وقد يختلف حسب مدة الإيجار والشركة المؤجرة.` },
-    { q: `ما مواصفات ${car.nameAr} ${car.year}؟`, a: `${car.nameAr} ${car.year}: ${car.seats} مقاعد، ناقل حركة ${car.transmissionAr}، وقود ${car.fuelAr}. تشمل المميزات: ${car.features.join('، ')}.` },
-    { q: `هل تأجير ${car.nameAr} يشمل التأمين؟`, a: `نعم، جميع عروض التأجير تشمل التأمين الأساسي. يمكنك ترقية التأمين لشامل مقابل رسوم إضافية بسيطة عند التواصل مع الشركة المؤجرة.` },
-    { q: `هل يمكن استلام ${car.nameAr} من المطار في ${city.nameAr}؟`, a: `نعم، معظم شركائنا يوفرون خدمة التوصيل والاستلام من مطارات ${city.nameAr}. حدد ذلك عند تقديم الطلب وسيتم ترتيب الاستلام.` },
-    { q: `ما شروط تأجير ${car.nameAr}؟`, a: `المستندات المطلوبة: رخصة قيادة سارية المفعول، هوية وطنية أو جواز سفر ساري، والعمر لا يقل عن 21 سنة. بعض الشركات قد تطلب ضمان مالي قابل للاسترداد.` },
+    { q: `كم سعر تأجير ${car.nameAr} في ${city.nameAr}؟`, a: `يبدأ سعر إيجار ${car.nameAr} ${car.year} في ${city.nameAr} من ${car.dailyPrice} ريال سعودي لليوم الواحد. الإيجار الأسبوعي يبدأ من ${seo.weeklyPrice} ريال بخصم 15%، والشهري من ${car.monthlyPrice} ريال بخصم حتى 40%. الأسعار تشمل التأمين الأساسي ضد الغير وتتفاوت حسب مدة الإيجار والشركة المؤجرة والموسم.` },
+    { q: `ما مواصفات ${car.nameAr} ${car.year} المتوفرة للتأجير؟`, a: `${car.nameAr} موديل ${car.year} من ${car.brandAr}: سعة ${car.seats} مقاعد، ناقل حركة ${car.transmissionAr}، وقود ${car.fuelAr}. تشمل التجهيزات: ${car.features.join('، ')}. ${car.description}` },
+    { q: `هل تأجير ${car.nameAr} في ${city.nameAr} يشمل التأمين والكيلومترات؟`, a: `نعم، جميع عروض تأجير ${car.nameAr} تشمل التأمين الأساسي ضد الغير وكيلومترات محددة يومياً. يمكنك ترقية التأمين لشامل مقابل رسوم إضافية بسيطة. الإيجار الشهري عادة يشمل كيلومترات مفتوحة وتأمين شامل.` },
+    { q: `هل يمكن استلام ${car.nameAr} من المطار في ${city.nameAr}؟`, a: cityAirports.length > 0 ? `نعم، معظم شركائنا في ${city.nameAr} يوفرون خدمة التوصيل والاستلام من ${cityAirports[0].nameAr} (${cityAirports[0].code}). حدد ذلك عند تقديم الطلب عبر النموذج وسيتم ترتيب استلام ${car.nameAr} فور وصولك.` : `نعم، خدمة التوصيل متاحة من أقرب مطار. حدد ذلك عند تقديم طلبك.` },
+    { q: `ما شروط استئجار ${car.nameAr} في ${city.nameAr}؟`, a: `شروط تأجير ${car.nameAr}: رخصة قيادة سعودية أو دولية سارية المفعول، هوية وطنية أو جواز سفر ساري، العمر لا يقل عن 21 سنة (25 للفئات الفاخرة). بعض شركات التأجير قد تطلب ضماناً مالياً قابلاً للاسترداد عند إرجاع السيارة بحالتها.` },
+    { q: `كم عدد شركات التأجير المتوفرة لـ${car.nameAr} في ${city.nameAr}؟`, a: `نعرض عروض تأجير ${car.nameAr} من ${partners.length > 0 ? partners.length : city.partnerCount} شركة تأجير مرخصة في ${city.nameAr}${partners.length > 0 ? ` منها ${partners.slice(0, 3).map(p => p.name).join(' و')}` : ''}. جميع الشركات حاصلة على ترخيص هيئة النقل العام في المملكة العربية السعودية.` },
   ]
 
   const jsonLd = {
     '@context': 'https://schema.org', '@graph': [
       generateBreadcrumbSchema([
         { name: SITE_NAME, url: '/' },
-        { name: city.nameAr, url: `/sa/${city.slug}` },
-        { name: cat.nameAr, url: `/sa/${city.slug}/${cat.slug}` },
-        { name: car.nameAr, url: `/sa/${city.slug}/${cat.slug}/${car.slug}` },
+        { name: `تأجير سيارات ${city.nameAr}`, url: `/sa/${city.slug}` },
+        { name: `تأجير ${cat.nameAr} ${city.nameAr}`, url: `/sa/${city.slug}/${cat.slug}` },
+        { name: `تأجير ${car.nameAr} ${city.nameAr}`, url: `/sa/${city.slug}/${cat.slug}/${car.slug}` },
       ]),
       generateFAQSchema(faqs),
       {
         '@type': 'Product', name: `تأجير ${car.nameAr} في ${city.nameAr}`,
-        description: car.description, brand: { '@type': 'Brand', name: car.brand },
-        offers: { '@type': 'AggregateOffer', lowPrice: car.dailyPrice, highPrice: car.dailyPrice * 2, priceCurrency: 'SAR', availability: 'https://schema.org/InStock' },
+        description: seo.uniqueIntro, brand: { '@type': 'Brand', name: car.brand },
+        offers: { '@type': 'AggregateOffer', lowPrice: car.dailyPrice, highPrice: car.monthlyPrice, priceCurrency: 'SAR', availability: 'https://schema.org/InStock', offerCount: partners.length || city.partnerCount },
       },
     ],
   }
-
-  const specs = [
-    { icon: '👥', label: 'المقاعد', value: `${car.seats} مقاعد` },
-    { icon: '⚙️', label: 'ناقل الحركة', value: car.transmissionAr },
-    { icon: '⛽', label: 'الوقود', value: car.fuelAr },
-    { icon: '📅', label: 'سنة الموديل', value: `${car.year}` },
-    { icon: '🏷️', label: 'الماركة', value: car.brandAr },
-    { icon: '🏷️', label: 'الفئة', value: cat.nameAr },
-  ]
 
   return (
     <>
@@ -86,11 +82,13 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
                 <span className="current">{car.nameAr}</span>
               </div>
               <h1 className="hero-title">تأجير {car.nameAr} في <span>{city.nameAr}</span></h1>
-              <p className="hero-subtitle">{car.description}</p>
+              <p className="hero-subtitle">{seo.uniqueIntro}</p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'center' }}>
                 <span className="pill pill-accent">من {car.dailyPrice} ر.س/يوم</span>
+                <span className="pill pill-accent">{car.monthlyPrice} ر.س/شهر</span>
                 <span className="pill pill-glass">{car.seats} مقاعد • {car.transmissionAr}</span>
                 <span className="pill pill-glass">{car.fuelAr} • {car.year}</span>
+                <span className="pill pill-glass">{cat.icon} {cat.nameAr}</span>
               </div>
             </div>
             <div id="form"><LazyLeadForm /></div>
@@ -98,28 +96,35 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         </div>
       </section>
 
-      {/* PRICES */}
+      {/* PRICES + SPECS */}
       <section className="section section-white">
         <div className="container">
           <div className="section-header">
-            <div className="section-tag">💰 الأسعار</div>
-            <h2 className="section-title">أسعار تأجير {car.nameAr} في {city.nameAr}</h2>
-            <p className="section-sub">أسعار تنافسية مع التأمين الأساسي — يومي وشهري</p>
+            <div className="section-tag">💰 أسعار تأجير {car.nameAr}</div>
+            <h2 className="section-title">أسعار إيجار {car.nameAr} {car.year} في {city.nameAr}</h2>
+            <p className="section-sub">أسعار تنافسية من شركات التأجير المرخصة — يومي وأسبوعي وشهري</p>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20, maxWidth: 700, margin: '0 auto' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20, maxWidth: 800, margin: '0 auto' }}>
             <div className="feature-card" style={{ borderTop: '3px solid #D4A853' }}>
               <div className="feature-icon">📅</div>
               <div className="feature-title">الإيجار اليومي</div>
               <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#D4A853', fontFamily: "'Cairo', sans-serif" }}>{car.dailyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ر.س/يوم</span></div>
-              <div className="feature-desc">يشمل التأمين الأساسي + كيلومترات محدودة</div>
+              <div className="feature-desc">تأمين أساسي + كيلومترات محدودة</div>
+            </div>
+            <div className="feature-card" style={{ borderTop: '3px solid #1B3A5C' }}>
+              <div className="feature-icon">📆</div>
+              <div className="feature-title">الإيجار الأسبوعي</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#1B3A5C', fontFamily: "'Cairo', sans-serif" }}>{seo.weeklyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ر.س/أسبوع</span></div>
+              <div className="feature-desc">خصم 15% — تأمين أساسي</div>
             </div>
             <div className="feature-card" style={{ borderTop: '3px solid #0D1B2A' }}>
               <div className="feature-icon">🗓️</div>
               <div className="feature-title">الإيجار الشهري</div>
               <div style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0D1B2A', fontFamily: "'Cairo', sans-serif" }}>{car.monthlyPrice} <span style={{ fontSize: '1rem', color: '#6B7280' }}>ر.س/شهر</span></div>
-              <div className="feature-desc">خصم يصل 40% — تأمين شامل + كيلومترات مفتوحة</div>
+              <div className="feature-desc">خصم 40% — تأمين شامل + كيلومترات مفتوحة</div>
             </div>
           </div>
+          <p style={{ textAlign: 'center', maxWidth: 700, margin: '32px auto 0', fontSize: '.9rem', color: '#4B5563', lineHeight: 1.8 }}>{seo.pricingDetails}</p>
         </div>
       </section>
 
@@ -127,11 +132,18 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
       <section className="section">
         <div className="container">
           <div className="section-header">
-            <div className="section-tag">📋 المواصفات</div>
-            <h2 className="section-title">مواصفات {car.nameAr} {car.year}</h2>
+            <div className="section-tag">📋 مواصفات {car.brandAr}</div>
+            <h2 className="section-title">مواصفات {car.nameAr} {car.year} للتأجير</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16, maxWidth: 800, margin: '0 auto' }}>
-            {specs.map((s, i) => (
+            {[
+              { icon: '👥', label: 'عدد المقاعد', value: `${car.seats} مقاعد` },
+              { icon: '⚙️', label: 'ناقل الحركة', value: car.transmissionAr },
+              { icon: '⛽', label: 'نوع الوقود', value: car.fuelAr },
+              { icon: '📅', label: 'سنة الموديل', value: `${car.year}` },
+              { icon: '🏷️', label: 'الشركة المصنعة', value: car.brandAr },
+              { icon: '🚗', label: 'فئة السيارة', value: cat.nameAr },
+            ].map((s, i) => (
               <div key={i} className="cat-card" style={{ cursor: 'default' }}>
                 <div style={{ fontSize: '2rem', marginBottom: 8 }}>{s.icon}</div>
                 <div className="cat-name">{s.label}</div>
@@ -142,12 +154,12 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         </div>
       </section>
 
-      {/* FEATURES */}
+      {/* WHY THIS CAR - Unique Content */}
       <section className="section section-dark">
         <div className="container">
           <div className="section-header">
-            <div className="section-tag section-tag-dark">✨ المميزات</div>
-            <h2 className="section-title section-title-white">مميزات {car.nameAr}</h2>
+            <div className="section-tag section-tag-dark">✨ لماذا {car.nameAr}؟</div>
+            <h2 className="section-title section-title-white">مميزات تأجير {car.nameAr} في {city.nameAr}</h2>
             <p className="section-sub section-sub-light">تجهيزات ومميزات تجعل رحلتك أكثر راحة وأماناً</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, maxWidth: 900, margin: '0 auto' }}>
@@ -158,28 +170,45 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
               </div>
             ))}
           </div>
+          <p style={{ textAlign: 'center', maxWidth: 700, margin: '32px auto 0', fontSize: '.9rem', color: 'rgba(255,255,255,0.65)', lineHeight: 1.8 }}>{seo.whyThisCar}</p>
         </div>
       </section>
 
-      {/* SIMILAR CARS */}
+      {/* CITY TIPS - Unique Content */}
+      <section className="section section-white">
+        <div className="container">
+          <div className="section-header">
+            <div className="section-tag">🏙️ نصائح القيادة في {city.nameAr}</div>
+            <h2 className="section-title">نصائح استئجار {car.nameAr} في {city.nameAr}</h2>
+          </div>
+          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+            <p style={{ fontSize: '.95rem', color: '#4B5563', lineHeight: 2, marginBottom: 24 }}>{seo.cityTips}</p>
+            <p style={{ fontSize: '.95rem', color: '#4B5563', lineHeight: 2 }}>{seo.rentalProcess}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* SIMILAR CARS - Colored Cards */}
       {similarCars.length > 0 && (
-        <section className="section section-white">
+        <section className="section">
           <div className="container">
             <div className="section-header">
-              <div className="section-tag">🚗 سيارات مشابهة</div>
-              <h2 className="section-title">سيارات {cat.nameAr} أخرى في {city.nameAr}</h2>
+              <div className="section-tag">{cat.icon} سيارات {cat.nameAr} أخرى</div>
+              <h2 className="section-title">سيارات {cat.nameAr} أخرى للتأجير في {city.nameAr}</h2>
               <p className="section-sub">قارن بين موديلات فئة {cat.nameAr} واختر الأنسب لرحلتك</p>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 20 }}>
               {similarCars.map(c => (
-                <Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`} className="feature-card" style={{ textAlign: 'right', textDecoration: 'none' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <div style={{ fontSize: '2rem' }}>{cat.icon}</div>
-                    <span className="pill pill-accent" style={{ fontSize: '.7rem', padding: '4px 12px' }}>من {c.dailyPrice} ر.س</span>
+                <Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`} style={{ textDecoration: 'none', display: 'block', position: 'relative', borderRadius: 16, overflow: 'hidden', height: 200, background: `linear-gradient(135deg, ${grad.from}, ${grad.to})`, transition: 'transform .4s, box-shadow .4s' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(13,27,42,0.9) 0%, rgba(13,27,42,0.2) 60%)' }} />
+                  <div style={{ position: 'absolute', top: 16, left: 16, zIndex: 2, background: 'rgba(212,168,83,0.9)', color: '#0D1B2A', padding: '5px 14px', borderRadius: 50, fontSize: '.7rem', fontWeight: 700 }}>من {c.dailyPrice} ر.س/يوم</div>
+                  <div style={{ position: 'absolute', bottom: 0, right: 0, left: 0, padding: 20, zIndex: 2 }}>
+                    <div style={{ fontFamily: "'Cairo', sans-serif", fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>{c.nameAr}</div>
+                    <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
+                      <span style={{ fontSize: '.7rem', color: 'rgba(255,255,255,0.75)' }}>{c.brandAr} • {c.year}</span>
+                      <span style={{ fontSize: '.7rem', color: 'rgba(255,255,255,0.75)' }}>{c.seats} مقاعد • {c.transmissionAr}</span>
+                    </div>
                   </div>
-                  <div className="feature-title" style={{ marginBottom: 4 }}>{c.nameAr}</div>
-                  <div style={{ fontSize: '.8rem', color: '#6B7280', marginBottom: 8 }}>{c.brandAr} • {c.year}</div>
-                  <div style={{ fontSize: '.75rem', color: '#9CA3AF' }}>{c.seats} مقاعد • {c.transmissionAr} • {c.fuelAr}</div>
                 </Link>
               ))}
             </div>
@@ -188,16 +217,16 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
       )}
 
       {/* SAME CAR OTHER CITIES */}
-      <section className="section">
+      <section className="section section-white">
         <div className="container">
           <div className="section-header">
             <div className="section-tag">🏙️ مدن أخرى</div>
-            <h2 className="section-title">تأجير {car.nameAr} في مدن أخرى</h2>
+            <h2 className="section-title">تأجير {car.nameAr} في مدن أخرى بالسعودية</h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16 }}>
             {otherCities.map(c => (
               <Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}/${car.slug}`} className="link-card">
-                <div className="link-card-name">{c.nameAr}</div>
+                <div className="link-card-name">تأجير {car.nameAr} {c.nameAr}</div>
                 <div className="link-card-sub">من {car.dailyPrice} ر.س/يوم</div>
               </Link>
             ))}
@@ -206,7 +235,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
       </section>
 
       {/* FAQ */}
-      <section className="section section-white" id="faq">
+      <section className="section" id="faq">
         <div className="container-sm">
           <div className="section-header">
             <div className="section-tag">❓ أسئلة شائعة</div>
@@ -224,13 +253,13 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
       </section>
 
       {/* CTA */}
-      <section className="section">
+      <section className="section section-white">
         <div className="container">
           <div className="cta-box">
             <div className="hero-glow" style={{ width: 288, height: 288, top: -80, right: -80 }} />
             <div className="hero-glow" style={{ width: 192, height: 192, bottom: -60, left: -60 }} />
-            <div className="cta-title">احجز {car.nameAr} الآن</div>
-            <div className="cta-desc">قدّم طلبك خلال ثوانٍ واستلم أفضل عرض لتأجير {car.nameAr} في {city.nameAr}</div>
+            <div className="cta-title">احجز {car.nameAr} في {city.nameAr} الآن</div>
+            <div className="cta-desc">قدّم طلب تأجير {car.nameAr} خلال ثوانٍ واستلم أفضل عرض سعر من شركات التأجير المرخصة في {city.nameAr}</div>
             <Link href="#form" className="cta-btn">قدّم طلبك مجاناً ←</Link>
           </div>
         </div>
