@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, carModels, categoryGradients, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
+import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, carModels, categoryGradients, cityGuides, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export function generateStaticParams() { return cities.map(c=>({city:c.slug})) }
@@ -13,10 +13,13 @@ export async function generateMetadata({params}:{params:Promise<{city:string}>})
 export default async function CityPage({params}:{params:Promise<{city:string}>}) {
   const city=getCityBySlug((await params).city); if(!city) notFound()
   const ap=getAirportsForCity(city.slug), partners=getPartnersForCity(city.slug), others=cities.filter(c=>c.slug!==city.slug)
+  const guide = cityGuides[city.slug] || cityGuides.riyadh
   const faqs=[
-    {q:`كم سعر تأجير سيارة في ${city.nameAr}؟`,a:`تبدأ أسعار تأجير السيارات في ${city.nameAr} من ${city.minPrice} ريال يومياً للفئة الاقتصادية.`},
-    {q:`ما أفضل شركة تأجير سيارات في ${city.nameAr}؟`,a:`نعرض عروض ${partners.length} شركة معتمدة منها ${partners.slice(0,2).map(p=>p.name).join(' و')}.`},
-    {q:`هل يوجد توصيل من المطار؟`,a:ap.length>0?`نعم، غالبية شركائنا يوفرون خدمة التوصيل من ${ap[0].nameAr}.`:`نعم، معظم المكاتب توفر خدمة التوصيل.`},
+    {q:`كم يكلف تأجير سيارات في ${city.nameAr}؟`,a:`تبدأ أسعار تأجير السيارات في ${city.nameAr} من ${city.minPrice} ريال يومياً للفئة الاقتصادية. تأجير سيارة سيدان متوسطة يبدأ من 135 ريال والفئة الفاخرة من 359 ريال يومياً.`},
+    {q:`ما أفضل شركة تأجير سيارات في ${city.nameAr}؟`,a:`نعرض عروض تأجير السيارات من ${partners.length} شركة معتمدة في ${city.nameAr} منها ${partners.slice(0,2).map(p=>p.name).join(' و')}. جميعها حاصلة على ترخيص هيئة النقل العام بالمملكة.`},
+    {q:`هل يوجد توصيل تأجير سيارة من المطار في ${city.nameAr}؟`,a:ap.length>0?`نعم، غالبية شركات تأجير السيارات توفر خدمة التوصيل والاستلام من ${ap[0].nameAr} مباشرة عند وصولك.`:`نعم، معظم مكاتب تأجير سيارات في ${city.nameAr} توفر خدمة التوصيل للعميل.`},
+    {q:`هل تأجير سيارة في ${city.nameAr} يشمل التأمين والوقود؟`,a:`جميع عروض تأجير السيارات تشمل التأمين الأساسي ضد الغير. الوقود عادة على حساب المستأجر ويتم تسليم المركبة بخزان ممتلئ.`},
+    {q:`ما شروط تأجير سيارات في ${city.nameAr}؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر والحد الأدنى للعمر 21 سنة. بعض شركات تأجير السيارات تطلب ضماناً مالياً مسترداً عند تأجير سيارة فاخرة.`},
   ]
   const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`}]),generateFAQSchema(faqs)]}
 
@@ -40,6 +43,14 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       <div className="cats-grid">{categories.map(cat=>(
         <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`} className="cat-card"><div className="cat-emoji">{cat.icon}</div><div className="cat-name">{cat.nameAr}</div><div className="cat-price">من <strong>{cat.minPrice} ر.س</strong></div></Link>
       ))}</div>
+    </div></section>
+
+    {/* CITY GUIDE — UNIQUE CONTENT */}
+    <section className="section section-white"><div className="container">
+      <div className="section-header"><div className="section-tag">📖 دليل تأجير السيارات</div><h2 className="section-title">دليل تأجير سيارات في {city.nameAr}</h2><p className="section-sub">كل ما تحتاج معرفته قبل استئجار مركبة في {city.nameAr}</p></div>
+      <div style={{maxWidth:800,margin:'0 auto'}}>
+        {guide.map((p,i)=>(<p key={i} style={{fontSize:'.95rem',color:'#4B5563',lineHeight:2,marginBottom:20}}>{p}</p>))}
+      </div>
     </div></section>
 
     {/* POPULAR CARS */}
