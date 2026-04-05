@@ -138,7 +138,7 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 .cat-card{background:#FAFAF7;border-radius:16px;padding:24px;text-align:center;border:2px solid transparent;transition:all .3s;cursor:pointer}
 .cat-card:hover{border-color:#D4A853;transform:translateY(-4px)}
 .cat-emoji{font-size:2.5rem;margin-bottom:12px}
-.cat-name{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-size:.875rem;font-weight:700;margin-bottom:4px}
+.cat-name{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-size:.875rem;font-weight:700;margin-bottom:4px;color:#1A1A2E}
 .cat-price{font-size:.8rem;color:#4B5563}
 .cat-price strong{color:#6B4D08;font-size:1rem}
 
@@ -156,7 +156,7 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 .faq-list{display:flex;flex-direction:column;gap:12px}
 .faq-item{background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow:hidden;transition:box-shadow .3s}
 .faq-item:hover{box-shadow:0 4px 24px rgba(0,0,0,0.06)}
-.faq-item summary{display:flex;justify-content:space-between;align-items:center;padding:20px;cursor:pointer;font-weight:700;font-size:1rem;list-style:none}
+.faq-item summary{display:flex;justify-content:space-between;align-items:center;padding:20px;cursor:pointer;font-weight:700;font-size:1rem;list-style:none;color:#1A1A2E}
 .faq-item summary::-webkit-details-marker{display:none}
 .faq-arrow{width:20px;height:20px;color:#D4A853;flex-shrink:0;transition:transform .3s}
 .faq-item[open] .faq-arrow{transform:rotate(180deg)}
@@ -201,7 +201,7 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 .link-card{background:#FAFAF7;border:1px solid #E5E7EB;border-radius:16px;padding:20px;text-align:center;transition:all .3s;display:block}
 .link-card:hover{border-color:#D4A853;transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,0.06)}
 .link-card-white{background:#fff}
-.link-card-name{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-weight:700}
+.link-card-name{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-weight:700;color:#1A1A2E}
 .link-card-sub{font-size:.75rem;color:#4B5563;margin-top:4px}
 
 /* ===== MOBILE CTA ===== */
