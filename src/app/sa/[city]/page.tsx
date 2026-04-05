@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, carModels, categoryGradients, cityGuides, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
+import { NoSSR } from '@/components/no-ssr'
 
 export function generateStaticParams() { return cities.map(c=>({city:c.slug})) }
 export async function generateMetadata({params}:{params:Promise<{city:string}>}):Promise<Metadata> {
@@ -25,6 +26,8 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
+
+    <NoSSR>
     <section className="hero">
       <div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
       <div className="container"><div className="hero-inner">
@@ -45,7 +48,6 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       ))}</div>
     </div></section>
 
-    {/* CITY GUIDE — UNIQUE CONTENT */}
     <section className="section section-white"><div className="container">
       <div className="section-header"><div className="section-tag">📖 دليل الاستئجار</div><h2 className="section-title">دليل استئجار المركبات في {city.nameAr}</h2><p className="section-sub">كل ما تحتاج معرفته قبل استئجار مركبة في {city.nameAr}</p></div>
       <div style={{maxWidth:800,margin:'0 auto'}}>
@@ -53,9 +55,8 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       </div>
     </div></section>
 
-    {/* POPULAR CARS */}
-    <section className="section section-white"><div className="container">
-      <div className="section-header"><div className="section-tag">⭐ الأكثر طلباً</div><h2 className="section-title">السيارات الأكثر طلباً في {city.nameAr}</h2><p className="section-sub">أشهر موديلات السيارات المتوفرة للتأجير في {city.nameAr}</p></div>
+    <section className="section"><div className="container">
+      <div className="section-header"><div className="section-tag">⭐ الأكثر طلباً</div><h2 className="section-title">السيارات الأكثر طلباً في {city.nameAr}</h2></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:16}}>{carModels.filter((_,i)=>i%3===0||i<7).slice(0,8).map(c=>{
         const catObj=categories.find(ct=>ct.slug===c.category)
         const grad=categoryGradients[c.category]||categoryGradients.economy
@@ -73,7 +74,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       })}</div>
     </div></section>
 
-    {ap.length>0&&<section className="section"><div className="container">
+    {ap.length>0&&<section className="section section-white"><div className="container">
       <div className="section-header"><div className="section-tag">✈️ المطارات</div><h2 className="section-title">تأجير سيارة من مطارات {city.nameAr}</h2></div>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:16}}>{ap.map(a=>(
         <Link key={a.slug} href={`/sa/airports/${a.slug}`} className="link-card-white link-card" style={{padding:'20px 32px'}}>
@@ -81,17 +82,21 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
         </Link>
       ))}</div>
     </div></section>}
+    </NoSSR>
 
+    {/* FAQ — SSR ONLY */}
     <section className="section" id="faq"><div className="container-sm">
       <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة شائعة عن تأجير السيارات في {city.nameAr}</h2></div>
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
 
+    <NoSSR>
     <section className="section section-white"><div className="container">
       <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير سيارات في مدن أخرى</h2>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:16}}>{others.map(c=>(
         <Link key={c.slug} href={`/sa/${c.slug}`} className="link-card"><div className="link-card-name">{c.nameAr}</div><div className="link-card-sub">من {c.minPrice} ريال</div></Link>
       ))}</div>
     </div></section>
+    </NoSSR>
   </>)
 }

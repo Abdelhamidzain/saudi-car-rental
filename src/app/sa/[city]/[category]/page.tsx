@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, categoryGradients, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
+import { NoSSR } from '@/components/no-ssr'
 
 export function generateStaticParams() { const p:{city:string;category:string}[]=[]; for(const c of cities) for(const cat of categories) p.push({city:c.slug,category:cat.slug}); return p }
 export async function generateMetadata({params}:{params:Promise<{city:string;category:string}>}):Promise<Metadata> {
@@ -30,6 +31,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
+    <NoSSR>
     <section className="hero"><div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
       <div className="container"><div className="hero-inner"><div className="hero-text">
         <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{cat.nameAr}</span></div>
@@ -76,6 +78,8 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
         <Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`} className="link-card"><div className="link-card-name">{c.nameAr}</div><div className="link-card-sub">من {cat.minPrice} ريال</div></Link>
       ))}</div>
     </div></section>
+
+    </NoSSR>
 
     <section className="section" id="faq"><div className="container-sm">
       <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة عن تأجير سيارات {cat.nameAr} في {city.nameAr}</h2></div>

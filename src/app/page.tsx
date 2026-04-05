@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { cities, categories, airports, carModels, categoryGradients, homeFAQs, generateFAQSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
+import { NoSSR } from '@/components/no-ssr'
 
 export default function HomePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify({'@context':'https://schema.org','@graph':[generateFAQSchema(homeFAQs)]})}}/>
 
+      <NoSSR>
       {/* HERO */}
       <section className="hero">
         <div className="hero-grid"/>
@@ -147,6 +149,8 @@ export default function HomePage() {
         </div>
       </section>
 
+      </NoSSR>
+
       {/* FAQ */}
       <section className="section" id="faq">
         <div className="container-sm">
@@ -165,6 +169,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <NoSSR>
       {/* CTA */}
       <section className="section section-white">
         <div className="container">
@@ -179,6 +184,7 @@ export default function HomePage() {
       </section>
 
       <div className="disclaimer"><p><strong>تنبيه:</strong> هذا الموقع دليل إلكتروني لمقارنة عروض تأجير السيارات ولا يُجري عمليات حجز مباشرة. الأسعار المدرجة ابتدائية وقابلة للتغيير.</p></div>
+      </NoSSR>
     </>
   )
 }

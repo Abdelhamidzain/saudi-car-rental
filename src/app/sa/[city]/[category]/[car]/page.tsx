@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { cities, categories, carModels, getCityBySlug, getCategoryBySlug, getCarBySlug, getCarsByCategory, getAirportsForCity, getPartnersForCity, generateFAQSchema, generateBreadcrumbSchema, generateCarSEOContent, categoryGradients, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
+import { NoSSR } from '@/components/no-ssr'
 
 export function generateStaticParams() {
   const p: { city: string; category: string; car: string }[] = []
@@ -67,6 +68,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
+      <NoSSR>
       {/* HERO */}
       <section className="hero">
         <div className="hero-grid" />
@@ -233,13 +235,14 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
           </div>
         </div>
       </section>
+      </NoSSR>
 
-      {/* FAQ */}
+      {/* FAQ — SSR ONLY for Surfer SEO */}
       <section className="section" id="faq">
         <div className="container-sm">
           <div className="section-header">
             <div className="section-tag">❓ أسئلة شائعة</div>
-            <h2 className="section-title">أسئلة شائعة عن إيجار {car.nameAr} في {city.nameAr}</h2>
+            <h2 className="section-title">أسئلة شائعة عن تأجير سيارة {car.nameAr} في {city.nameAr}</h2>
           </div>
           <div className="faq-list">
             {faqs.map((f, i) => (
@@ -252,6 +255,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         </div>
       </section>
 
+      <NoSSR>
       {/* CTA */}
       <section className="section section-white">
         <div className="container">
@@ -264,6 +268,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
           </div>
         </div>
       </section>
+      </NoSSR>
     </>
   )
 }

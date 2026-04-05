@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { airports, categories, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
+import { NoSSR } from '@/components/no-ssr'
 
 export function generateStaticParams() { return airports.map(a=>({airport:a.slug})) }
 export async function generateMetadata({params}:{params:Promise<{airport:string}>}):Promise<Metadata> {
@@ -36,6 +37,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
+    <NoSSR>
     <section className="hero"><div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
       <div className="container"><div className="hero-inner"><div className="hero-text">
         <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{ap.code}</span></div>
@@ -67,11 +69,14 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
       ))}</div>
     </div></section>
 
+    </NoSSR>
+
     <section className="section section-white" id="faq"><div className="container-sm">
       <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة شائعة عن تأجير سيارات من {ap.nameAr}</h2></div>
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
 
+    <NoSSR>
     {/* CTA */}
     <section className="section"><div className="container">
       <div className="cta-box">
@@ -88,5 +93,6 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
         <Link key={a.slug} href={`/sa/airports/${a.slug}`} className="link-card-white link-card"><div style={{fontFamily:"'Cairo',sans-serif",fontSize:'1.25rem',fontWeight:900,color:'#D4A853',marginBottom:4}}>{a.code}</div><div className="link-card-sub">تأجير سيارة من {a.nameAr.replace(' الدولي','')}</div></Link>
       ))}</div>
     </div></section>
+    </NoSSR>
   </>)
 }
