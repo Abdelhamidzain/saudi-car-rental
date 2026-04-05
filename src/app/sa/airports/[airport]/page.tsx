@@ -4,97 +4,76 @@ import type { Metadata } from 'next'
 import { airports, categories, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
 import { LeadForm } from '@/components/lead-form'
 
-export function generateStaticParams() {
-  return airports.map(a => ({ airport: a.slug }))
+export function generateStaticParams() { return airports.map(a=>({airport:a.slug})) }
+
+export async function generateMetadata({params}:{params:Promise<{airport:string}>}):Promise<Metadata> {
+  const ap=getAirportBySlug((await params).airport)
+  if(!ap) return {}
+  const city=getCityBySlug(ap.citySlug)
+  return { title:`تأجير سيارة من ${ap.nameAr} (${ap.code})`, description:`احجز سيارة من ${ap.nameAr}. استلم مركبتك فور وصولك. أسعار من ${city?.minPrice} ريال يومياً.`, alternates:{canonical:`/sa/airports/${ap.slug}`} }
 }
 
-export async function generateMetadata({ params }: { params: Promise<{ airport: string }> }): Promise<Metadata> {
-  const ap = getAirportBySlug((await params).airport)
-  if (!ap) return {}
-  const city = getCityBySlug(ap.citySlug)
-  return {
-    title: `تأجير سيارة من ${ap.nameAr} (${ap.code})`,
-    description: `احجز سيارة من ${ap.nameAr} في ${city?.nameAr}. استلم مركبتك فور وصولك مع خدمة التوصيل المباشر. أسعار تبدأ من ${city?.minPrice} ريال يومياً.`,
-    alternates: { canonical: `/sa/airports/${ap.slug}` },
-  }
+const apInfo:Record<string,string>={
+  'king-khalid':'يقع شمال الرياض ويخدم أكثر من 30 مليون مسافر سنوياً. صالات الوصول مجهزة بمكاتب تأجير متعددة.',
+  'king-abdulaziz':'بوابة جدة الجوية ونقطة العبور الرئيسية للحجاج والمعتمرين. المبنى الجديد يضم طابقاً لمكاتب الإيجار.',
+  'king-fahd':'أكبر مطار مساحةً ويخدم المنطقة الشرقية. يربط الدمام بالخبر والظهران.',
+  'prince-mohammed':'يخدم زوار المسجد النبوي. استلام السيارة من صالة الوصول مباشرة.',
+  'taif':'يخدم المصطافين القادمين لمدينة الورد. نقطة انطلاق لجولات الجنوب.',
 }
 
-const airportInfo: Record<string, string> = {
-  'king-khalid': 'يقع في شمال العاصمة الرياض ويخدم أكثر من 30 مليون مسافر سنوياً. صالات الوصول الدولية والمحلية مجهزة بمكاتب تأجير متعددة. الطريق السريع يربطك بوسط المدينة خلال 35 دقيقة.',
-  'king-abdulaziz': 'بوابة جدة الجوية ونقطة العبور الرئيسية للحجاج والمعتمرين. المبنى الجديد يضم طابقاً كاملاً لمكاتب إيجار السيارات. يبعد 19 كم عن وسط جدة عبر طريق المدينة السريع.',
-  'king-fahd': 'أكبر مطار بالعالم مساحةً ويخدم المنطقة الشرقية بالكامل. يربط الدمام بالخبر والظهران والجبيل. مكاتب التأجير متوفرة في صالة القدوم الرئيسية على مدار الساعة.',
-  'prince-mohammed': 'يخدم زوار المسجد النبوي ويشهد ذروة في مواسم العمرة والحج. استلام السيارة من صالة الوصول مباشرة مع إمكانية تسليمها بمدينة أخرى.',
-  'taif': 'مطار الطائف الدولي يخدم المصطافين والزوار القادمين لمدينة الورد. قريب من الباحة وبلجرشي مما يجعله نقطة انطلاق ممتازة لجولات الجنوب.',
-}
-
-export default async function AirportPage({ params }: { params: Promise<{ airport: string }> }) {
-  const ap = getAirportBySlug((await params).airport)
-  if (!ap) notFound()
-  const city = getCityBySlug(ap.citySlug)
-  if (!city) notFound()
-  const info = airportInfo[ap.slug] || ''
-
-  const apFAQs = [
-    { q: `هل توجد مكاتب تأجير سيارات داخل ${ap.nameAr}؟`, a: `نعم، يتوفر عدد من مكاتب الإيجار المعتمدة في صالات الوصول. كما يمكنك الحجز مسبقاً عبر منصتنا والاستلام فور هبوطك.` },
-    { q: `كم المسافة من ${ap.nameAr} لوسط ${city.nameAr}؟`, a: `تختلف المسافة حسب وجهتك داخل ${city.nameAr}، لكن أغلب المواقع المركزية تبعد 20-40 دقيقة بالسيارة عبر الطرق السريعة.` },
-    { q: `هل أستطيع تسليم السيارة في مطار مختلف؟`, a: `بعض الشركاء يوفرون خدمة التسليم في مدينة أو مطار مختلف مقابل رسوم إضافية. تواصل مع المؤجر لتأكيد التوفر والتكلفة.` },
+export default async function AirportPage({params}:{params:Promise<{airport:string}>}) {
+  const ap=getAirportBySlug((await params).airport)
+  if(!ap) notFound()
+  const city=getCityBySlug(ap.citySlug)
+  if(!city) notFound()
+  const info=apInfo[ap.slug]||''
+  const apFAQs=[
+    {q:`هل توجد مكاتب تأجير داخل ${ap.nameAr}؟`,a:`نعم، يتوفر مكاتب إيجار معتمدة في صالات الوصول.`},
+    {q:`كم المسافة لوسط ${city.nameAr}؟`,a:`أغلب المواقع المركزية تبعد 20-40 دقيقة بالسيارة.`},
+    {q:`هل أستطيع تسليم السيارة في مطار مختلف؟`,a:`بعض الشركاء يوفرون التسليم في مطار آخر مقابل رسوم إضافية.`},
   ]
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@graph': [
-      generateBreadcrumbSchema([
-        { name: SITE_NAME, url: '/' },
-        { name: city.nameAr, url: `/sa/${city.slug}` },
-        { name: ap.code, url: `/sa/airports/${ap.slug}` },
-      ]),
-      generateFAQSchema(apFAQs),
-    ],
+  const jsonLd={
+    '@context':'https://schema.org',
+    '@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`},{name:ap.code,url:`/sa/airports/${ap.slug}`}]),generateFAQSchema(apFAQs)]
   }
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
-      {/* Hero */}
-      <section className="pt-28 pb-20 px-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A5C 40%, #0D1B2A 100%)' }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}} />
+      <section className="relative overflow-hidden" style={{background:'linear-gradient(135deg,#0D1B2A 0%,#1B3A5C 40%,#0D1B2A 100%)',padding:'120px 0 80px'}}>
         <div className="absolute inset-0 grid-pattern" />
-        <div className="hero-glow w-[400px] h-[400px] -top-24 -right-24 absolute" />
-
-        <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div className="text-center lg:text-right">
-            <nav className="text-white/40 text-sm mb-5" aria-label="التنقل">
-              <Link href="/" className="hover:text-accent transition-colors">الرئيسية</Link>
-              <span className="mx-2 text-white/20">/</span>
-              <Link href={`/sa/${city.slug}`} className="hover:text-accent transition-colors">{city.nameAr}</Link>
-              <span className="mx-2 text-white/20">/</span>
-              <span className="text-white/80">{ap.code}</span>
-            </nav>
-            <h1 className="font-display text-3xl md:text-4xl font-black text-white leading-tight mb-5">
-              تأجير سيارة من <span className="text-accent">{ap.nameAr}</span>
-            </h1>
-            <p className="text-lg text-white/60 max-w-lg leading-relaxed mx-auto lg:mx-0 mb-8">{info}</p>
-            <div className="flex flex-wrap gap-3 justify-center lg:justify-start text-sm">
-              <span className="px-5 py-2.5 rounded-full font-bold text-sm" style={{ background: 'rgba(212,168,83,0.15)', border: '1px solid rgba(212,168,83,0.3)', color: '#D4A853' }}>✈️ {ap.code}</span>
-              <span className="px-5 py-2.5 rounded-full text-sm" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>من {city.minPrice} ر.س/يوم</span>
-              <span className="px-5 py-2.5 rounded-full text-sm" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>استلام فوري</span>
+        <div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}} />
+        <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px',position:'relative',zIndex:10}}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="text-center lg:text-right">
+              <nav className="text-sm mb-5" style={{color:'rgba(255,255,255,0.4)'}} aria-label="التنقل">
+                <Link href="/" className="hover:text-accent transition-colors">الرئيسية</Link>
+                <span className="mx-2" style={{color:'rgba(255,255,255,0.2)'}}>/</span>
+                <Link href={`/sa/${city.slug}`} className="hover:text-accent transition-colors">{city.nameAr}</Link>
+                <span className="mx-2" style={{color:'rgba(255,255,255,0.2)'}}>/</span>
+                <span style={{color:'rgba(255,255,255,0.8)'}}>{ap.code}</span>
+              </nav>
+              <h1 className="font-display text-3xl md:text-4xl font-black text-white leading-tight mb-5">تأجير سيارة من <span className="text-accent">{ap.nameAr}</span></h1>
+              <p className="text-lg leading-relaxed mb-8" style={{color:'rgba(255,255,255,0.6)',maxWidth:520}}>{info}</p>
+              <div className="flex flex-wrap gap-3 justify-center lg:justify-start text-sm">
+                <span className="rounded-full font-bold" style={{background:'rgba(212,168,83,0.15)',border:'1px solid rgba(212,168,83,0.3)',color:'#D4A853',padding:'10px 20px'}}>✈️ {ap.code}</span>
+                <span className="rounded-full" style={{background:'rgba(255,255,255,0.1)',border:'1px solid rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.8)',padding:'10px 20px'}}>من {city.minPrice} ر.س/يوم</span>
+              </div>
             </div>
+            <div id="form"><LeadForm /></div>
           </div>
-          <div id="form"><LeadForm /></div>
         </div>
       </section>
 
-      {/* Categories */}
-      <section className="py-20 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="section-tag mb-4">🚗 الفئات المتوفرة</div>
+      <section style={{padding:'80px 0'}}>
+        <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px'}}>
+          <div className="text-center" style={{marginBottom:48}}>
+            <div className="section-tag" style={{marginBottom:16}}>🚗 الفئات</div>
             <h2 className="font-display text-2xl font-black">فئات سيارات متوفرة في {city.nameAr}</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-            {categories.map(cat => (
-              <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`}
-                className="bg-white border border-border/50 rounded-2xl p-5 text-center hover:border-accent hover:-translate-y-1 hover:shadow-lg transition-all">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7" style={{gap:16}}>
+            {categories.map(cat=>(
+              <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`} className="bg-white border border-border rounded-2xl text-center hover:border-accent hover:-translate-y-1 hover:shadow-lg transition-all" style={{padding:20}}>
                 <span className="text-3xl">{cat.icon}</span>
                 <p className="font-display text-sm font-bold mt-2">{cat.nameAr}</p>
               </Link>
@@ -103,37 +82,33 @@ export default async function AirportPage({ params }: { params: Promise<{ airpor
         </div>
       </section>
 
-      {/* FAQ */}
-      <section className="py-20 px-6 bg-white" id="faq">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="section-tag mb-4">❓ أسئلة شائعة</div>
+      <section className="bg-white" id="faq" style={{padding:'80px 0'}}>
+        <div style={{maxWidth:800,margin:'0 auto',padding:'0 24px'}}>
+          <div className="text-center" style={{marginBottom:48}}>
+            <div className="section-tag" style={{marginBottom:16}}>❓ أسئلة شائعة</div>
             <h2 className="font-display text-xl font-black">أسئلة عن التأجير من {ap.nameAr}</h2>
           </div>
-          <div className="grid gap-3">
-            {apFAQs.map((faq, i) => (
-              <details key={i} className="group bg-bg rounded-xl border border-border/50 overflow-hidden hover:shadow-md transition-shadow">
-                <summary className="flex justify-between items-center p-5 cursor-pointer font-bold text-sm list-none">
-                  {faq.q}
-                  <svg className="w-5 h-5 text-accent shrink-0 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9" /></svg>
+          <div style={{display:'flex',flexDirection:'column',gap:12}}>
+            {apFAQs.map((faq,i)=>(
+              <details key={i} className="group bg-bg rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow">
+                <summary className="flex justify-between items-center cursor-pointer font-bold text-sm list-none" style={{padding:20}}>{faq.q}
+                  <svg className="w-5 h-5 text-accent shrink-0 group-open:rotate-180 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
                 </summary>
-                <p className="px-5 pb-5 text-sm text-text-mid leading-relaxed">{faq.a}</p>
+                <p className="text-sm text-text-mid leading-relaxed" style={{padding:'0 20px 20px'}}>{faq.a}</p>
               </details>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Other airports */}
-      <section className="py-16 px-6">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-display text-xl font-black text-center mb-8">مطارات أخرى</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {airports.filter(a => a.slug !== ap.slug).map(a => (
-              <Link key={a.slug} href={`/sa/airports/${a.slug}`}
-                className="bg-white border border-border/50 rounded-2xl p-5 text-center hover:border-accent hover:-translate-y-1 hover:shadow-lg transition-all">
-                <p className="font-display text-xl font-black text-accent mb-1">{a.code}</p>
-                <p className="text-sm text-text-mid">{a.nameAr.replace(' الدولي', '')}</p>
+      <section style={{padding:'64px 0'}}>
+        <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px'}}>
+          <h2 className="font-display text-xl font-black text-center" style={{marginBottom:32}}>مطارات أخرى</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4" style={{gap:16}}>
+            {airports.filter(a=>a.slug!==ap.slug).map(a=>(
+              <Link key={a.slug} href={`/sa/airports/${a.slug}`} className="bg-white border border-border rounded-2xl text-center hover:border-accent hover:-translate-y-1 hover:shadow-lg transition-all" style={{padding:20}}>
+                <p className="font-display text-xl font-black text-accent" style={{marginBottom:4}}>{a.code}</p>
+                <p className="text-sm text-text-mid">{a.nameAr.replace(' الدولي','')}</p>
               </Link>
             ))}
           </div>

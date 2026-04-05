@@ -37,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* ===== HEADER ===== */}
         <header className="fixed top-0 inset-x-0 z-50 h-16" style={{ background: 'rgba(13,27,42,0.95)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-          <div className="max-w-7xl mx-auto px-6 flex items-center justify-between h-full">
+          <div className="flex items-center justify-between h-full" style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
             <Link href="/" className="font-display text-xl font-black text-white flex items-center gap-2">
               {SITE_NAME}
               <span className="w-2 h-2 rounded-full bg-accent" />
@@ -82,8 +82,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="main">{children}</main>
 
         {/* ===== FOOTER ===== */}
-        <footer className="bg-primary text-white/50 pt-16 pb-8 px-6">
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <footer className="bg-primary" style={{ color: 'rgba(255,255,255,0.5)', padding: '64px 24px 32px' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4" style={{ maxWidth: 1200, margin: '0 auto', gap: 40, paddingBottom: 48, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <div>
               <p className="font-display text-white text-lg font-black mb-4 flex items-center gap-2">
                 {SITE_NAME}
@@ -119,14 +119,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               </div>
             </div>
           </div>
-          <div className="max-w-7xl mx-auto pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-xs">
+          <div className="flex flex-col md:flex-row justify-between items-center text-xs" style={{ maxWidth: 1200, margin: '0 auto', paddingTop: 24, gap: 12 }}>
             <span>© {new Date().getFullYear()} {SITE_NAME}. جميع الحقوق محفوظة</span>
             <span>صُنع بـ ❤️ في السعودية</span>
           </div>
         </footer>
 
         {/* Mobile CTA */}
-        <div className="md:hidden fixed bottom-0 inset-x-0 z-40 p-3" style={{ background: 'rgba(13,27,42,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="md:hidden fixed bottom-0 inset-x-0 z-40" style={{ padding: 12, background: 'rgba(13,27,42,0.95)', backdropFilter: 'blur(20px)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <Link href="#form" className="block w-full text-center bg-accent text-primary py-3.5 rounded-2xl font-display font-black text-base">
             احصل على عرض تأجير
           </Link>
