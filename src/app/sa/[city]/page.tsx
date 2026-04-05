@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
-import { LeadForm } from '@/components/lead-form'
+import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export function generateStaticParams() { return cities.map(c=>({city:c.slug})) }
 export async function generateMetadata({params}:{params:Promise<{city:string}>}):Promise<Metadata> {
@@ -31,7 +31,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
           <p className="hero-subtitle">{city.description}</p>
           <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-glass">{city.partnerCount} شركة معتمدة</span><span className="pill pill-accent">من {city.minPrice} ر.س/يوم</span>{ap.length>0&&<span className="pill pill-glass">✈️ توصيل المطار</span>}</div>
         </div>
-        <div id="form"><LeadForm/></div>
+        <div id="form"><LazyLeadForm/></div>
       </div></div>
     </section>
 

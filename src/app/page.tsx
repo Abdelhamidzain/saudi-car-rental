@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { cities, categories, airports, homeFAQs, generateFAQSchema, SITE_NAME } from '@/lib/data'
-import { LeadForm } from '@/components/lead-form'
+import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export default function HomePage() {
   return (
@@ -24,7 +24,7 @@ export default function HomePage() {
                 <div style={{textAlign:'center'}}><div className="stat-num">4.8 ★</div><div className="stat-label">تقييم العملاء</div></div>
               </div>
             </div>
-            <div id="form"><LeadForm/></div>
+            <div id="form"><LazyLeadForm/></div>
           </div>
         </div>
       </section>

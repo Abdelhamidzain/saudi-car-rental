@@ -1,7 +1,30 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { Tajawal, Cairo } from 'next/font/google'
 import './globals.css'
 import { cities, categories, SITE_NAME, SITE_URL } from '@/lib/data'
+
+// FIX: Self-host fonts via next/font — eliminates:
+// - Render-blocking Google Fonts CSS request
+// - Third-party network dependency
+// - 3-hop request chain (HTML → CSS → font files)
+// - CLS from font swap (automatic size-adjust)
+// - Forced reflow from text relayout
+const tajawal = Tajawal({
+  subsets: ['arabic'],
+  weight: ['400', '700', '800', '900'],
+  display: 'swap',
+  variable: '--font-tajawal',
+  preload: true,
+})
+
+const cairo = Cairo({
+  subsets: ['arabic'],
+  weight: ['700', '800', '900'],
+  display: 'swap',
+  variable: '--font-cairo',
+  preload: true,
+})
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -12,16 +35,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="ar" dir="rtl" className={`${tajawal.variable} ${cairo.variable}`}>
       <head>
-        {/* FIX: Preconnect to Google Fonts — eliminates DNS+TCP+TLS latency */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* FIX: Load fonts via <link> instead of CSS @import — non-render-blocking */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&family=Cairo:wght@700;800;900&display=swap"
-          rel="stylesheet"
-        />
+        {/* No more Google Fonts <link> — fonts are self-hosted by next/font */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           '@context':'https://schema.org','@graph':[
             {'@type':'WebSite',name:SITE_NAME,url:SITE_URL,inLanguage:'ar'},

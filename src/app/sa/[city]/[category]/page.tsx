@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { cities, categories, getCityBySlug, getCategoryBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
-import { LeadForm } from '@/components/lead-form'
+import { LazyLeadForm } from '@/components/lazy-lead-form'
 
 export function generateStaticParams() { const p:{city:string;category:string}[]=[]; for(const c of cities) for(const cat of categories) p.push({city:c.slug,category:cat.slug}); return p }
 export async function generateMetadata({params}:{params:Promise<{city:string;category:string}>}):Promise<Metadata> {
@@ -35,7 +35,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
         <h1 className="hero-title">تأجير سيارات {cat.nameAr} في <span>{city.nameAr}</span></h1>
         <p className="hero-subtitle">{desc}</p>
         <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ر.س/يوم</span><span className="pill pill-glass">{cat.icon} {cat.nameAr}</span><span className="pill pill-glass">تأمين شامل</span></div>
-      </div><div id="form"><LeadForm/></div></div></div>
+      </div><div id="form"><LazyLeadForm/></div></div></div>
     </section>
 
     <section className="section"><div className="container">
