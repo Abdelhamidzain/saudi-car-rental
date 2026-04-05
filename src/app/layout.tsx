@@ -2,7 +2,9 @@ import type { Metadata } from 'next'
 import { Tajawal, Cairo } from 'next/font/google'
 import './globals.css'
 import { SITE_NAME, SITE_URL } from '@/lib/data'
-import { ClientShell } from '@/components/layout-shell'
+import { CityProvider } from '@/components/city-context'
+import { ClientHeader } from '@/components/client-header'
+import { ClientFooter } from '@/components/client-footer'
 
 const tajawal = Tajawal({ subsets:['arabic'], weight:['400','700','800','900'], display:'swap', variable:'--font-tajawal', preload:true })
 const cairo = Cairo({ subsets:['arabic'], weight:['700','800','900'], display:'optional', variable:'--font-cairo', preload:true })
@@ -29,7 +31,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         })}} />
       </head>
       <body>
-        <ClientShell>{children}</ClientShell>
+        <CityProvider>
+          <ClientHeader/>
+          <main id="main">{children}</main>
+          <ClientFooter/>
+        </CityProvider>
       </body>
     </html>
   )
