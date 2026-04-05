@@ -31,16 +31,16 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
-    <NoSSR>
     <section className="hero"><div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
       <div className="container"><div className="hero-inner"><div className="hero-text">
         <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{cat.nameAr}</span></div>
         <h1 className="hero-title">تأجير سيارات {cat.nameAr} في <span>{city.nameAr}</span></h1>
         <p className="hero-subtitle">{desc}</p>
-        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ريال/يوم</span><span className="pill pill-glass">{cat.icon} {cat.icon} {cat.nameAr}</span><span className="pill pill-glass">شركات مرخصة</span></div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ريال/يوم</span><span className="pill pill-glass">{cat.icon} {cat.nameAr}</span><span className="pill pill-glass">شركات مرخصة</span></div>
       </div><div id="form"><LazyLeadForm/></div></div></div>
     </section>
 
+    <NoSSR>
     {/* CAR MODELS */}
     {cars.length > 0 && (
     <section className="section section-white"><div className="container">

@@ -37,7 +37,6 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
-    <NoSSR>
     <section className="hero"><div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
       <div className="container"><div className="hero-inner"><div className="hero-text">
         <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{ap.code}</span></div>
@@ -47,6 +46,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
       </div><div id="form"><LazyLeadForm/></div></div></div>
     </section>
 
+    <NoSSR>
     {/* WHY RENT FROM AIRPORT */}
     <section className="section section-white"><div className="container">
       <div className="section-header"><div className="section-tag">✨ لماذا الاستئجار من المطار</div><h2 className="section-title">مميزات تأجير سيارة من {ap.nameAr}</h2><p className="section-sub">وفّر وقتك واستلم سيارتك مباشرة — بدون انتظار</p></div>

@@ -27,7 +27,6 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
 
-    <NoSSR>
     <section className="hero">
       <div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
       <div className="container"><div className="hero-inner">
@@ -41,6 +40,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
       </div></div>
     </section>
 
+    <NoSSR>
     <section className="section"><div className="container">
       <div className="section-header"><div className="section-tag">🚗 الفئات المتوفرة</div><h2 className="section-title">فئات السيارات المتوفرة في {city.nameAr}</h2></div>
       <div className="cats-grid">{categories.map(cat=>(

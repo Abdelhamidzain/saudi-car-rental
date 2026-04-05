@@ -68,8 +68,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <NoSSR>
-      {/* HERO */}
+      {/* HERO — SSR */}
       <section className="hero">
         <div className="hero-grid" />
         <div className="hero-glow" style={{ width: 400, height: 400, top: -100, right: -100 }} />
@@ -98,6 +97,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
         </div>
       </section>
 
+      <NoSSR>
       {/* PRICES + SPECS */}
       <section className="section section-white">
         <div className="container">

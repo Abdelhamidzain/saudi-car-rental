@@ -8,8 +8,7 @@ export default function HomePage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify({'@context':'https://schema.org','@graph':[generateFAQSchema(homeFAQs)]})}}/>
 
-      <NoSSR>
-      {/* HERO */}
+      {/* HERO — SSR */}
       <section className="hero">
         <div className="hero-grid"/>
         <div className="hero-glow" style={{width:500,height:500,top:-100,right:-100}}/>
@@ -31,6 +30,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <NoSSR>
       {/* CITIES */}
       <section className="section section-white" id="cities">
         <div className="container">
