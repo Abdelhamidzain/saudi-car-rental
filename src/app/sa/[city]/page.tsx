@@ -93,7 +93,10 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
     {/* GUIDE INTRO — SSR for unique content */}
     <section className="section section-white"><div className="container">
       <h2 className="section-title" style={{textAlign:'center',marginBottom:24}}>دليل استئجار المركبات</h2>
-      <p style={{maxWidth:800,margin:'0 auto',fontSize:'.95rem',color:'#4B5563',lineHeight:2,textAlign:'center'}}>{guide[0]}</p>
+      <div style={{maxWidth:800,margin:'0 auto'}}>
+        <p style={{fontSize:'.95rem',color:'#4B5563',lineHeight:2,marginBottom:16,textAlign:'center'}}>{guide[0]}</p>
+        <p style={{fontSize:'.95rem',color:'#4B5563',lineHeight:2,textAlign:'center'}}>{guide[1]}</p>
+      </div>
     </div></section>
 
     {/* SSR INTERNAL LINKS */}
