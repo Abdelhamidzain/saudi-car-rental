@@ -27,11 +27,11 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
   const ap=getAirportBySlug((await params).airport); if(!ap) notFound()
   const city=getCityBySlug(ap.citySlug); if(!city) notFound()
   const faqs=[
-    {q:`كم سعر تأجير سيارات من ${ap.nameAr}؟`,a:`تبدأ أسعار تأجير السيارات من ${ap.nameAr} من ${city.minPrice} ريال يومياً للفئة الاقتصادية. تختلف الأسعار حسب نوع السيارة ومدة الإيجار والموسم.`},
-    {q:`هل توجد مكاتب إيجار داخل ${ap.nameAr}؟`,a:`نعم، تتوفر عدة مكاتب إيجار مركبات مرخصة في صالات الوصول بـ${ap.nameAr}. يمكنك تأجير سيارة واستلامها مباشرة عند وصولك.`},
-    {q:`كيف أحجز تأجير سيارة من ${ap.nameAr}؟`,a:`قدّم طلبك عبر النموذج أعلاه واختر تاريخ الاستلام من ${ap.nameAr}. سيتواصل معك أحد شركائنا بأفضل عرض تأجير سيارة خلال دقائق.`},
-    {q:`هل يمكن تسليم السيارة في مطار مختلف؟`,a:`نعم، بعض الشركات المعتمدة توفر خدمة الاستلام من مطار والتسليم في مطار آخر مقابل رسوم إضافية بسيطة.`},
-    {q:`ما المستندات المطلوبة لتأجير سيارة من المطار؟`,a:`تحتاج رخصة قيادة سارية وهوية وطنية أو جواز سفر. بعض شركات تأجير السيارات قد تطلب ضماناً مالياً مسترداً.`},
+    {q:`كم سعر تأجير سيارات من ${ap.nameAr}؟`,a:`تبدأ الأسعار من ${city.minPrice} ريال سعودي يومياً للمركبات الاقتصادية. يختلف السعر حسب فئة المركبة ومدة العقد وموسم الذروة. الإيجار الشهري يوفر خصومات تصل أربعين بالمئة.`},
+    {q:`هل توجد مكاتب إيجار مركبات داخل ${ap.nameAr}؟`,a:`نعم، تتوفر عدة مكاتب معتمدة في صالات الوصول بـ${ap.nameAr}. يمكنك استلام مركبتك مباشرة عند وصولك دون الحاجة للتنقل خارج مبنى المطار.`},
+    {q:`كيف أحجز تأجير سيارة من ${ap.nameAr}؟`,a:`قدّم طلبك عبر النموذج أعلاه واختر تاريخ الوصول ونوع المركبة المطلوبة. سيتواصل معك أحد شركائنا المعتمدين بأفضل عرض خلال دقائق معدودة.`},
+    {q:`هل يمكن تسليم المركبة في مطار مختلف؟`,a:`بعض الشركاء المعتمدين يوفرون خدمة الاستلام من مدينة والتسليم في مدينة أخرى مقابل رسوم إضافية بسيطة يتم الاتفاق عليها مسبقاً.`},
+    {q:`ما الوثائق المطلوبة لاستئجار مركبة من ${ap.nameAr}؟`,a:`يلزم رخصة قيادة سارية المفعول وإثبات هوية رسمي ساري (بطاقة وطنية أو جواز سفر). الحد الأدنى للعمر واحد وعشرون عاماً مع إمكانية طلب ضمان مالي مسترد.`},
   ]
   const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:`تأجير سيارات ${city.nameAr}`,url:`/sa/${city.slug}`},{name:`تأجير سيارات ${ap.code}`,url:`/sa/airports/${ap.slug}`}]),generateFAQSchema(faqs)]}
 
@@ -72,7 +72,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
     </NoSSR>
 
     <section className="section section-white" id="faq"><div className="container-sm">
-      <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة شائعة عن تأجير سيارات من {ap.nameAr}</h2></div>
+      <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة شائعة عن الاستئجار من {ap.nameAr}</h2></div>
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
 
