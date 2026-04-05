@@ -1,18 +1,13 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
 import { cities, categories } from '@/lib/data'
+import { useCity } from './city-context'
 
 export function LeadForm() {
-  const path = usePathname()
-
-  // Auto-detect city from URL
-  const urlCity = cities.find(c => path?.includes(`/sa/${c.slug}`))
-
-  // Auto-set today's date
+  const { selectedCity, setSelectedCity } = useCity()
   const today = new Date().toISOString().split('T')[0]
 
-  const [city, setCity] = useState(urlCity?.slug || '')
+  const [city, setCity] = useState('')
   const [pickup, setPickup] = useState(today)
   const [ret, setRet] = useState('')
   const [vehicle, setVehicle] = useState('')
@@ -20,14 +15,20 @@ export function LeadForm() {
   const [honey, setHoney] = useState('')
   const [done, setDone] = useState(false)
 
-  // Sync city when URL changes
+  // Sync city from context (when user picks from navbar dropdown)
   useEffect(() => {
-    if (urlCity) setCity(urlCity.slug)
-  }, [urlCity])
+    if (selectedCity) setCity(selectedCity)
+  }, [selectedCity])
 
-  // Auto-fix return date if it's before pickup
+  // Sync back to context when form city changes
+  function handleCityChange(slug: string) {
+    setCity(slug)
+    setSelectedCity(slug)
+  }
+
+  // Ensure return date is always >= pickup date
   useEffect(() => {
-    if (ret && pickup && ret < pickup) setRet(pickup)
+    if (pickup && ret && ret < pickup) setRet(pickup)
   }, [pickup, ret])
 
   function submit() {
@@ -46,7 +47,7 @@ export function LeadForm() {
       </div>
       <div className="glass-form-title" role="status">تم إرسال طلبك!</div>
       <p style={{ fontSize: '.875rem', color: 'rgba(255,255,255,0.65)', marginBottom: 20 }}>سيتواصل معك أحد شركائنا خلال دقائق</p>
-      <button onClick={() => { setDone(false); setRet(''); setPhone('') }} style={{ fontSize: '.875rem', color: 'rgba(255,255,255,0.5)' }}>طلب جديد</button>
+      <button onClick={() => setDone(false)} style={{ fontSize: '.875rem', color: 'rgba(255,255,255,0.5)' }}>طلب جديد</button>
     </div>
   )
 
@@ -57,31 +58,20 @@ export function LeadForm() {
 
       <div className="form-group">
         <label htmlFor="lead-city" className="form-label">المدينة</label>
-        <select id="lead-city" className="form-input" value={city} onChange={e => setCity(e.target.value)} aria-required="true">
+        <select id="lead-city" className="form-input" value={city} onChange={e => handleCityChange(e.target.value)} aria-required="true">
           <option value="">اختر المدينة</option>
           {cities.map(c => <option key={c.slug} value={c.slug}>{c.nameAr}</option>)}
         </select>
       </div>
 
-      {/* Stacks vertically on mobile, side-by-side on desktop */}
       <div className="form-row">
         <div className="form-group">
           <label htmlFor="lead-pickup" className="form-label">تاريخ الاستلام</label>
-          <input id="lead-pickup" type="date" className="form-input" min={today} value={pickup}
-            onChange={e => {
-              setPickup(e.target.value)
-              // Auto-set return to pickup if empty or before new pickup
-              if (!ret || ret < e.target.value) setRet(e.target.value)
-            }}
-            style={{ colorScheme: 'dark' }} aria-required="true" />
+          <input id="lead-pickup" type="date" className="form-input" min={today} value={pickup} onChange={e => { setPickup(e.target.value); if (!ret || ret < e.target.value) setRet(e.target.value) }} style={{ colorScheme: 'dark' }} aria-required="true" />
         </div>
         <div className="form-group">
           <label htmlFor="lead-return" className="form-label">تاريخ التسليم</label>
-          <input id="lead-return" type="date" className="form-input"
-            min={pickup || today}
-            value={ret}
-            onChange={e => setRet(e.target.value)}
-            style={{ colorScheme: 'dark' }} aria-required="true" />
+          <input id="lead-return" type="date" className="form-input" min={pickup || today} value={ret} onChange={e => setRet(e.target.value)} style={{ colorScheme: 'dark' }} aria-required="true" />
         </div>
       </div>
 
