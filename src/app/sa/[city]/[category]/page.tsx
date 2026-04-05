@@ -26,7 +26,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
   const desc=(descs[cat.slug]||(c=>`تأجير ${cat.nameAr} في ${c}.`))(city.nameAr)
   const otherCats=categories.filter(c=>c.slug!==cat.slug), otherCities=cities.filter(c=>c.slug!==city.slug).slice(0,4)
   const cars=getCarsByCategory(cat.slug)
-  const faqs=[{q:`كم سعر إيجار ${cat.nameAr} في ${city.nameAr}؟`,a:`يبدأ سعر الإيجار اليومي لفئة ${cat.nameAr} في ${city.nameAr} من ${cat.minPrice} ريال. الاستئجار الشهري يوفر خصماً يصل 40% مع تغطية تأمينية شاملة.`},{q:`هل الإيجار يشمل التأمين والكيلومترات؟`,a:`نعم، جميع العروض تشمل التأمين الأساسي ضد الغير. يمكنك ترقيته لتأمين شامل مقابل رسوم إضافية بسيطة عند استلام المركبة.`},{q:`ما المستندات المطلوبة للاستئجار؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر ساري المفعول. الحد الأدنى للعمر 21 سنة للفئات العادية و25 للمركبات الفاخرة.`}]
+  const faqs=[{q:`كم سعر تأجير سيارة ${cat.nameAr} في ${city.nameAr}؟`,a:`يبدأ سعر الإيجار اليومي لفئة ${cat.nameAr} في ${city.nameAr} من ${cat.minPrice} ريال. الاستئجار الشهري يوفر خصماً يصل 40% مع تغطية تأمينية شاملة.`},{q:`هل عروض تأجير السيارات تشمل التأمين والكيلومترات؟`,a:`نعم، جميع العروض تشمل التأمين الأساسي ضد الغير. يمكنك ترقيته لتأمين شامل مقابل رسوم إضافية بسيطة عند استلام المركبة.`},{q:`ما المستندات المطلوبة للاستئجار؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر ساري المفعول. الحد الأدنى للعمر 21 سنة للفئات العادية و25 للمركبات الفاخرة.`}]
   const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`},{name:cat.nameAr,url:`/sa/${city.slug}/${cat.slug}`}]),generateFAQSchema(faqs)]}
 
   return (<>
