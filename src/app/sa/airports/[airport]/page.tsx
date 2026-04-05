@@ -57,11 +57,11 @@ export default async function AirportPage({ params }: { params: Promise<{ airpor
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
       {/* Hero */}
-      <section className="pt-28 pb-20 px-6 bg-gradient-to-br from-primary via-primary-light to-primary relative overflow-hidden">
-        <div className="absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+      <section className="pt-28 pb-20 px-6 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #0D1B2A 0%, #1B3A5C 40%, #0D1B2A 100%)' }}>
+        <div className="absolute inset-0 grid-pattern" />
         <div className="hero-glow w-[400px] h-[400px] -top-24 -right-24 absolute" />
 
-        <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-14 items-center">
+        <div className="max-w-7xl mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-right">
             <nav className="text-white/40 text-sm mb-5" aria-label="التنقل">
               <Link href="/" className="hover:text-accent transition-colors">الرئيسية</Link>
@@ -75,9 +75,9 @@ export default async function AirportPage({ params }: { params: Promise<{ airpor
             </h1>
             <p className="text-lg text-white/60 max-w-lg leading-relaxed mx-auto lg:mx-0 mb-8">{info}</p>
             <div className="flex flex-wrap gap-3 justify-center lg:justify-start text-sm">
-              <span className="bg-accent/15 border border-accent/30 text-accent px-5 py-2.5 rounded-full font-bold">✈️ {ap.code}</span>
-              <span className="bg-white/10 border border-white/10 text-white/80 px-5 py-2.5 rounded-full">من {city.minPrice} ر.س/يوم</span>
-              <span className="bg-white/10 border border-white/10 text-white/80 px-5 py-2.5 rounded-full">استلام فوري</span>
+              <span className="px-5 py-2.5 rounded-full font-bold text-sm" style={{ background: 'rgba(212,168,83,0.15)', border: '1px solid rgba(212,168,83,0.3)', color: '#D4A853' }}>✈️ {ap.code}</span>
+              <span className="px-5 py-2.5 rounded-full text-sm" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>من {city.minPrice} ر.س/يوم</span>
+              <span className="px-5 py-2.5 rounded-full text-sm" style={{ background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)' }}>استلام فوري</span>
             </div>
           </div>
           <div id="form"><LeadForm /></div>

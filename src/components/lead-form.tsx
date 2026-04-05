@@ -23,15 +23,28 @@ export function LeadForm() {
     setSubmitted(true)
   }
 
+  const inputStyle: React.CSSProperties = {
+    padding: '14px 16px',
+    background: 'rgba(255,255,255,0.07)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    borderRadius: '12px',
+    color: '#fff',
+    fontSize: '0.9rem',
+    width: '100%',
+    fontFamily: 'inherit',
+    outline: 'none',
+    transition: 'border-color 0.3s',
+  }
+
   if (submitted) {
     return (
-      <div className="glass-card rounded-3xl p-8 text-center">
-        <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-success/20 flex items-center justify-center">
+      <div className="rounded-3xl p-8 text-center" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <div className="w-16 h-16 mx-auto mb-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(26,122,66,0.2)' }}>
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#1A7A42" strokeWidth="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
         </div>
         <h3 className="font-display text-2xl font-black text-white mb-2">تم!</h3>
-        <p className="text-sm text-white/60 mb-5">سيتواصل معك أحد شركائنا خلال دقائق</p>
-        <button onClick={() => setSubmitted(false)} className="text-sm text-white/40 hover:text-accent transition-colors">
+        <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.6)' }}>سيتواصل معك أحد شركائنا خلال دقائق</p>
+        <button onClick={() => setSubmitted(false)} className="text-sm hover:text-accent transition-colors" style={{ color: 'rgba(255,255,255,0.4)' }}>
           طلب جديد
         </button>
       </div>
@@ -39,65 +52,61 @@ export function LeadForm() {
   }
 
   return (
-    <div className="glass-card rounded-3xl p-8 relative overflow-hidden">
+    <div className="rounded-3xl p-8 relative overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.1)' }}>
       {/* Gold top bar */}
-      <div className="absolute top-0 right-0 left-0 h-[3px] bg-gradient-to-l from-accent via-accent-light to-accent" />
-      
+      <div className="absolute top-0 right-0 left-0 h-1" style={{ background: 'linear-gradient(90deg, #D4A853, #F0D78C, #D4A853)' }} />
+
       <h2 className="font-display text-xl font-black text-white mb-1">ابحث عن سيارتك</h2>
-      <p className="text-sm text-white/50 mb-6">احصل على أفضل العروض مجاناً</p>
-      
+      <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.5)' }}>احصل على أفضل العروض مجاناً</p>
+
       <div className="grid gap-4">
-        {/* City */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="f-city" className="text-xs font-bold text-white/60">المدينة</label>
-          <select id="f-city" value={city} onChange={e => setCity(e.target.value)}
-            className="p-3.5 bg-white/7 border border-white/10 rounded-xl text-sm text-white focus:border-accent transition-colors appearance-none cursor-pointer [&>option]:text-black">
+          <label htmlFor="f-city" className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.6)' }}>المدينة</label>
+          <select id="f-city" value={city} onChange={e => setCity(e.target.value)} style={inputStyle}>
             <option value="">اختر المدينة</option>
             {cities.map(c => <option key={c.slug} value={c.slug}>{c.nameAr}</option>)}
           </select>
         </div>
 
-        {/* Dates */}
         <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="f-pickup" className="text-xs font-bold text-white/60">الاستلام</label>
-            <input id="f-pickup" type="date" min={today} value={pickup} onChange={e => { setPickup(e.target.value); if (!returnDate) setReturn(e.target.value) }}
-              className="p-3.5 bg-white/7 border border-white/10 rounded-xl text-sm text-white focus:border-accent transition-colors [color-scheme:dark]" />
+            <label htmlFor="f-pickup" className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.6)' }}>الاستلام</label>
+            <input id="f-pickup" type="date" min={today} value={pickup}
+              onChange={e => { setPickup(e.target.value); if (!returnDate) setReturn(e.target.value) }}
+              style={{ ...inputStyle, colorScheme: 'dark' }} />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="f-return" className="text-xs font-bold text-white/60">التسليم</label>
-            <input id="f-return" type="date" min={pickup || today} value={returnDate} onChange={e => setReturn(e.target.value)}
-              className="p-3.5 bg-white/7 border border-white/10 rounded-xl text-sm text-white focus:border-accent transition-colors [color-scheme:dark]" />
+            <label htmlFor="f-return" className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.6)' }}>التسليم</label>
+            <input id="f-return" type="date" min={pickup || today} value={returnDate}
+              onChange={e => setReturn(e.target.value)}
+              style={{ ...inputStyle, colorScheme: 'dark' }} />
           </div>
         </div>
 
-        {/* Vehicle */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="f-vehicle" className="text-xs font-bold text-white/60">نوع السيارة</label>
-          <select id="f-vehicle" value={vehicle} onChange={e => setVehicle(e.target.value)}
-            className="p-3.5 bg-white/7 border border-white/10 rounded-xl text-sm text-white focus:border-accent transition-colors appearance-none cursor-pointer [&>option]:text-black">
+          <label htmlFor="f-vehicle" className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.6)' }}>نوع السيارة</label>
+          <select id="f-vehicle" value={vehicle} onChange={e => setVehicle(e.target.value)} style={inputStyle}>
             <option value="">اختر النوع</option>
             {categories.map(c => <option key={c.slug} value={c.slug}>{c.icon} {c.nameAr}</option>)}
           </select>
         </div>
 
-        {/* Phone */}
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="f-phone" className="text-xs font-bold text-white/60">رقم الجوال</label>
-          <input id="f-phone" type="tel" placeholder="05XXXXXXXX" dir="ltr" value={phone} onChange={e => setPhone(e.target.value)}
-            className="p-3.5 bg-white/7 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/25 focus:border-accent transition-colors" />
+          <label htmlFor="f-phone" className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.6)' }}>رقم الجوال</label>
+          <input id="f-phone" type="tel" placeholder="05XXXXXXXX" dir="ltr" value={phone}
+            onChange={e => setPhone(e.target.value)}
+            style={inputStyle} />
         </div>
 
-        {/* Honeypot */}
         <div className="hidden"><input type="text" value={honey} onChange={e => setHoney(e.target.value)} tabIndex={-1} autoComplete="off" /></div>
 
-        {/* Submit */}
         <button onClick={handleSubmit}
-          className="w-full py-4 bg-gradient-to-l from-accent to-accent-hover rounded-xl text-primary font-display text-lg font-black hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(212,168,83,0.35)] active:scale-[0.98] transition-all mt-1"
+          className="w-full py-4 rounded-xl font-display text-lg font-black transition-all hover:opacity-90 active:scale-[0.98] mt-1"
+          style={{ background: 'linear-gradient(135deg, #D4A853, #B8912E)', color: '#0D1B2A' }}
           aria-label="أرسل طلب تأجير سيارة مجاناً">
           أرسل طلبي ←
         </button>
-        <p className="text-xs text-white/30 text-center">بياناتك محمية ولن نشاركها مع أي طرف</p>
+        <p className="text-xs text-center" style={{ color: 'rgba(255,255,255,0.3)' }}>بياناتك محمية ولن نشاركها مع أي طرف</p>
       </div>
     </div>
   )
