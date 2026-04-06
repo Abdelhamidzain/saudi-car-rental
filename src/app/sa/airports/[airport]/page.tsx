@@ -10,7 +10,7 @@ export async function generateMetadata({params}:{params:Promise<{airport:string}
   const ap=getAirportBySlug((await params).airport); if(!ap) return {}; const city=getCityBySlug(ap.citySlug)
   return {
     title: { absolute: `تأجير سيارات من ${ap.nameAr} (${ap.code}) — من ${city?.minPrice} ريال` },
-    description: `تأجير سيارة من ${ap.nameAr} بأفضل سعر. قارن عروض تأجير السيارات من الشركات المرخصة في ${city?.nameAr}. أسعار تبدأ من ${city?.minPrice} ريال يومياً مع التأمين واستلام فوري من المطار.`,
+    description: `تأجير سيارة من ${ap.nameAr} بأفضل سعر. قارن عروض تأجير السيارات من الشركات المرخصة في ${city?.nameAr}. أسعار تبدأ من ${city?.minPrice} ريال يومياً مع استلام فوري.`,
     alternates: { canonical: `/sa/airports/${ap.slug}` },
     openGraph: {
       title: `تأجير سيارات من ${ap.nameAr} (${ap.code})`,
