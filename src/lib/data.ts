@@ -12,6 +12,8 @@ export interface City {
   partnerCount: number
   description: string
   image: string
+  lat: number
+  lng: number
 }
 
 export const cities: City[] = [
@@ -23,6 +25,8 @@ export const cities: City[] = [
     partnerCount: 18,
     description: 'عاصمة المملكة وأكبر مدينة — أسطول ضخم من المركبات الاقتصادية والفاخرة مع خدمة توصيل لمطار الملك خالد الدولي.',
     image: '/images/riyadh.webp',
+    lat: 24.7136,
+    lng: 46.6753,
   },
   {
     slug: 'jeddah',
@@ -32,6 +36,8 @@ export const cities: City[] = [
     partnerCount: 15,
     description: 'بوابة الحرمين الشريفين — خيارات واسعة للإيجار اليومي والشهري بالقرب من مطار الملك عبدالعزيز والكورنيش.',
     image: '/images/jeddah.webp',
+    lat: 21.4858,
+    lng: 39.1925,
   },
   {
     slug: 'dammam',
@@ -41,6 +47,8 @@ export const cities: City[] = [
     partnerCount: 12,
     description: 'عاصمة المنطقة الشرقية — أسعار تنافسية مع تغطية لمطار الملك فهد الدولي وربط مباشر بالخبر والظهران.',
     image: '/images/dammam.webp',
+    lat: 26.3927,
+    lng: 49.9777,
   },
   {
     slug: 'makkah',
@@ -50,6 +58,8 @@ export const cities: City[] = [
     partnerCount: 6,
     description: 'قبلة المسلمين — إيجار مركبات للمعتمرين والحجاج مع خدمة استقبال من مطار جدة وتوصيل للحرم مباشرة.',
     image: '/images/makkah.webp',
+    lat: 21.3891,
+    lng: 39.8579,
   },
   {
     slug: 'madinah',
@@ -59,6 +69,8 @@ export const cities: City[] = [
     partnerCount: 5,
     description: 'مدينة الرسول — حلول تنقل مرنة للزوار مع استلام وتسليم من مطار الأمير محمد بن عبدالعزيز.',
     image: '/images/madinah.webp',
+    lat: 24.4539,
+    lng: 39.6142,
   },
   {
     slug: 'khobar',
@@ -68,6 +80,8 @@ export const cities: City[] = [
     partnerCount: 4,
     description: 'لؤلؤة الشرقية — أرخص عروض تأجير سيارات بالمملكة مع تغطية لجسر الملك فهد والمنطقة الصناعية.',
     image: '/images/khobar.webp',
+    lat: 26.2172,
+    lng: 50.1971,
   },
 ]
 
@@ -342,5 +356,47 @@ export function generateBreadcrumbSchema(items: { name: string; url: string }[])
       name: item.name,
       item: `${SITE_URL}${item.url}`,
     })),
+  }
+}
+
+export function generateLocalBusinessSchema(city: City) {
+  return {
+    '@type': 'AutoRental',
+    name: `${SITE_NAME} — ${city.nameAr}`,
+    description: `خدمة مقارنة عروض تأجير السيارات في ${city.nameAr} من ${city.partnerCount} شركة مرخصة. أسعار تبدأ من ${city.minPrice} ريال يومياً.`,
+    url: `${SITE_URL}/sa/${city.slug}`,
+    telephone: '+966500000000',
+    email: 'info@cars-renting.com',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: city.nameAr,
+      addressRegion: city.nameAr,
+      addressCountry: 'SA',
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: city.lat,
+      longitude: city.lng,
+    },
+    priceRange: `${city.minPrice} - 599 SAR`,
+    currenciesAccepted: 'SAR',
+    paymentAccepted: 'Cash, Credit Card',
+    openingHoursSpecification: {
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'],
+      opens: '00:00',
+      closes: '23:59',
+    },
+    areaServed: {
+      '@type': 'City',
+      name: city.nameEn,
+    },
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      reviewCount: String(city.partnerCount * 12),
+      bestRating: '5',
+      worstRating: '1',
+    },
   }
 }

@@ -270,15 +270,15 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
       {/* SSR INTERNAL LINKS */}
       <div className="ssr-links">
         <div className="container">
-          <div className="ssr-links-title">تأجير سيارات {cat.nameAr} أخرى في {city.nameAr}</div>
+          <h2 className="ssr-links-title">تأجير سيارات {cat.nameAr} أخرى في {city.nameAr}</h2>
           <div className="ssr-links-grid">
             {similarCars.slice(0,4).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${cat.slug}/${c.slug}`}>{c.nameAr}</Link>)}
           </div>
-          <div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من فئات أخرى</div>
+          <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من فئات أخرى</h2>
           <div className="ssr-links-grid">
             {categories.filter(c=>c.slug!==cat.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr} {city.nameAr}</Link>)}
           </div>
-          <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات في مدن أخرى</div>
+          <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات في مدن أخرى</h2>
           <div className="ssr-links-grid">
             {otherCities.map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}/${car.slug}`}>{car.nameAr} — {c.nameAr}</Link>)}
             <Link href={`/sa/${city.slug}`}>جميع العروض في {city.nameAr}</Link>

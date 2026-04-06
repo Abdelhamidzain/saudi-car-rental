@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, categoryGradients, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME, SITE_URL } from '@/lib/data'
+import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, categoryGradients, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
 
@@ -43,7 +43,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
   const otherCats=categories.filter(c=>c.slug!==cat.slug), otherCities=cities.filter(c=>c.slug!==city.slug).slice(0,4)
   const cars=getCarsByCategory(cat.slug)
   const faqs=[{q:`كم سعر تأجير سيارة ${cat.nameAr} في ${city.nameAr}؟`,a:`يبدأ سعر الإيجار اليومي لفئة ${cat.nameAr} في ${city.nameAr} من ${cat.minPrice} ريال. الاستئجار الشهري يوفر خصماً يصل 40% مع تغطية تأمينية شاملة.`},{q:`هل عروض تأجير السيارات تشمل التأمين والكيلومترات؟`,a:`نعم، جميع العروض تشمل التأمين الأساسي ضد الغير. يمكنك ترقيته لتأمين شامل مقابل رسوم إضافية بسيطة عند استلام المركبة.`},{q:`ما المستندات المطلوبة للاستئجار؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر ساري المفعول. الحد الأدنى للعمر 21 سنة للفئات العادية و25 للمركبات الفاخرة.`}]
-  const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`},{name:cat.nameAr,url:`/sa/${city.slug}/${cat.slug}`}]),generateFAQSchema(faqs)]}
+  const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`},{name:cat.nameAr,url:`/sa/${city.slug}/${cat.slug}`}]),generateFAQSchema(faqs),generateLocalBusinessSchema(city)]}
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
@@ -105,11 +105,11 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
     {/* SSR INTERNAL LINKS */}
     <div className="ssr-links">
       <div className="container">
-        <div className="ssr-links-title">تأجير سيارات {cat.nameAr} في مدن أخرى</div>
+        <h2 className="ssr-links-title">تأجير سيارات {cat.nameAr} في مدن أخرى</h2>
         <div className="ssr-links-grid">
           {cities.filter(c=>c.slug!==city.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`}>{cat.icon} {cat.nameAr} {c.nameAr}</Link>)}
         </div>
-        <div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من فئات أخرى في {city.nameAr}</div>
+        <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من فئات أخرى في {city.nameAr}</h2>
         <div className="ssr-links-grid">
           {categories.filter(c=>c.slug!==cat.slug).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr}</Link>)}
         </div>

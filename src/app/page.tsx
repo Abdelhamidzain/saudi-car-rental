@@ -1,12 +1,13 @@
 import Link from 'next/link'
-import { cities, categories, airports, carModels, categoryGradients, homeFAQs, generateFAQSchema, SITE_NAME } from '@/lib/data'
+import { cities, categories, airports, carModels, categoryGradients, homeFAQs, generateFAQSchema, generateLocalBusinessSchema, getCityBySlug, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
 
 export default function HomePage() {
+  const riyadh = getCityBySlug('riyadh')!
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify({'@context':'https://schema.org','@graph':[generateFAQSchema(homeFAQs)]})}}/>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify({'@context':'https://schema.org','@graph':[generateFAQSchema(homeFAQs), generateLocalBusinessSchema(riyadh)]})}}/>
 
       {/* HERO — SSR */}
       <section className="hero">
@@ -29,6 +30,17 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* SSR H2 SECTIONS */}
+      <section className="section section-white"><div className="container" style={{maxWidth:900}}>
+        <h2 className="section-title" style={{textAlign:'center',marginBottom:16}}>لماذا تختار منصة تأجير سيارات؟</h2>
+        <p style={{textAlign:'center',fontSize:'.95rem',color:'#4B5563',lineHeight:2,maxWidth:700,margin:'0 auto'}}>نجمع لك عروض تأجير السيارات من أكثر من خمسين مكتب مرخص في ست مدن سعودية. قارن الأسعار والمواصفات واحصل على أفضل عرض تأجير سيارة خلال دقائق — بدون رسوم وبدون التزام. جميع الشركاء حاصلون على ترخيص هيئة النقل العام بالمملكة.</p>
+      </div></section>
+
+      <section className="section"><div className="container" style={{maxWidth:900}}>
+        <h2 className="section-title" style={{textAlign:'center',marginBottom:16}}>خدمات تأجير السيارات المتوفرة</h2>
+        <p style={{textAlign:'center',fontSize:'.95rem',color:'#4B5563',lineHeight:2,maxWidth:700,margin:'0 auto'}}>نوفر سبع فئات من المركبات تشمل السيارات الاقتصادية والسيدان المتوسطة والدفع الرباعي والفاخرة والعائلية ذات السبعة مقاعد والبيك أب والفان الجماعي. تتوفر عقود يومية وأسبوعية وشهرية مع إمكانية الاستلام من المطار أو التوصيل لأي موقع داخل المدينة.</p>
+      </div></section>
 
       <NoSSR>
       {/* CITIES */}
@@ -172,15 +184,15 @@ export default function HomePage() {
       {/* SSR INTERNAL LINKS — visible to crawler */}
       <div className="ssr-links">
         <div className="container">
-          <div className="ssr-links-title">تأجير سيارات حسب المدينة</div>
+          <h2 className="ssr-links-title">تأجير سيارات حسب المدينة</h2>
           <div className="ssr-links-grid">
             {cities.map((c,i)=><Link key={c.slug} href={`/sa/${c.slug}`}>{i===0?'تأجير سيارات':'إيجار مركبات'} {c.nameAr}</Link>)}
           </div>
-          <div className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة حسب الفئة</div>
+          <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة حسب الفئة</h2>
           <div className="ssr-links-grid">
             {categories.map(c=><Link key={c.slug} href={`/sa/riyadh/${c.slug}`}>{c.icon} {c.nameAr}</Link>)}
           </div>
-          <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من المطارات</div>
+          <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من المطارات</h2>
           <div className="ssr-links-grid">
             {airports.map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>{a.code} — {a.nameAr.replace(' الدولي','')}</Link>)}
           </div>

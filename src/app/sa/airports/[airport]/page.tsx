@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { airports, categories, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME, SITE_URL } from '@/lib/data'
+import { airports, categories, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
 
@@ -45,7 +45,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
     {q:`هل يمكن تسليم المركبة في موقع مختلف؟`,a:`عدد من الشركاء المعتمدين يوفرون مرونة كاملة في نقاط التسليم سواء داخل نفس المدينة أو في مدينة مغايرة. يُرجى تحديد ذلك مسبقاً عند تعبئة الطلب حيث قد تُفرض رسوم رمزية إضافية حسب المسافة وسياسة المؤجر.`},
     {q:`ما الوثائق والشروط اللازمة للاستئجار؟`,a:`يُشترط إبراز رخصة قيادة صالحة سواء محلية أو دولية مصحوبة بإثبات هوية رسمي كالبطاقة الوطنية أو جواز السفر الساري. يجب ألا يقل عمر المستأجر عن واحد وعشرين عاماً مع إمكانية طلب إيداع ضمان مالي قابل للاسترداد الكامل عند إتمام العقد.`},
   ]
-  const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:`تأجير سيارات ${city.nameAr}`,url:`/sa/${city.slug}`},{name:`تأجير سيارات ${ap.code}`,url:`/sa/airports/${ap.slug}`}]),generateFAQSchema(faqs)]}
+  const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:`تأجير سيارات ${city.nameAr}`,url:`/sa/${city.slug}`},{name:`تأجير سيارات ${ap.code}`,url:`/sa/airports/${ap.slug}`}]),generateFAQSchema(faqs),generateLocalBusinessSchema(city)]}
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
@@ -91,11 +91,11 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
     {/* SSR INTERNAL LINKS */}
     <div className="ssr-links">
       <div className="container">
-        <div className="ssr-links-title">تأجير سيارات في {city.nameAr}</div>
+        <h2 className="ssr-links-title">تأجير سيارات في {city.nameAr}</h2>
         <div className="ssr-links-grid">
           {categories.map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr} {city.nameAr}</Link>)}
         </div>
-        <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من مطارات أخرى</div>
+        <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من مطارات أخرى</h2>
         <div className="ssr-links-grid">
           {airports.filter(a=>a.slug!==ap.slug).map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>{a.code} — {a.nameAr.replace(' الدولي','')}</Link>)}
         </div>

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, carModels, categoryGradients, cityGuides, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME, SITE_URL } from '@/lib/data'
+import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, carModels, categoryGradients, cityGuides, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
 
@@ -38,7 +38,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
     {q:`هل تأجير سيارة يشمل التأمين والوقود؟`,a:`جميع العروض تشمل تغطية تأمينية أساسية ضد الغير. الوقود عادة على حساب المستأجر ويتم تسليم المركبة بخزان ممتلئ وإرجاعها بنفس المستوى.`},
     {q:`ما الوثائق والشروط المطلوبة للاستئجار؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر ساري المفعول والحد الأدنى للعمر واحد وعشرون عاماً. بعض المكاتب تطلب ضماناً مالياً مسترداً عند استلام المركبة الفاخرة.`},
   ]
-  const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`}]),generateFAQSchema(faqs)]}
+  const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`}]),generateFAQSchema(faqs),generateLocalBusinessSchema(city)]}
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
@@ -55,6 +55,12 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
         <div id="form"><LazyLeadForm/></div>
       </div></div>
     </section>
+
+    {/* SSR H2 — additional unique content */}
+    <section className="section section-white"><div className="container" style={{maxWidth:900}}>
+      <h2 className="section-title" style={{textAlign:'center',marginBottom:16}}>تأجير سيارة في {city.nameAr} بأفضل سعر</h2>
+      <p style={{textAlign:'center',fontSize:'.95rem',color:'#4B5563',lineHeight:2,maxWidth:700,margin:'0 auto'}}>نوفر لك مقارنة شاملة بين عروض تأجير السيارات من {city.partnerCount} مكتب مرخص في {city.nameAr}. تبدأ الأسعار من {city.minPrice} ريال يومياً للفئة الاقتصادية مع خيارات متنوعة تشمل العقود اليومية والأسبوعية والشهرية. جميع العروض تتضمن تغطية تأمينية أساسية وخدمة استلام مرنة.</p>
+    </div></section>
 
     <NoSSR>
     <section className="section"><div className="container">
@@ -118,15 +124,15 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
     {/* SSR INTERNAL LINKS */}
     <div className="ssr-links">
       <div className="container">
-        <div className="ssr-links-title">تأجير سيارات {city.nameAr} حسب الفئة</div>
+        <h2 className="ssr-links-title">تأجير سيارات {city.nameAr} حسب الفئة</h2>
         <div className="ssr-links-grid">
           {categories.map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr} {city.nameAr}</Link>)}
         </div>
-        <div className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات في مدن أخرى</div>
+        <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات في مدن أخرى</h2>
         <div className="ssr-links-grid">
           {others.map((c,i)=><Link key={c.slug} href={`/sa/${c.slug}`}>{i===0?'تأجير سيارة':'إيجار مركبات'} {c.nameAr}</Link>)}
         </div>
-        {ap.length>0&&<><div className="ssr-links-title" style={{marginTop:20}}>الاستلام من المطار</div>
+        {ap.length>0&&<><h2 className="ssr-links-title" style={{marginTop:20}}>الاستلام من المطار</h2>
         <div className="ssr-links-grid">
           {ap.map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>{a.code} — {a.nameAr.replace(' الدولي','')}</Link>)}
         </div></>}

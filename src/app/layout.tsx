@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Tajawal, Cairo } from 'next/font/google'
 import './globals.css'
-import { SITE_NAME, SITE_URL } from '@/lib/data'
+import { SITE_NAME, SITE_URL, getCityBySlug, generateLocalBusinessSchema } from '@/lib/data'
 import { CityProvider } from '@/components/city-context'
 import { ClientHeader } from '@/components/client-header'
 import { ClientFooter } from '@/components/client-footer'
@@ -39,7 +39,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
           '@context':'https://schema.org','@graph':[
             {'@type':'WebSite',name:SITE_NAME,url:SITE_URL,inLanguage:'ar'},
-            {'@type':'Organization',name:SITE_NAME,url:SITE_URL}
+            {'@type':'Organization',name:SITE_NAME,url:SITE_URL},
+            generateLocalBusinessSchema(getCityBySlug('riyadh')!),
           ]
         })}} />
       </head>
