@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { airports, categories, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
+import { airports, categories, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
 
@@ -9,9 +9,21 @@ export function generateStaticParams() { return airports.map(a=>({airport:a.slug
 export async function generateMetadata({params}:{params:Promise<{airport:string}>}):Promise<Metadata> {
   const ap=getAirportBySlug((await params).airport); if(!ap) return {}; const city=getCityBySlug(ap.citySlug)
   return {
-    title:`تأجير سيارات من ${ap.nameAr} (${ap.code}) — أسعار من ${city?.minPrice} ريال | ${SITE_NAME}`,
-    description:`تأجير سيارة من ${ap.nameAr} بأفضل سعر. قارن عروض تأجير السيارات من شركات التأجير المرخصة في ${city?.nameAr}. استلم سيارتك فور وصولك من المطار.`,
-    alternates:{canonical:`/sa/airports/${ap.slug}`}
+    title: { absolute: `تأجير سيارات من ${ap.nameAr} (${ap.code}) — من ${city?.minPrice} ريال` },
+    description: `تأجير سيارة من ${ap.nameAr} بأفضل سعر. قارن عروض تأجير السيارات من الشركات المرخصة في ${city?.nameAr}. أسعار تبدأ من ${city?.minPrice} ريال يومياً مع التأمين واستلام فوري من المطار.`,
+    alternates: { canonical: `/sa/airports/${ap.slug}` },
+    openGraph: {
+      title: `تأجير سيارات من ${ap.nameAr} (${ap.code})`,
+      description: `قارن عروض تأجير السيارات من ${ap.nameAr}. أسعار تأجير سيارة تبدأ من ${city?.minPrice} ريال يومياً مع استلام فوري.`,
+      url: `${SITE_URL}/sa/airports/${ap.slug}`,
+      type: 'website',
+      locale: 'ar_SA',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `تأجير سيارات ${ap.code} — من ${city?.minPrice} ريال`,
+      description: `احجز سيارتك من ${ap.nameAr}. استلام فوري وأسعار تبدأ من ${city?.minPrice} ريال يومياً.`,
+    },
   }
 }
 

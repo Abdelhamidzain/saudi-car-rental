@@ -17,12 +17,24 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   const { city: cs, category: cats, car: cars } = await params
   const city = getCityBySlug(cs), cat = getCategoryBySlug(cats), car = getCarBySlug(cars)
   if (!city || !cat || !car) return {}
-  const title = `تأجير سيارة ${car.nameAr} في ${city.nameAr} — تأجير سيارات من ${car.dailyPrice} ريال | ${SITE_NAME}`
-  const desc = `تأجير سيارات ${cat.nameAr} في ${city.nameAr}: احجز ${car.nameAr} ${car.year} بأفضل سعر. قارن عروض تأجير السيارات من الشركات المرخصة. تأجير سيارة ${car.nameAr} يبدأ من ${car.dailyPrice} ريال يومياً و${car.monthlyPrice} ريال شهرياً.`
+  const title = `تأجير سيارة ${car.nameAr} في ${city.nameAr} — من ${car.dailyPrice} ريال يومياً`
+  const desc = `تأجير سيارات ${cat.nameAr} في ${city.nameAr}: احجز ${car.nameAr} ${car.year} بأفضل سعر. قارن عروض تأجير السيارات من الشركات المرخصة. أسعار تبدأ من ${car.dailyPrice} ريال يومياً.`
   return {
-    title, description: desc,
+    title: { absolute: title },
+    description: desc,
     alternates: { canonical: `/sa/${city.slug}/${cat.slug}/${car.slug}` },
-    openGraph: { title, description: desc, url: `${SITE_URL}/sa/${city.slug}/${cat.slug}/${car.slug}`, type: 'website', locale: 'ar_SA' },
+    openGraph: {
+      title: `تأجير سيارة ${car.nameAr} ${city.nameAr} — من ${car.dailyPrice} ريال`,
+      description: `احجز ${car.nameAr} ${car.year} في ${city.nameAr}. قارن عروض تأجير السيارات بأسعار تبدأ من ${car.dailyPrice} ريال يومياً.`,
+      url: `${SITE_URL}/sa/${city.slug}/${cat.slug}/${car.slug}`,
+      type: 'website',
+      locale: 'ar_SA',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `تأجير سيارة ${car.nameAr} ${city.nameAr}`,
+      description: `${car.nameAr} ${car.year} للإيجار من ${car.dailyPrice} ريال يومياً. قارن العروض واحجز الآن.`,
+    },
   }
 }
 

@@ -1,14 +1,30 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, categoryGradients, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
+import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, categoryGradients, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
 
 export function generateStaticParams() { const p:{city:string;category:string}[]=[]; for(const c of cities) for(const cat of categories) p.push({city:c.slug,category:cat.slug}); return p }
 export async function generateMetadata({params}:{params:Promise<{city:string;category:string}>}):Promise<Metadata> {
   const city=getCityBySlug((await params).city),cat=getCategoryBySlug((await params).category); if(!city||!cat) return {}
-  return { title:`تأجير سيارات ${cat.nameAr} في ${city.nameAr} — من ${cat.minPrice} ريال/يوم`, description:`قارن عروض إيجار ${cat.nameAr} في ${city.nameAr} من الشركات المرخصة. أسعار تبدأ من ${cat.minPrice} ريال يومياً مع التأمين الأساسي وخدمة التوصيل للمطار.`, alternates:{canonical:`/sa/${city.slug}/${cat.slug}`} }
+  return {
+    title: `تأجير سيارات ${cat.nameAr} في ${city.nameAr} — من ${cat.minPrice} ريال/يوم`,
+    description: `تأجير سيارات ${cat.nameAr} في ${city.nameAr} بأفضل سعر. قارن عروض تأجير السيارات من الشركات المرخصة. أسعار تأجير سيارة ${cat.nameAr} تبدأ من ${cat.minPrice} ريال يومياً مع التأمين وخدمة التوصيل.`,
+    alternates: { canonical: `/sa/${city.slug}/${cat.slug}` },
+    openGraph: {
+      title: `تأجير سيارات ${cat.nameAr} في ${city.nameAr} — من ${cat.minPrice} ريال`,
+      description: `قارن عروض تأجير السيارات من فئة ${cat.nameAr} في ${city.nameAr}. أسعار تأجير سيارة تبدأ من ${cat.minPrice} ريال يومياً.`,
+      url: `${SITE_URL}/sa/${city.slug}/${cat.slug}`,
+      type: 'website',
+      locale: 'ar_SA',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `تأجير سيارات ${cat.nameAr} ${city.nameAr} — من ${cat.minPrice} ريال`,
+      description: `قارن عروض تأجير السيارات ${cat.nameAr} في ${city.nameAr}. أسعار تبدأ من ${cat.minPrice} ريال.`,
+    },
+  }
 }
 
 const descs:Record<string,(c:string)=>string>={

@@ -1,14 +1,30 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, carModels, categoryGradients, cityGuides, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME } from '@/lib/data'
+import { cities, categories, getAirportsForCity, getPartnersForCity, getCityBySlug, carModels, categoryGradients, cityGuides, generateFAQSchema, generateBreadcrumbSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
 
 export function generateStaticParams() { return cities.map(c=>({city:c.slug})) }
 export async function generateMetadata({params}:{params:Promise<{city:string}>}):Promise<Metadata> {
   const city=getCityBySlug((await params).city); if(!city) return {}
-  return { title:`تأجير سيارات في ${city.nameAr} — أسعار من ${city.minPrice} ريال/يوم`, description:`قارن عروض تأجير السيارات في ${city.nameAr} من ${city.partnerCount} شركة معتمدة.`, alternates:{canonical:`/sa/${city.slug}`} }
+  return {
+    title: `تأجير سيارات في ${city.nameAr} — أسعار من ${city.minPrice} ريال/يوم`,
+    description: `تأجير سيارات في ${city.nameAr} من ${city.partnerCount} شركة معتمدة. قارن عروض تأجير السيارات واحصل على أفضل سعر تأجير سيارة يبدأ من ${city.minPrice} ريال يومياً مع التأمين وخدمة التوصيل للمطار.`,
+    alternates: { canonical: `/sa/${city.slug}` },
+    openGraph: {
+      title: `تأجير سيارات في ${city.nameAr} — من ${city.minPrice} ريال`,
+      description: `قارن عروض تأجير السيارات في ${city.nameAr} من ${city.partnerCount} شركة. أسعار تأجير سيارة تبدأ من ${city.minPrice} ريال يومياً.`,
+      url: `${SITE_URL}/sa/${city.slug}`,
+      type: 'website',
+      locale: 'ar_SA',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `تأجير سيارات ${city.nameAr} — من ${city.minPrice} ريال`,
+      description: `قارن عروض تأجير السيارات في ${city.nameAr}. أسعار تبدأ من ${city.minPrice} ريال يومياً.`,
+    },
+  }
 }
 
 export default async function CityPage({params}:{params:Promise<{city:string}>}) {
