@@ -14,7 +14,7 @@ export default function FooterInner() {
             </div>
             <div><div className="footer-title">المدن</div><div className="footer-links">{cities.map(c=><Link key={c.slug} href={`/sa/${c.slug}`}>{c.nameAr}</Link>)}</div></div>
             <div><div className="footer-title">خدمات</div><div className="footer-links"><span>شهري</span><span>أسبوعي</span><span>المطار</span><span>بدون تأمين</span></div></div>
-            <div><div className="footer-title">روابط</div><div className="footer-links"><span>من نحن</span><span>للشركاء</span><span>سياسة الخصوصية</span></div></div>
+            <div><div className="footer-title">روابط</div><div className="footer-links"><Link href="/about">من نحن</Link><Link href="/contact">اتصل بنا</Link><Link href="/privacy">سياسة الخصوصية</Link></div></div>
           </div>
         </div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} {SITE_NAME}. جميع الحقوق محفوظة</span><span>صُنع بـ ❤️ في السعودية</span></div>

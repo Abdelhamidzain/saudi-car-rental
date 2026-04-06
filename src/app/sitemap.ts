@@ -8,6 +8,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // Homepage
   entries.push({ url: SITE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 })
 
+  // Trust pages
+  entries.push({ url: `${SITE_URL}/about`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 })
+  entries.push({ url: `${SITE_URL}/privacy`, lastModified: now, changeFrequency: 'monthly', priority: 0.3 })
+  entries.push({ url: `${SITE_URL}/contact`, lastModified: now, changeFrequency: 'monthly', priority: 0.4 })
+
   // City pages
   for (const city of cities) {
     entries.push({ url: `${SITE_URL}/sa/${city.slug}`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 })
