@@ -24,17 +24,24 @@ export function LoginForm() {
           "Account created. An administrator must promote your role before you can access the dashboard.",
         );
       }
-      // signIn redirects on success; nothing else to do here.
     });
   }
 
   return (
     <form className="admin-form" action={onSubmit}>
-      <div>
+      <div className="field">
         <label htmlFor="login-email">Email</label>
-        <input id="login-email" name="email" type="email" autoComplete="email" required disabled={pending} />
+        <input
+          id="login-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          disabled={pending}
+          className="admin-input"
+        />
       </div>
-      <div>
+      <div className="field">
         <label htmlFor="login-password">Password</label>
         <input
           id="login-password"
@@ -44,11 +51,12 @@ export function LoginForm() {
           minLength={mode === "signin" ? 6 : 8}
           required
           disabled={pending}
+          className="admin-input"
         />
       </div>
       {error && <div className="admin-error">{error}</div>}
       {success && <div className="admin-success">{success}</div>}
-      <button type="submit" disabled={pending}>
+      <button type="submit" disabled={pending} className="admin-btn admin-btn--primary">
         {pending ? (mode === "signin" ? "Signing in…" : "Creating account…") : (mode === "signin" ? "Sign in" : "Create account")}
       </button>
       <button

@@ -38,7 +38,7 @@ export function StatusForm({
 
   return (
     <form className="admin-form" action={onSubmit}>
-      <div>
+      <div className="field">
         <label htmlFor="new-status">New status</label>
         <select
           id="new-status"
@@ -46,18 +46,26 @@ export function StatusForm({
           value={status}
           onChange={e => setStatus(e.target.value as LeadStatus)}
           disabled={!canEdit || pending}
+          className="admin-select"
         >
           {ALL_STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
         </select>
       </div>
-      <div>
+      <div className="field">
         <label htmlFor="status-note">Note (optional)</label>
-        <textarea id="status-note" name="note" rows={2} disabled={!canEdit || pending} placeholder="Reason or context for this change" />
+        <textarea
+          id="status-note"
+          name="note"
+          rows={2}
+          disabled={!canEdit || pending}
+          placeholder="Reason or context for this change"
+          className="admin-textarea"
+        />
       </div>
-      {!canEdit && <div className="admin-notice">Your role does not have permission to change status.</div>}
+      {!canEdit && <div className="admin-notice">Your role does not permit status changes.</div>}
       {error && <div className="admin-error">{error}</div>}
       {success && <div className="admin-success">{success}</div>}
-      <button type="submit" disabled={!canEdit || pending}>
+      <button type="submit" disabled={!canEdit || pending} className="admin-btn admin-btn--primary">
         {pending ? "Updating…" : "Update status"}
       </button>
     </form>

@@ -34,62 +34,80 @@ export default async function LeadsListPage({
 
   return (
     <>
-      <h1>Leads</h1>
+      <div className="admin-page-head">
+        <h1>Leads <span className="admin-section-tag">{statusFilter ?? "all"}</span></h1>
+        <div className="sub">
+          {leads.length === 0
+            ? "No leads to display."
+            : `Showing ${leads.length} ${leads.length === 1 ? "lead" : "leads"} (latest first, capped at 50).`}
+        </div>
+      </div>
 
       <form className="admin-filter-bar" method="get">
-        <div>
-          <label htmlFor="filter-status" style={{ fontSize: ".8rem", color: "#6B7280", display: "block", marginBottom: 4 }}>Status</label>
-          <select id="filter-status" name="status" defaultValue={statusFilter ?? ""}>
+        <div className="field">
+          <label htmlFor="filter-status">Status</label>
+          <select id="filter-status" name="status" defaultValue={statusFilter ?? ""} className="admin-select">
             <option value="">All</option>
-            {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            {STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
           </select>
         </div>
-        <button type="submit" style={{ padding: "6px 14px", fontSize: ".85rem", background: "#1B3A5C", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
-          Filter
-        </button>
+        <button type="submit" className="admin-btn admin-btn--secondary">Filter</button>
         {statusFilter && (
-          <Link href="/admin/leads" style={{ fontSize: ".85rem", color: "#6B7280" }}>
-            Clear
-          </Link>
+          <Link href="/admin/leads" className="admin-link-clear">Clear</Link>
         )}
       </form>
 
       {leads.length === 0 ? (
-        <p style={{ color: "#6B7280", fontSize: ".9rem", padding: 12 }}>No leads match this filter.</p>
+        <div className="admin-empty">
+          <div className="icon">📭</div>
+          <div>No leads match this filter.</div>
+          {statusFilter && (
+            <div style={{ marginTop: 8 }}>
+              <Link href="/admin/leads" className="admin-link-clear">Clear filter</Link>
+            </div>
+          )}
+        </div>
       ) : (
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Lead #</th>
-              <th>Created</th>
-              <th>Phone</th>
-              <th>City</th>
-              <th>Category</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Last activity</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leads.map(lead => (
-              <tr key={lead.id}>
-                <td><Link href={`/admin/leads/${lead.id}`}>{lead.lead_number ?? lead.id.slice(0, 8)}</Link></td>
-                <td>{formatRiyadh(lead.created_at)}</td>
-                <td style={{ fontFamily: "ui-monospace, monospace" }}>{lead.customer_phone}</td>
-                <td>{lead.city?.name_ar ?? "—"}</td>
-                <td>{lead.category?.name_ar ?? "—"}</td>
-                <td>{lead.request_type}</td>
-                <td><span className={`admin-badge admin-badge--${lead.status}`}>{lead.status.replace(/_/g, " ")}</span></td>
-                <td>{formatRiyadh(lead.updated_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="admin-table-wrap">
+          <div className="admin-table-scroll">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Lead #</th>
+                  <th>Created</th>
+                  <th>Phone</th>
+                  <th>City</th>
+                  <th>Category</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th className="col-right">Last activity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {leads.map(lead => (
+                  <tr key={lead.id}>
+                    <td>
+                      <Link className="lead-link" href={`/admin/leads/${lead.id}`}>
+                        {lead.lead_number ?? lead.id.slice(0, 8)}
+                      </Link>
+                    </td>
+                    <td style={{ color: "#6B7280", fontSize: "0.82rem" }}>{formatRiyadh(lead.created_at)}</td>
+                    <td className="admin-mono">{lead.customer_phone}</td>
+                    <td>{lead.city?.name_ar ?? "—"}</td>
+                    <td>{lead.category?.name_ar ?? "—"}</td>
+                    <td style={{ color: "#6B7280", fontSize: "0.82rem" }}>{lead.request_type.replace(/_/g, " ")}</td>
+                    <td><span className={`admin-badge admin-badge--${lead.status}`}>{lead.status.replace(/_/g, " ")}</span></td>
+                    <td className="col-right">{formatRiyadh(lead.updated_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="admin-table-foot">
+            Showing latest 50 leads. Pagination coming in a later task.
+          </div>
+        </div>
       )}
-
-      <p style={{ color: "#9CA3AF", fontSize: ".75rem", marginTop: 12 }}>
-        Showing latest 50. Pagination coming in a later task.
-      </p>
     </>
   );
 }

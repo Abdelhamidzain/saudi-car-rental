@@ -12,7 +12,6 @@ export default async function LoginPage({
   const params = await searchParams;
   const session = await getSession();
 
-  // Already signed in with full access — straight to leads.
   if (session && ["owner", "admin", "editor"].includes(session.role)) {
     redirect("/admin/leads");
   }
@@ -29,10 +28,13 @@ export default async function LoginPage({
   return (
     <div className="admin-login-wrap">
       <div className="admin-login-card">
-        <h1>Admin sign-in</h1>
+        <div className="admin-login-brand">
+          Admin<span className="dot" aria-hidden="true" />
+        </div>
+        <h1>Sign in</h1>
         <p className="sub">Authorised personnel only.</p>
         {initialNotice && (
-          <div className={params.reason === "forbidden" ? "admin-notice" : "admin-success"} style={{ marginBottom: 12 }}>
+          <div className={params.reason === "forbidden" ? "admin-notice" : "admin-success"} style={{ marginBottom: 14 }}>
             {initialNotice}
           </div>
         )}
