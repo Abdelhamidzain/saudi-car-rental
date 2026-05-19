@@ -141,7 +141,7 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
 - Pure CSS / JSX restyle — no auth, role, query, or RPC logic touched. Public site untouched.
 
 ### Task 4.1 — Lead Operations MVP
-**Commit:** `8ade802` (current `main` HEAD).
+**Commit:** `8ade802` · **UX fix:** `64343f3`.
 - Manual company/branch assignment from `/admin/leads/[id]`.
 - New migration `…022_create_lead_routing_rpcs.sql` — two atomic RPCs:
   - `assign_lead_to_company_with_log` — inserts a `lead_company_routing` row, updates `leads.assigned_company_id` / `assigned_branch_id` / `assigned_whatsapp`, writes a `lead_assigned_to_company` activity log entry.
@@ -157,6 +157,34 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
 - All five events store `actor_type='admin'` + the authenticated `actor_id` and embed `routing_id` in `metadata_json` where relevant.
 - **Closing line of every WhatsApp message** always says "*فضلاً تواصلوا مع العميل لتأكيد التوفر والسعر النهائي*" — never implies confirmed booking or guaranteed final price.
 - **Manual-first preserved:** no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard, no auto-selected companies.
+- **Reassignment + WhatsApp deep-link UX fix (commit `64343f3`):**
+  - Routing panel restructured into three sections: **Assign / Reassign** (always visible — the heading flips to "Reassign" once at least one routing exists, and an inline notice explains that a new routing row will be created and the lead pointer will advance); **Current routing** (the latest, green-highlighted with full Copy / Open WhatsApp / Mark-as-sent actions); **Previous routings (N)** (older history rows preserved for audit). The DB layer already supported reassignment — only the UI needed to make it obvious.
+  - **Open WhatsApp** is now a real `<a href="https://wa.me/9665XXXXXXXX?text=…" target="_blank" rel="noopener noreferrer">` instead of `window.open(...)`. Popup-blocker friction is gone and WhatsApp reliably opens with the Arabic message prefilled (newlines, `+966...`, and `#` characters all survive `encodeURIComponent`).
+  - When `branch.whatsapp_number` is null: Open WhatsApp is rendered as a disabled button + a visible "No WhatsApp number available for this branch — use Copy message and paste it into WhatsApp manually" notice. Copy and Mark-as-sent remain available.
+  - Defensive fallback: if a routing row's snapshotted `generated_message` is somehow empty, the card rebuilds the Arabic message client-side from the live lead context + the routing's joined company/branch before exposing Copy / Open WhatsApp.
+  - No schema / RPC / server-action changes — pure UI / link-behaviour fix. Files touched: `src/app/(admin)/admin/leads/[id]/routing-panel.tsx`, `src/app/(admin)/admin.css`.
+
+### Task 4.2 — Customer Notes + Lead Quality
+**Commit:** `e66d6eb`.
+- New migration `…023_add_lead_customer_notes.sql`:
+  - Adds nullable `customer_notes text` on `public.leads` with a CHECK constraint capping length at 500 characters.
+  - Drops the old 21-arg `create_lead_with_activity_log` signature and recreates it with a trailing `p_customer_notes text default null` parameter, so notes are persisted in the same transaction as the lead row + activity-log entry.
+- Public lead form gains an optional 2-row Arabic textarea labelled "ملاحظات إضافية (اختياري)" with placeholder examples (child seat, delivery to specific location, monthly rental). `maxLength={500}` on the client; server-side sanitizer mirrors the cap.
+- Server-side sanitization in `src/lib/leads/validate.ts`:
+  - Normalize CRLF / bare CR → LF.
+  - Strip ASCII control chars except newline (`\n`) and tab (`\t`).
+  - Trim leading/trailing whitespace.
+  - Empty result → stored as `NULL`.
+  - More than 500 chars after sanitization → rejected with `field: customer_notes, reason: too_long`.
+- Admin lead detail page now renders a "Customer notes" row in the Details `<dl>` with `white-space: pre-wrap` so line breaks survive, and passes `lead.customer_notes` into `RoutingPanel.messageContext`. The WhatsApp message builder already gated the "ملاحظات العميل" section on truthiness — it now emits the section whenever the customer typed something, omits it otherwise.
+- No URL/profanity filtering — deferred to Task 3.1.
+- No admin-side notes editing — captured at submission only.
+
+### Recent Operational Fixes
+
+A running list of post-task fixes that don't constitute new tasks:
+
+- **`64343f3` — Lead reassignment UX + WhatsApp deep-link reliability.** See the Task 4.1 entry above for the full description.
 
 ---
 
@@ -210,7 +238,6 @@ Capability gaps (do not assume any of these exist):
 - WhatsApp Business API integration / automated sending (admin still copies / opens manually).
 - Company follow-up form / table data entry.
 - Customer follow-up form / table data entry.
-- Customer notes captured on the public lead form (the WhatsApp template's "ملاحظات العميل" section is therefore always empty today).
 - Admin reports / overview dashboard.
 - Company dashboard (Phase 2).
 - Companies CRUD in admin.
@@ -230,22 +257,22 @@ Capability gaps (do not assume any of these exist):
 
 ## 9. Recommended Next Tasks
 
-### Task 4.2 — Customer Notes + Lead Quality Improvements (**recommended next**)
-
-Scope:
-- Add a `customer_notes` (or similar) text column on `public.leads` via a small additive migration.
-- Add an optional Arabic textarea to the public lead form so customers can describe special requests (delivery address, child seat, monthly rental intent, etc.).
-- Persist the note alongside the lead; expose it on the admin detail page and inside the generated WhatsApp message ("ملاحظات العميل" section already exists in `ai-docs/24_MESSAGING_TEMPLATES.md` and `src/lib/admin/routing/whatsapp-message.ts` — currently always empty because nothing captures the value).
-- Optional: server-side internal `lead_intent_score` heuristic (the enum `high`/`medium`/`low` already exists on `public.leads`) — never shown to the customer.
-- No new UI design language; reuse the existing form/admin styles.
-
-### Task 3.1 — Anti-Spam and Duplicate Detection
+### Task 3.1 — Anti-Spam and Duplicate Detection (**recommended next**)
 
 Scope:
 - Rate-limit `/admin/login` and the public lead-form server action (per-IP bucket; a small `lead_rate_limits` table or Vercel KV both work).
 - Duplicate-lead detection surfaced in the admin list: same phone within 24h; same phone + city + dates. Detection is a **warning**, not a block, per `ai-docs/06_LEAD_MANAGEMENT_WORKFLOW.md`.
+- Optional: URL/profanity filtering on `customer_notes` (deferred from Task 4.2).
 - The public lead form already has a honeypot; this task hardens what's around it.
 - Becomes urgent once the form starts seeing real traffic (paid ads or social).
+
+### Task 4.3 — Riyadh Date Handling Cleanup
+
+Scope:
+- Public lead form currently derives `today` from `new Date().toISOString().split('T')[0]` — that's the UTC date, not the customer's local date. During UTC late-evening hours the form's `min` attribute is yesterday-Riyadh, allowing a "today in Riyadh but yesterday in UTC" pickup to pass the client check before being rejected by the server validator (`todayInRiyadh()`).
+- Fix: derive the form's `today` constant via `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })` — same source the server uses — so client and server agree on what "today" is.
+- Audit any other public timestamp formatting for the same UTC-vs-Riyadh slip-up.
+- Pure client-side fix; no schema or RPC changes.
 
 ### Task 5 — Company / Branch / Car / Offer CRUD
 
@@ -254,15 +281,15 @@ Scope:
 - Currently these are seeded via `scripts/seed/*` only — there is no UI to add a new partner without re-running the seed.
 - Per `ai-docs/08_ADMIN_DASHBOARD_SPEC.md`: company fields include logo, website, Google Maps URL, rating snapshot, internal notes, trust level; branches need address, district, working hours, WhatsApp number; offers need company + branch + car + city + prices + approval status.
 - Approval workflow (`approval_status`) is already in the schema — Task 5 should wire it in (admin approve / reject before an offer is publicly visible).
-- Larger than 4.1 or 4.2 — plan to split into 5.1 (companies + branches) and 5.2 (cars + offers).
+- Larger than 4.1, 4.2, or 4.3 — plan to split into 5.1 (companies + branches) and 5.2 (cars + offers).
 
-**Recommended priority order: 4.2 → 3.1 → 5.** Task 4.2 is small and unblocks the WhatsApp template's empty section; Task 3.1 is a defensive precondition before any traffic spike; Task 5 is the largest and best tackled after both.
+**Recommended priority order: 3.1 → 4.3 → 5.** Task 3.1 is a defensive precondition before any traffic spike; Task 4.3 is a small client-side cleanup that closes a latent foot-gun; Task 5 is the largest and best tackled after both.
 
 ---
 
 ## 10. Short Context for Future AI Sessions
 
-> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. As of commit `8ade802` the admin can manually assign a company/branch, generate an Arabic WhatsApp message, copy it to clipboard, open `wa.me` with the message pre-filled, and mark the routing as sent — every action recorded as an atomic activity-log entry. Status changes auto-advance to `sent_to_company` when appropriate. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side.
+> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. Latest `main` HEAD: `64343f3`.
 
 ---
 
