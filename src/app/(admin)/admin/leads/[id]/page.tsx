@@ -2,7 +2,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/require-role";
 import { getLeadById, getLeadActivityLog } from "@/lib/admin/leads/get-lead";
+import { listCompaniesForAssignment } from "@/lib/admin/routing/list-companies";
+import { listAllActiveBranches } from "@/lib/admin/routing/list-all-branches";
+import { listRoutingsForLead } from "@/lib/admin/routing/list-routings";
+import type { AdminBranchOption } from "@/lib/admin/routing/list-branches";
 import { StatusForm } from "./status-form";
+import { RoutingPanel } from "./routing-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +30,30 @@ export default async function LeadDetailPage({
   const lead = await getLeadById(id);
   if (!lead) notFound();
 
-  const log = await getLeadActivityLog(id);
+  // Fetch routing-related data in parallel with the activity log.
+  const [log, companies, allBranches, routings] = await Promise.all([
+    getLeadActivityLog(id),
+    listCompaniesForAssignment(),
+    listAllActiveBranches(),
+    listRoutingsForLead(id),
+  ]);
+
+  // Group branches by company for the client picker.
+  const branchesByCompany: Record<string, AdminBranchOption[]> = {};
+  for (const b of allBranches) {
+    const companyId = b.company_id;
+    if (!branchesByCompany[companyId]) branchesByCompany[companyId] = [];
+    branchesByCompany[companyId].push({
+      id: b.id,
+      district: b.district,
+      address_ar: b.address_ar,
+      phone: b.phone,
+      whatsapp_number: b.whatsapp_number,
+      is_main_branch: b.is_main_branch,
+      city: b.city,
+    });
+  }
+
   const canEdit = session.role === "owner" || session.role === "admin";
   const utmLine = [
     lead.utm_source && `source=${lead.utm_source}`,
@@ -34,6 +62,26 @@ export default async function LeadDetailPage({
     lead.utm_content && `content=${lead.utm_content}`,
     lead.utm_term && `term=${lead.utm_term}`,
   ].filter(Boolean).join(" · ") || "—";
+
+  // Pre-compute the message context. The RoutingPanel layers the chosen
+  // company/branch on top of this when rendering the live preview.
+  const messageContext = {
+    lead_number: lead.lead_number,
+    request_type: lead.request_type,
+    city_name_ar: lead.city?.name_ar ?? null,
+    category_name_ar: lead.category?.name_ar ?? null,
+    car_name_ar: lead.selected_car
+      ? `${lead.selected_car.brand_ar} ${lead.selected_car.model_ar}`.trim()
+      : null,
+    pickup_date: lead.pickup_date,
+    return_date: lead.return_date,
+    rental_days: lead.rental_days,
+    customer_phone: lead.customer_phone,
+    pickup_location: lead.pickup_location,
+    customer_notes: null as string | null, // not captured by current form
+    company_name_ar: null as string | null,
+    branch_label: null as string | null,
+  };
 
   return (
     <>
@@ -84,6 +132,15 @@ export default async function LeadDetailPage({
             <h2><span className="admin-section-tag">Change status</span></h2>
             <StatusForm leadId={lead.id} currentStatus={lead.status} canEdit={canEdit} />
           </div>
+
+          <RoutingPanel
+            leadId={lead.id}
+            canEdit={canEdit}
+            messageContext={messageContext}
+            companies={companies}
+            branchesByCompany={branchesByCompany}
+            routings={routings}
+          />
 
           <div className="admin-card">
             <h2><span className="admin-section-tag">Activity log</span></h2>
