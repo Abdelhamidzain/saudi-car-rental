@@ -53,7 +53,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
         <h1 className="hero-title">تأجير سيارات {cat.nameAr} في <span>{city.nameAr}</span></h1>
         <p className="hero-subtitle">{desc}</p>
         <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ريال/يوم</span><span className="pill pill-glass">{cat.icon} {cat.nameAr}</span><span className="pill pill-glass">شركات مرخصة</span></div>
-      </div><div id="form"><LazyLeadForm/></div></div></div>
+      </div><div id="form"><LazyLeadForm defaultCategorySlug={cat.slug}/></div></div></div>
     </section>
 
     <NoSSR>

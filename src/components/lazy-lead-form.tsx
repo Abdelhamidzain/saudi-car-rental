@@ -1,6 +1,12 @@
 'use client'
 import dynamic from 'next/dynamic'
 
+type LazyLeadFormProps = {
+  selectedCarSlug?: string
+  airportSlug?: string
+  defaultCategorySlug?: string
+}
+
 const LeadForm = dynamic(() => import('./lead-form').then(m => ({ default: m.LeadForm })), {
   ssr: false,
   loading: () => (
@@ -10,6 +16,6 @@ const LeadForm = dynamic(() => import('./lead-form').then(m => ({ default: m.Lea
   ),
 })
 
-export function LazyLeadForm() {
-  return <LeadForm />
+export function LazyLeadForm(props: LazyLeadFormProps = {}) {
+  return <LeadForm {...props} />
 }
