@@ -5,6 +5,7 @@ import { getLeadById, getLeadActivityLog } from "@/lib/admin/leads/get-lead";
 import { listCompaniesForAssignment } from "@/lib/admin/routing/list-companies";
 import { listAllActiveBranches } from "@/lib/admin/routing/list-all-branches";
 import { listRoutingsForLead } from "@/lib/admin/routing/list-routings";
+import { getSiblingLeadsForAdmin } from "@/lib/admin/leads/get-sibling-leads";
 import type { AdminBranchOption } from "@/lib/admin/routing/list-branches";
 import { StatusForm } from "./status-form";
 import { RoutingPanel } from "./routing-panel";
@@ -31,11 +32,12 @@ export default async function LeadDetailPage({
   if (!lead) notFound();
 
   // Fetch routing-related data in parallel with the activity log.
-  const [log, companies, allBranches, routings] = await Promise.all([
+  const [log, companies, allBranches, routings, siblings] = await Promise.all([
     getLeadActivityLog(id),
     listCompaniesForAssignment(),
     listAllActiveBranches(),
     listRoutingsForLead(id),
+    getSiblingLeadsForAdmin({ phone: lead.customer_phone, excludeLeadId: lead.id }),
   ]);
 
   // Group branches by company for the client picker.
@@ -91,6 +93,49 @@ export default async function LeadDetailPage({
         <h1>{lead.lead_number ?? lead.id.slice(0, 8)}</h1>
         <span className={`admin-badge admin-badge--lg admin-badge--${lead.status}`}>{lead.status.replace(/_/g, " ")}</span>
       </div>
+
+      {siblings.length > 0 && (
+        <div className="admin-card" style={{ borderColor: "rgba(212,168,83,0.4)", background: "rgba(212,168,83,0.04)", marginBottom: 16 }}>
+          <h2><span className="admin-section-tag">⚠ Potential duplicates</span></h2>
+          <p style={{ fontSize: "0.88rem", color: "#374151", marginBottom: 12 }}>
+            This customer&apos;s phone (<span className="admin-mono">{lead.customer_phone}</span>) has
+            {" "}submitted {siblings.length} other request{siblings.length === 1 ? "" : "s"} in the last 24 hours.
+            Click a row to open it; mark this lead as <code>duplicate</code> in the status form once verified.
+          </p>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+            {siblings.map(s => (
+              <li key={s.id}>
+                <Link
+                  href={`/admin/leads/${s.id}`}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(160px, 1fr) auto auto auto",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "8px 12px",
+                    background: "#fff",
+                    border: "1px solid #E5E7EB",
+                    borderRadius: 10,
+                    textDecoration: "none",
+                    color: "#1A1A2E",
+                  }}
+                >
+                  <span className="admin-mono" style={{ color: "#1B3A5C", fontWeight: 700 }}>
+                    {s.lead_number ?? s.id.slice(0, 8)}
+                  </span>
+                  <span style={{ fontSize: ".82rem", color: "#6B7280" }}>
+                    {s.city?.name_ar ?? "—"}
+                  </span>
+                  <span className={`admin-badge admin-badge--${s.status}`}>{s.status.replace(/_/g, " ")}</span>
+                  <span style={{ fontSize: ".82rem", color: "#9CA3AF", whiteSpace: "nowrap" }}>
+                    {fmtRiyadh(s.created_at)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="admin-two-col">
         <div>

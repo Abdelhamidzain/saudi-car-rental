@@ -32,6 +32,8 @@ import {
   getCategoryIdBySlug,
   getCityIdBySlug,
 } from "./lookup";
+import { checkLeadRateLimit } from "./rate-limit";
+import { findRecentSiblingLeads, logPotentialDuplicate } from "./duplicate-detect";
 import type { CreateLeadError, CreateLeadInput, CreateLeadResult } from "./types";
 
 const MSG_AR: Record<CreateLeadError, string> = {
@@ -41,6 +43,7 @@ const MSG_AR: Record<CreateLeadError, string> = {
   unknown_category: "فئة السيارة المختارة غير متاحة حالياً.",
   unknown_car: "السيارة المختارة غير متاحة حالياً.",
   unknown_airport: "المطار المختار غير متاح حالياً.",
+  rate_limited: "تم تجاوز الحد المسموح من المحاولات. يرجى المحاولة مرة أخرى بعد ساعة.",
   server_error: "تعذّر إرسال الطلب. حاول مجدداً بعد قليل.",
 };
 
@@ -92,7 +95,13 @@ export async function createLead(
   const rental_days = computeRentalDays(v.value.pickup_date, v.value.return_date);
   const consent_ip = await extractClientIp();
 
-  // 5. Atomic insert via RPC.
+  // 5. Rate-limit guard — hard cap on per-IP submissions in the last hour.
+  // Honeypot already short-circuited fake-success above; this catches the
+  // remaining bot pressure. Skipped when consent_ip is null.
+  const rateLimit = await checkLeadRateLimit({ ip: consent_ip });
+  if (!rateLimit.ok) return fail("rate_limited");
+
+  // 6. Atomic insert via RPC.
   const log_metadata = {
     source_page: v.value.source_page,
     utm: v.value.utm,
@@ -148,6 +157,24 @@ export async function createLead(
   if (!leadNumber) {
     console.error("[createLead] rpc returned no lead_number", data);
     return fail("server_error");
+  }
+
+  // 7. Post-insert: detect potential duplicates (same phone in last 24h).
+  // Per ai-docs/06 we do NOT block — just flag, so admin sees the warning.
+  // Failure here is non-fatal: the lead is already saved.
+  const leadId =
+    row && typeof row === "object" && "lead_id" in row
+      ? (row as { lead_id: string }).lead_id
+      : null;
+  if (leadId) {
+    try {
+      const siblings = await findRecentSiblingLeads({ phone, excludeLeadId: leadId });
+      if (siblings.length > 0) {
+        await logPotentialDuplicate({ lead_id: leadId, siblings });
+      }
+    } catch (e) {
+      console.error("[createLead] duplicate-detect failed (non-fatal)", e);
+    }
   }
 
   return { ok: true, lead_number: leadNumber };

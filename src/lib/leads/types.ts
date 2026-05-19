@@ -44,6 +44,7 @@ export type CreateLeadError =
   | "unknown_category"
   | "unknown_car"
   | "unknown_airport"
+  | "rate_limited"
   | "server_error";
 
 export type CreateLeadResult =

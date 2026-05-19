@@ -10,6 +10,7 @@
  */
 
 import type { CreateLeadInput, CreateLeadUtm, RequestType } from "./types";
+import { stripUrlsFromNotes } from "./sanitize-notes-urls";
 
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
@@ -171,21 +172,22 @@ export function validateCreateLeadInput(
   }
 
   // customer_notes — optional, ≤ 500 chars after sanitization.
-  // Sanitization:
+  // Sanitization pipeline:
   //   - normalize CRLF/CR to LF
   //   - strip ASCII control chars except newline (0x0A) and tab (0x09)
+  //   - strip URLs (Task 3.1) — replaced with the placeholder [رابط محذوف]
   //   - trim
   //   - empty result -> null
   // The DB enforces the 500-char cap via CHECK; rejecting here gives a nicer
   // error message and avoids a useless round-trip.
   let customer_notes: string | null = null;
   if (typeof raw.customer_notes === "string") {
-    const normalized = raw.customer_notes
+    let normalized = raw.customer_notes
       .replace(/\r\n/g, "\n")
       .replace(/\r/g, "\n")
       // eslint-disable-next-line no-control-regex
-      .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, "")
-      .trim();
+      .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, "");
+    normalized = stripUrlsFromNotes(normalized).trim();
     if (normalized.length > MAX_CUSTOMER_NOTES_LENGTH) {
       return { ok: false, field: "customer_notes", reason: "too_long" };
     }
