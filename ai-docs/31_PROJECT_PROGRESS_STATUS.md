@@ -203,7 +203,7 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
 - **No DB migration.** No new RPC. No new npm dependency. No CAPTCHA. No OTP. No WhatsApp automation. No public-page content changes — only the lead form's server-side error map gained the `rate_limited` entry. Service-role usage stays server-only (all 4 new helpers carry `import "server-only"`).
 
 ### Task 4.3 — Riyadh Date Handling Cleanup
-**Commit:** `0edfc44` (current `main` HEAD).
+**Commit:** `0edfc44`.
 - **New util** [src/lib/leads/date-utils.ts](../src/lib/leads/date-utils.ts) exports `todayInRiyadh(): string` returning the Asia/Riyadh calendar date as `YYYY-MM-DD`. No `server-only` / Next imports — importable from both client and server modules.
 - **`src/lib/leads/validate.ts`** removes its local `todayInRiyadh()` implementation and imports the shared one. Validation behaviour unchanged.
 - **`src/components/lead-form.tsx`** replaces `new Date().toISOString().split('T')[0]` with `todayInRiyadh()`. The form's pickup-date default and both date inputs' `min` attributes now match Riyadh calendar — same source of truth the server uses.
@@ -218,6 +218,35 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
   - Same-day pickup/return → `rental_days = 1` (the `max(diff, 1)` floor preserved).
   - 366-day span rejected as `return_date/span_too_long`.
   - End-to-end RPC creates a real lead with today-in-Riyadh and succeeds.
+
+### Task 5.1 — Company + Branch CRUD
+**Commit:** `e623213` (current `main` HEAD).
+- **Admin routes added:**
+  - `/admin/companies` — list with `status` and `public_status` filters, "+ New company" CTA.
+  - `/admin/companies/new` — create form (full-page host for `<CompanyForm mode="create"/>`).
+  - `/admin/companies/[id]` — two-column edit form + meta card + below-fold branches table with "+ New branch" CTA.
+  - `/admin/companies/[id]/branches/new` — branch create form.
+  - `/admin/companies/[id]/branches/[branchId]` — branch edit form (guards against URL tampering: 404s if `branch.company_id !== company.id`).
+- **Companies CRUD:**
+  - Create + edit (single shared `<CompanyForm/>` client component, controlled inputs, field-level error rendering).
+  - Activation / deactivation via existing `status` (`active` / `inactive` / `archived`) and `public_status` (`draft` / `published` / `hidden` / `blocked`) enums.
+  - **No physical delete.** Archive = `status='archived'`. Routing picker auto-skips because [list-companies.ts](../src/lib/admin/routing/list-companies.ts) filters `status='active'`.
+  - Slug uniqueness enforced by existing DB UNIQUE constraint; the upsert helper maps `23505` → friendly inline `"Slug already taken — choose another."`.
+- **Branches CRUD:**
+  - Create + edit (single shared `<BranchForm/>` client component).
+  - Branch WhatsApp numbers are **normalised server-side** via the existing `normalizeSaudiPhone` from Task 3 — admin can paste `05XXXXXXXX` and the DB stores `+9665XXXXXXXX`. The DB CHECK constraint `branches_whatsapp_format` is the final guard.
+  - Status (`active` / `inactive` / `archived`) — no `public_status` column on branches (matches schema).
+  - **No physical delete.** Inactive/archived branches are skipped by the routing branch dropdown.
+  - `is_main_branch` checkbox with soft UI hint (no DB UNIQUE constraint enforces "only one main per company" — admin's responsibility).
+- **Sidebar nav:** new **Companies** link added next to **Leads**. The hardcoded `is-active` class on the Leads link was removed (was always-on; now neither is highlighted — a future task can wire `usePathname()`).
+- **Role permissions:**
+  - `owner` / `admin`: full CRUD.
+  - `editor`: read-only — pages render with all inputs disabled and submit buttons disabled; server actions also reject with 403 (`assertRole(['owner','admin'])`).
+  - `viewer`, `company_*`, unauthenticated: middleware-level redirect to `/admin/login` (unchanged from Task 4).
+- **New server-only library modules** (9 files under `src/lib/admin/`): `companies/{validate,list,get,upsert}.ts`, `branches/{validate,list-for-company,get,upsert}.ts`, `cities/list.ts`. Each carries `import "server-only"`.
+- **No DB migration. No new RPC. No new npm dependency. No public site changes. No lead form changes. No routing logic changes** — the routing UI (Task 4.1) automatically sees new active companies/branches because it queries the same tables.
+- **Smoke test highlights (14/14 PASS, transient test rows cleaned up):** company + branch validators behave correctly (whitespace trim, empty URL → null, bad slug rejected, WhatsApp `0501234567` normalised to `+966501234567`); DB CRUD round-trips work; `companies_slug_key` rejects duplicate slugs; `branches_whatsapp_format` CHECK rejects non-normalised numbers; archiving a company removes it from the routing picker.
+- **Deferred (still not built):** `working_hours` JSON editor; rating snapshot fields editor; logo file upload (URL-only for now); audit log of company/branch changes; partial UNIQUE constraint on main-branch.
 
 ### Recent Operational Fixes
 
@@ -279,10 +308,12 @@ Capability gaps (do not assume any of these exist):
 - Customer follow-up form / table data entry.
 - Admin reports / overview dashboard.
 - Company dashboard (Phase 2).
-- Companies CRUD in admin.
-- Branches CRUD in admin.
 - Cars CRUD in admin.
 - Offers CRUD in admin.
+- Audit log of company / branch CRUD changes (relying on `updated_at` only).
+- `working_hours` JSON editor on branches.
+- Rating snapshot editor on companies.
+- File-upload UI for company logos (URL-paste only today).
 - Public pages reading from Supabase (still using `src/lib/data.ts` static arrays).
 - Rate limiting on `/admin/login` (the public lead-form endpoint is rate-limited; the admin sign-in form is not — Supabase Auth's own rate limit applies but app-side is unchanged).
 - Profanity filter on `customer_notes` (URL stripping is in place; explicit profanity matching is not).
@@ -296,39 +327,37 @@ Capability gaps (do not assume any of these exist):
 
 ## 9. Recommended Next Tasks
 
-Task 5 (admin CRUD for companies, branches, cars, offers) is the largest remaining MVP block. To keep PRs reviewable and risk contained, it should be split into two tasks landed in this order.
+Task 5.1 landed company + branch CRUD. The remaining Task 5 work (cars + offers) is bigger than 5.1 was — offers carry the approval workflow, foreign keys to four tables, and three independent price tiers. Per the same "keep PRs reviewable" rationale that split Task 5 into 5.1 + 5.2, **Task 5.2 itself should be planned in two sub-tasks** landed in this order.
 
-### Task 5.1 — Company + Branch CRUD (**recommended next**)
-
-Scope:
-- Admin pages to create / edit / archive **companies** and **branches** from inside `/admin`.
-- Routes: `/admin/companies` (list + filter), `/admin/companies/[id]` (edit), `/admin/companies/new` (create); same shape for `/admin/branches`.
-- Company fields per `ai-docs/08_ADMIN_DASHBOARD_SPEC.md`: name_ar, name_en, slug, logo_url, website_url, google_maps_url, rating_snapshot (+ verified_at), trust_level, public_status, internal_notes, status. The slug is the URL key for any future public company page.
-- Branch fields: company_id, city_id, district, address_ar, address_en, google_maps_url, phone, whatsapp_number (must match `^\+9665\d{8}$` — reuse the existing CHECK constraint), working_hours JSON, is_main_branch, status.
-- Role gate: `owner`/`admin` can create + edit; `editor` read-only. Reuse `requireRole(...)` and `assertRole(...)`.
-- Activity / audit log: add `company_created` / `company_updated` / `branch_created` / `branch_updated` events to a new admin-audit channel OR write to `lead_activity_logs` only on association events. Plan should pick one approach.
-- No public-page changes — the routing panel and lead form already read from the existing rows; new rows immediately become available for routing.
-- Likely needs: an `admin_audit_logs` migration (new table) OR a decision to skip CRUD audit for now and revisit. Plan should call this out.
-
-### Task 5.2 — Car + Offer CRUD
+### Task 5.2A — Car CRUD (**recommended next**)
 
 Scope:
-- Admin pages for **cars** (model catalogue) and **offers** (company × branch × car × city × price tier).
-- Routes: `/admin/cars`, `/admin/cars/[id]`, `/admin/cars/new`; `/admin/offers`, `/admin/offers/[id]`, `/admin/offers/new`.
-- Car fields: brand_ar, brand_en, model_ar, model_en, slug, year, category_id, seats, transmission, fuel_type, features_json, image_url, description_ar, status.
-- Offer fields: company_id, branch_id, car_id, city_id, daily_price_from, weekly_price_from, monthly_price_from, deposit, insurance_info, mileage_limit, airport_delivery, price_status, availability_status, approval_status, last_updated_at, public_status, status.
-- **Approval workflow** — wire in the existing `approval_status` enum: new offers default to `pending_review`; admin must approve before `public_status` can move to `published`. The current Task 1 schema already supports this; the UI is missing.
-- Note the **seed/demo formula** `weekly_price_from = round(daily_price_from × 7 × 0.85, 2)` is **NOT** authoritative once admin creates real offers — the DB-stored value is the source of truth from then on. Admin form should accept all three prices independently.
+- Admin pages for the **car model catalogue**: `/admin/cars`, `/admin/cars/new`, `/admin/cars/[id]`.
+- Car fields per [migration 009](../supabase/migrations/20260519000009_create_cars.sql): `brand_ar`, `brand_en`, `model_ar`, `model_en`, `slug` (must match `^[a-z0-9-]+$`), `year` (1990–2100), `category_id` FK, `seats` (1–100), `transmission` (`automatic`/`manual` or null), `fuel_type` (free text), `features_json` (jsonb), `image_url`, `description_ar`, `status` (entity enum).
+- Sidebar adds a third link: **Cars**.
+- Reuses the Task 5.1 pattern: validators + list/get/upsert helpers + server actions + one shared client form + 3 pages.
+- No new migration. No new RPC. No new npm dep. Pure additive UI.
+- Approx file count: 1 layout edit + 3 pages + 1 form + 1 actions + 4 helpers = **~10 files**.
 
-**Why split:** Task 5.1 unblocks adding new partners without touching the seed scripts (high real-world value). Task 5.2 unblocks the future DB-driven offer page (`selected_offer` request type) that's currently scaffolded but unreachable. Doing both at once would touch ≥20 files in a single PR — too much surface for one review cycle.
+### Task 5.2B — Offer CRUD
 
-**Recommended priority order: 5.1 → 5.2.** Task 4.3 cleared the last small-task backlog; Task 5 is what's left.
+Scope:
+- Admin pages for **offers** (the company × branch × car × city × price tier rows): `/admin/offers`, `/admin/offers/new`, `/admin/offers/[id]`.
+- Offer fields per [migration 010](../supabase/migrations/20260519000010_create_offers.sql): `company_id`, `branch_id`, `car_id`, `city_id`, `daily_price_from`, `weekly_price_from`, `monthly_price_from`, `deposit`, `insurance_info`, `mileage_limit`, `airport_delivery_available`, `price_status`, `availability_status`, `approval_status`, `last_updated_at`, `public_status`, `status`.
+- **Approval workflow** — the existing `approval_status` enum has `pending_review` / `approved` / `rejected` / `auto_approved`. The Task 5.2B form should default new offers to `pending_review` and require an explicit approve action before `public_status` can move to `published`. (Soft enforcement at the UI layer; the DB has no policy here yet.)
+- The seed/demo formula `weekly_price_from = round(daily_price_from × 7 × 0.85, 2)` is **only** for seed data — the admin form accepts all three prices independently. Once an admin edits an offer, the DB-stored values are authoritative.
+- Likely needs a small cascade picker UX: when the admin picks a company, the branch dropdown filters to that company's active branches in the selected city. Similar to the routing panel in Task 4.1.
+- Approx file count: 1 layout edit + 3 pages + 1 form + 1 actions + 5 helpers = **~11 files**.
+
+**Why split 5.2 further:** offers carry four FKs and the approval state machine. Bundling cars + offers in one task would touch ~20 files with two new sidebar links, two new admin domains, and the approval-workflow concept all at once. Splitting keeps each PR a discrete cognitive unit (≤10 files) and lets us test cars-stand-alone before they become a dependency of offers.
+
+**Recommended priority order: 5.2A → 5.2B.** Cars are a prerequisite for offers (offer.car_id FK), so cars must land first.
 
 ---
 
 ## 10. Short Context for Future AI Sessions
 
-> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Latest `main` HEAD: `0edfc44`.
+> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Admin can also manage rental partners directly: `/admin/companies` lists every company; create / edit forms cover both companies and branches; activation / deactivation / archival is via existing `status` + `public_status` enums (no physical deletes); branch WhatsApp numbers are normalised to `+9665XXXXXXXX` on save; archived companies/branches automatically drop out of the routing picker. Latest `main` HEAD: `e623213`.
 
 ---
 
