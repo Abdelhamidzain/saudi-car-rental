@@ -6,7 +6,8 @@ Before working on this repository, always read:
 
 1. `ai-docs/01_NON_NEGOTIABLE_RULES.md`
 2. `ai-docs/30_AI_CONTEXT_REFRESH_SUMMARY.md`
-3. The task-specific file from `ai-docs/`
+3. `ai-docs/31_PROJECT_PROGRESS_STATUS.md`
+4. The task-specific file from `ai-docs/`
 
 This project is a Saudi car rental comparison and lead generation platform.
 
