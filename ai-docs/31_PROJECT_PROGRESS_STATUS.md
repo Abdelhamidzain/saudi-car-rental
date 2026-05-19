@@ -180,6 +180,28 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
 - No URL/profanity filtering — deferred to Task 3.1.
 - No admin-side notes editing — captured at submission only.
 
+### Task 3.1 — Anti-Spam and Duplicate Detection
+**Commit:** `97b0228` (current `main` HEAD).
+- **IP rate limit** ([src/lib/leads/rate-limit.ts](../src/lib/leads/rate-limit.ts)):
+  - `MAX_LEADS_PER_IP_PER_HOUR = 10` over a 1-hour rolling window.
+  - Counts leads via `public.leads.consent_ip` (existing column + index — no new infrastructure).
+  - Blocks the 11th attempt with the inline Arabic message *"تم تجاوز الحد المسموح من المحاولات. يرجى المحاولة مرة أخرى بعد ساعة."* and no DB write.
+  - Skips the check when `consent_ip` is null (proxy stripped the header) — never punishes a customer for missing data we couldn't extract.
+  - Fail-open on query error: a transient DB problem cannot block legitimate submissions.
+- **Duplicate phone detection** ([src/lib/leads/duplicate-detect.ts](../src/lib/leads/duplicate-detect.ts)):
+  - After the lead RPC succeeds, looks up sibling leads by normalized `customer_phone` in the last 24h, limit 5, newest first, excluding the new lead.
+  - **Never blocks** the new lead (per `ai-docs/06_LEAD_MANAGEMENT_WORKFLOW.md`'s manual-first rule).
+  - When ≥1 sibling exists, writes one `public.lead_activity_logs` row on the new lead: `event_type='lead_potential_duplicate'`, `actor_type='system'`, `title='Potential duplicate detected'`, with `metadata_json` containing `sibling_count` and a `siblings` array (each entry = `{id, lead_number, created_at, status}`).
+  - Failure of the audit insert is non-fatal — the lead is already saved.
+- **Customer notes URL stripping** ([src/lib/leads/sanitize-notes-urls.ts](../src/lib/leads/sanitize-notes-urls.ts)):
+  - Replaces `http(s)://...` and bare `www....` (the latter via a `(?<!\S)` negative lookbehind so embedded text like `awww.example` is left alone) with the placeholder `[رابط محذوف]`.
+  - Submission still succeeds. Admin sees the placeholder and can call back for clarification.
+  - Hooked into the existing notes sanitization pipeline in `src/lib/leads/validate.ts` between control-char stripping and the trim. The 500-char cap from Task 4.2 still applies after stripping.
+- **Admin UI** ([src/app/(admin)/admin/leads/[id]/page.tsx](../src/app/(admin)/admin/leads/[id]/page.tsx) · [src/lib/admin/leads/get-sibling-leads.ts](../src/lib/admin/leads/get-sibling-leads.ts)):
+  - When sibling leads exist, the lead detail page renders a "⚠ Potential duplicates" gold-tinted card above the two-column grid, listing each sibling (lead number · city · status badge · Riyadh-formatted timestamp) as a clickable link to its own detail page.
+  - No changes to the leads list page (intentionally deferred to keep this task focused).
+- **No DB migration.** No new RPC. No new npm dependency. No CAPTCHA. No OTP. No WhatsApp automation. No public-page content changes — only the lead form's server-side error map gained the `rate_limited` entry. Service-role usage stays server-only (all 4 new helpers carry `import "server-only"`).
+
 ### Recent Operational Fixes
 
 A running list of post-task fixes that don't constitute new tasks:
@@ -245,8 +267,8 @@ Capability gaps (do not assume any of these exist):
 - Cars CRUD in admin.
 - Offers CRUD in admin.
 - Public pages reading from Supabase (still using `src/lib/data.ts` static arrays).
-- Rate limiting on the lead-form endpoint.
-- Duplicate lead detection.
+- Rate limiting on `/admin/login` (the public lead-form endpoint is rate-limited; the admin sign-in form is not — Supabase Auth's own rate limit applies but app-side is unchanged).
+- Profanity filter on `customer_notes` (URL stripping is in place; explicit profanity matching is not).
 - Password reset flow.
 - Email verification flow.
 - n8n / automation pipelines.
@@ -257,16 +279,7 @@ Capability gaps (do not assume any of these exist):
 
 ## 9. Recommended Next Tasks
 
-### Task 3.1 — Anti-Spam and Duplicate Detection (**recommended next**)
-
-Scope:
-- Rate-limit `/admin/login` and the public lead-form server action (per-IP bucket; a small `lead_rate_limits` table or Vercel KV both work).
-- Duplicate-lead detection surfaced in the admin list: same phone within 24h; same phone + city + dates. Detection is a **warning**, not a block, per `ai-docs/06_LEAD_MANAGEMENT_WORKFLOW.md`.
-- Optional: URL/profanity filtering on `customer_notes` (deferred from Task 4.2).
-- The public lead form already has a honeypot; this task hardens what's around it.
-- Becomes urgent once the form starts seeing real traffic (paid ads or social).
-
-### Task 4.3 — Riyadh Date Handling Cleanup
+### Task 4.3 — Riyadh Date Handling Cleanup (**recommended next**)
 
 Scope:
 - Public lead form currently derives `today` from `new Date().toISOString().split('T')[0]` — that's the UTC date, not the customer's local date. During UTC late-evening hours the form's `min` attribute is yesterday-Riyadh, allowing a "today in Riyadh but yesterday in UTC" pickup to pass the client check before being rejected by the server validator (`todayInRiyadh()`).
@@ -283,13 +296,13 @@ Scope:
 - Approval workflow (`approval_status`) is already in the schema — Task 5 should wire it in (admin approve / reject before an offer is publicly visible).
 - Larger than 4.1, 4.2, or 4.3 — plan to split into 5.1 (companies + branches) and 5.2 (cars + offers).
 
-**Recommended priority order: 3.1 → 4.3 → 5.** Task 3.1 is a defensive precondition before any traffic spike; Task 4.3 is a small client-side cleanup that closes a latent foot-gun; Task 5 is the largest and best tackled after both.
+**Recommended priority order: 4.3 → 5.** Task 4.3 is a tiny client-side cleanup that closes a latent foot-gun in the public lead form's date handling and should land before any real traffic begins. Task 5 (CRUD) is the largest remaining MVP block.
 
 ---
 
 ## 10. Short Context for Future AI Sessions
 
-> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. Latest `main` HEAD: `64343f3`.
+> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, and strips URLs out of customer notes. Latest `main` HEAD: `97b0228`.
 
 ---
 
