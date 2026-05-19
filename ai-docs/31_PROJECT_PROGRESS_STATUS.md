@@ -181,7 +181,7 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
 - No admin-side notes editing — captured at submission only.
 
 ### Task 3.1 — Anti-Spam and Duplicate Detection
-**Commit:** `97b0228` (current `main` HEAD).
+**Commit:** `97b0228`.
 - **IP rate limit** ([src/lib/leads/rate-limit.ts](../src/lib/leads/rate-limit.ts)):
   - `MAX_LEADS_PER_IP_PER_HOUR = 10` over a 1-hour rolling window.
   - Counts leads via `public.leads.consent_ip` (existing column + index — no new infrastructure).
@@ -201,6 +201,23 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
   - When sibling leads exist, the lead detail page renders a "⚠ Potential duplicates" gold-tinted card above the two-column grid, listing each sibling (lead number · city · status badge · Riyadh-formatted timestamp) as a clickable link to its own detail page.
   - No changes to the leads list page (intentionally deferred to keep this task focused).
 - **No DB migration.** No new RPC. No new npm dependency. No CAPTCHA. No OTP. No WhatsApp automation. No public-page content changes — only the lead form's server-side error map gained the `rate_limited` entry. Service-role usage stays server-only (all 4 new helpers carry `import "server-only"`).
+
+### Task 4.3 — Riyadh Date Handling Cleanup
+**Commit:** `0edfc44` (current `main` HEAD).
+- **New util** [src/lib/leads/date-utils.ts](../src/lib/leads/date-utils.ts) exports `todayInRiyadh(): string` returning the Asia/Riyadh calendar date as `YYYY-MM-DD`. No `server-only` / Next imports — importable from both client and server modules.
+- **`src/lib/leads/validate.ts`** removes its local `todayInRiyadh()` implementation and imports the shared one. Validation behaviour unchanged.
+- **`src/components/lead-form.tsx`** replaces `new Date().toISOString().split('T')[0]` with `todayInRiyadh()`. The form's pickup-date default and both date inputs' `min` attributes now match Riyadh calendar — same source of truth the server uses.
+- **Bug fixed:** during the UTC 21:00–24:00 window (when UTC date is one day behind Riyadh), the form previously pre-filled the UTC date for `pickup_date`, then the server rejected it as `pickup_date / in_past`. After this fix, the two sides agree on "today" at all hours. The smoke test ran in exactly that window — UTC was `2026-05-19` while Riyadh was `2026-05-20` — and confirmed end-to-end success.
+- **No DB migration. No RPC change. No visible UI change. No admin change. No new npm dependency.**
+- **Smoke-test highlights (8/8 PASS, transient lead `SCR-202605-00004` cleaned up):**
+  - `todayInRiyadh()` returns `YYYY-MM-DD` format.
+  - Matches `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })` reference.
+  - Riyadh today is always ≥ UTC today (never behind).
+  - Validator accepts `pickup_date = todayInRiyadh()` even in the UTC-late window.
+  - Validator rejects yesterday-in-Riyadh as `pickup_date/in_past`.
+  - Same-day pickup/return → `rental_days = 1` (the `max(diff, 1)` floor preserved).
+  - 366-day span rejected as `return_date/span_too_long`.
+  - End-to-end RPC creates a real lead with today-in-Riyadh and succeeds.
 
 ### Recent Operational Fixes
 
@@ -279,30 +296,39 @@ Capability gaps (do not assume any of these exist):
 
 ## 9. Recommended Next Tasks
 
-### Task 4.3 — Riyadh Date Handling Cleanup (**recommended next**)
+Task 5 (admin CRUD for companies, branches, cars, offers) is the largest remaining MVP block. To keep PRs reviewable and risk contained, it should be split into two tasks landed in this order.
+
+### Task 5.1 — Company + Branch CRUD (**recommended next**)
 
 Scope:
-- Public lead form currently derives `today` from `new Date().toISOString().split('T')[0]` — that's the UTC date, not the customer's local date. During UTC late-evening hours the form's `min` attribute is yesterday-Riyadh, allowing a "today in Riyadh but yesterday in UTC" pickup to pass the client check before being rejected by the server validator (`todayInRiyadh()`).
-- Fix: derive the form's `today` constant via `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Riyadh' })` — same source the server uses — so client and server agree on what "today" is.
-- Audit any other public timestamp formatting for the same UTC-vs-Riyadh slip-up.
-- Pure client-side fix; no schema or RPC changes.
+- Admin pages to create / edit / archive **companies** and **branches** from inside `/admin`.
+- Routes: `/admin/companies` (list + filter), `/admin/companies/[id]` (edit), `/admin/companies/new` (create); same shape for `/admin/branches`.
+- Company fields per `ai-docs/08_ADMIN_DASHBOARD_SPEC.md`: name_ar, name_en, slug, logo_url, website_url, google_maps_url, rating_snapshot (+ verified_at), trust_level, public_status, internal_notes, status. The slug is the URL key for any future public company page.
+- Branch fields: company_id, city_id, district, address_ar, address_en, google_maps_url, phone, whatsapp_number (must match `^\+9665\d{8}$` — reuse the existing CHECK constraint), working_hours JSON, is_main_branch, status.
+- Role gate: `owner`/`admin` can create + edit; `editor` read-only. Reuse `requireRole(...)` and `assertRole(...)`.
+- Activity / audit log: add `company_created` / `company_updated` / `branch_created` / `branch_updated` events to a new admin-audit channel OR write to `lead_activity_logs` only on association events. Plan should pick one approach.
+- No public-page changes — the routing panel and lead form already read from the existing rows; new rows immediately become available for routing.
+- Likely needs: an `admin_audit_logs` migration (new table) OR a decision to skip CRUD audit for now and revisit. Plan should call this out.
 
-### Task 5 — Company / Branch / Car / Offer CRUD
+### Task 5.2 — Car + Offer CRUD
 
 Scope:
-- Admin pages to create / edit companies, branches, cars, and offers from inside `/admin`.
-- Currently these are seeded via `scripts/seed/*` only — there is no UI to add a new partner without re-running the seed.
-- Per `ai-docs/08_ADMIN_DASHBOARD_SPEC.md`: company fields include logo, website, Google Maps URL, rating snapshot, internal notes, trust level; branches need address, district, working hours, WhatsApp number; offers need company + branch + car + city + prices + approval status.
-- Approval workflow (`approval_status`) is already in the schema — Task 5 should wire it in (admin approve / reject before an offer is publicly visible).
-- Larger than 4.1, 4.2, or 4.3 — plan to split into 5.1 (companies + branches) and 5.2 (cars + offers).
+- Admin pages for **cars** (model catalogue) and **offers** (company × branch × car × city × price tier).
+- Routes: `/admin/cars`, `/admin/cars/[id]`, `/admin/cars/new`; `/admin/offers`, `/admin/offers/[id]`, `/admin/offers/new`.
+- Car fields: brand_ar, brand_en, model_ar, model_en, slug, year, category_id, seats, transmission, fuel_type, features_json, image_url, description_ar, status.
+- Offer fields: company_id, branch_id, car_id, city_id, daily_price_from, weekly_price_from, monthly_price_from, deposit, insurance_info, mileage_limit, airport_delivery, price_status, availability_status, approval_status, last_updated_at, public_status, status.
+- **Approval workflow** — wire in the existing `approval_status` enum: new offers default to `pending_review`; admin must approve before `public_status` can move to `published`. The current Task 1 schema already supports this; the UI is missing.
+- Note the **seed/demo formula** `weekly_price_from = round(daily_price_from × 7 × 0.85, 2)` is **NOT** authoritative once admin creates real offers — the DB-stored value is the source of truth from then on. Admin form should accept all three prices independently.
 
-**Recommended priority order: 4.3 → 5.** Task 4.3 is a tiny client-side cleanup that closes a latent foot-gun in the public lead form's date handling and should land before any real traffic begins. Task 5 (CRUD) is the largest remaining MVP block.
+**Why split:** Task 5.1 unblocks adding new partners without touching the seed scripts (high real-world value). Task 5.2 unblocks the future DB-driven offer page (`selected_offer` request type) that's currently scaffolded but unreachable. Doing both at once would touch ≥20 files in a single PR — too much surface for one review cycle.
+
+**Recommended priority order: 5.1 → 5.2.** Task 4.3 cleared the last small-task backlog; Task 5 is what's left.
 
 ---
 
 ## 10. Short Context for Future AI Sessions
 
-> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, and strips URLs out of customer notes. Latest `main` HEAD: `97b0228`.
+> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Latest `main` HEAD: `0edfc44`.
 
 ---
 
