@@ -5,6 +5,7 @@ import { cities, categories } from '@/lib/data'
 import { useCity } from './city-context'
 import { createLead } from '@/lib/leads/create-lead'
 import { CONSENT_TEXT_AR } from '@/lib/leads/consent'
+import { todayInRiyadh } from '@/lib/leads/date-utils'
 import type { CreateLeadError } from '@/lib/leads/types'
 
 type LeadFormProps = {
@@ -16,7 +17,7 @@ type LeadFormProps = {
 export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug }: LeadFormProps = {}) {
   const { selectedCity, setSelectedCity } = useCity()
   const pathname = usePathname()
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayInRiyadh()
 
   const [city, setCity] = useState('')
   const [pickup, setPickup] = useState(today)

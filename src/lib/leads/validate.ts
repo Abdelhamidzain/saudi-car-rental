@@ -11,12 +11,12 @@
 
 import type { CreateLeadInput, CreateLeadUtm, RequestType } from "./types";
 import { stripUrlsFromNotes } from "./sanitize-notes-urls";
+import { todayInRiyadh } from "./date-utils";
 
 const SLUG_RE = /^[a-z0-9-]{1,80}$/;
 const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const UTM_VALUE_RE = /^[A-Za-z0-9._\- ]{1,100}$/;
 
-const ASIA_RIYADH_TZ = "Asia/Riyadh";
 const MAX_RENTAL_SPAN_DAYS = 365;
 const MAX_CUSTOMER_NOTES_LENGTH = 500;
 
@@ -46,22 +46,6 @@ export type ValidationSuccess = {
   ok: true;
   value: ValidatedLeadInput;
 };
-
-/**
- * Returns today's date in Asia/Riyadh as 'YYYY-MM-DD'. Used to enforce that
- * pickup_date is not in the past relative to the customer's local time.
- */
-export function todayInRiyadh(): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: ASIA_RIYADH_TZ,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const lookup: Record<string, string> = {};
-  for (const part of parts) lookup[part.type] = part.value;
-  return `${lookup.year}-${lookup.month}-${lookup.day}`;
-}
 
 function diffDays(fromIso: string, toIso: string): number {
   const from = Date.UTC(
