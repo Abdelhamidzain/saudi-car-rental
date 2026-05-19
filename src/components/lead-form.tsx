@@ -23,6 +23,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug }: 
   const [ret, setRet] = useState('')
   const [vehicle, setVehicle] = useState(defaultCategorySlug ?? '')
   const [phone, setPhone] = useState('')
+  const [notes, setNotes] = useState('')
   const [honey, setHoney] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [leadNumber, setLeadNumber] = useState<string | null>(null)
@@ -76,6 +77,8 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug }: 
         selected_car_slug: selectedCarSlug ?? null,
         airport_slug: airportSlug ?? null,
         request_type: 'best_offer',
+        pickup_location: null,
+        customer_notes: notes || null,
         source_page: sourcePage,
         utm: readUtmFromLocation(),
         honey,
@@ -94,6 +97,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug }: 
     setErrorMsg(null)
     setHoney('')
     setPhone('')
+    setNotes('')
   }
 
   if (leadNumber) return (
@@ -145,6 +149,21 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug }: 
       <div className="form-group">
         <label htmlFor="lead-phone" className="form-label">رقم الجوال</label>
         <input id="lead-phone" type="tel" className="form-input" placeholder="05XXXXXXXX" dir="ltr" value={phone} onChange={e => setPhone(e.target.value)} aria-required="true" autoComplete="tel" disabled={isPending} />
+      </div>
+
+      <div className="form-group">
+        <label htmlFor="lead-notes" className="form-label">ملاحظات إضافية (اختياري)</label>
+        <textarea
+          id="lead-notes"
+          className="form-input"
+          placeholder="مثال: كرسي أطفال، توصيل لموقع معين، إيجار شهري"
+          rows={2}
+          maxLength={500}
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          disabled={isPending}
+          style={{ resize: 'vertical', minHeight: 56 }}
+        />
       </div>
 
       <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}><input tabIndex={-1} value={honey} onChange={e => setHoney(e.target.value)} autoComplete="off" /></div>

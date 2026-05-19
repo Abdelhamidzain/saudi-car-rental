@@ -19,6 +19,7 @@ export type AdminLeadDetail = {
   return_date: string;
   rental_days: number;
   pickup_location: string | null;
+  customer_notes: string | null;
   source_page: string | null;
   utm_source: string | null;
   utm_medium: string | null;
@@ -66,6 +67,7 @@ export async function getLeadById(id: string): Promise<AdminLeadDetail | null> {
         "return_date",
         "rental_days",
         "pickup_location",
+        "customer_notes",
         "source_page",
         "utm_source",
         "utm_medium",

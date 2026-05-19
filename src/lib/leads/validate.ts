@@ -17,6 +17,7 @@ const UTM_VALUE_RE = /^[A-Za-z0-9._\- ]{1,100}$/;
 
 const ASIA_RIYADH_TZ = "Asia/Riyadh";
 const MAX_RENTAL_SPAN_DAYS = 365;
+const MAX_CUSTOMER_NOTES_LENGTH = 500;
 
 export type ValidatedLeadInput = {
   customer_phone: string;
@@ -28,6 +29,7 @@ export type ValidatedLeadInput = {
   airport_slug: string | null;
   request_type: RequestType;
   pickup_location: string | null;
+  customer_notes: string | null;
   source_page: string;
   utm: Required<CreateLeadUtm>;
   honey: string;
@@ -168,6 +170,28 @@ export function validateCreateLeadInput(
     pickup_location = trimmed.length > 0 ? trimmed : null;
   }
 
+  // customer_notes — optional, ≤ 500 chars after sanitization.
+  // Sanitization:
+  //   - normalize CRLF/CR to LF
+  //   - strip ASCII control chars except newline (0x0A) and tab (0x09)
+  //   - trim
+  //   - empty result -> null
+  // The DB enforces the 500-char cap via CHECK; rejecting here gives a nicer
+  // error message and avoids a useless round-trip.
+  let customer_notes: string | null = null;
+  if (typeof raw.customer_notes === "string") {
+    const normalized = raw.customer_notes
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      // eslint-disable-next-line no-control-regex
+      .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, "")
+      .trim();
+    if (normalized.length > MAX_CUSTOMER_NOTES_LENGTH) {
+      return { ok: false, field: "customer_notes", reason: "too_long" };
+    }
+    customer_notes = normalized.length === 0 ? null : normalized;
+  }
+
   // source_page
   if (
     typeof raw.source_page !== "string" ||
@@ -194,6 +218,7 @@ export function validateCreateLeadInput(
       airport_slug,
       request_type: raw.request_type,
       pickup_location,
+      customer_notes,
       source_page: raw.source_page.slice(0, 500),
       utm: cleanUtm(raw.utm),
       honey,

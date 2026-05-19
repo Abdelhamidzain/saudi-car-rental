@@ -78,7 +78,7 @@ export default async function LeadDetailPage({
     rental_days: lead.rental_days,
     customer_phone: lead.customer_phone,
     pickup_location: lead.pickup_location,
-    customer_notes: null as string | null, // not captured by current form
+    customer_notes: lead.customer_notes,
     company_name_ar: null as string | null,
     branch_label: null as string | null,
   };
@@ -108,6 +108,8 @@ export default async function LeadDetailPage({
               <dt>Return</dt><dd className="admin-mono">{lead.return_date}</dd>
               <dt>Rental days</dt><dd>{lead.rental_days}</dd>
               <dt>Pickup location</dt><dd>{lead.pickup_location ?? "—"}</dd>
+              <dt>Customer notes</dt>
+              <dd style={{ whiteSpace: "pre-wrap" }} dir="auto">{lead.customer_notes ?? "—"}</dd>
               <dt>Source page</dt><dd className="admin-mono" style={{ wordBreak: "break-all" }}>{lead.source_page ?? "—"}</dd>
               <dt>UTMs</dt><dd style={{ fontSize: "0.85rem" }}>{utmLine}</dd>
               <dt>Consent</dt>

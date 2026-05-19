@@ -31,6 +31,7 @@ export type CreateLeadInput = {
   airport_slug?: string | null;
   request_type: RequestType;
   pickup_location?: string | null;
+  customer_notes?: string | null;
   source_page: string;
   utm?: CreateLeadUtm | null;
   honey?: string | null;

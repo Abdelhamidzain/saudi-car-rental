@@ -124,6 +124,7 @@ export async function createLead(
     p_consent_text_version: CONSENT_TEXT_VERSION,
     p_consent_ip: consent_ip,
     p_log_metadata: log_metadata,
+    p_customer_notes: v.value.customer_notes,
   };
 
   const { data, error } = await getSupabaseAdminClient().rpc(
