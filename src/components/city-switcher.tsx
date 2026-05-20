@@ -1,11 +1,13 @@
 'use client'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { cities } from '@/lib/data'
+import { buildRouteFromContext } from '@/lib/search/url-builder'
 import { useCity } from './city-context'
 
 export function CitySwitcher() {
   const { selectedCity, setSelectedCity } = useCity()
   const router = useRouter()
+  const pathname = usePathname() || ''
   const current = cities.find(c => c.slug === selectedCity)
 
   return (
@@ -25,7 +27,7 @@ export function CitySwitcher() {
               className={`city-option ${selectedCity === c.slug ? 'city-option-active' : ''}`}
               onClick={() => {
                 setSelectedCity(c.slug)
-                router.push(`/sa/${c.slug}`)
+                router.push(buildRouteFromContext(c.slug, pathname))
               }}
             >
               <span>{c.nameAr}</span>
