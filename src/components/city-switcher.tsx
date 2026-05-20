@@ -1,9 +1,11 @@
 'use client'
+import { useRouter } from 'next/navigation'
 import { cities } from '@/lib/data'
 import { useCity } from './city-context'
 
 export function CitySwitcher() {
   const { selectedCity, setSelectedCity } = useCity()
+  const router = useRouter()
   const current = cities.find(c => c.slug === selectedCity)
 
   return (
@@ -21,7 +23,10 @@ export function CitySwitcher() {
               role="option"
               aria-selected={selectedCity === c.slug}
               className={`city-option ${selectedCity === c.slug ? 'city-option-active' : ''}`}
-              onClick={() => setSelectedCity(c.slug)}
+              onClick={() => {
+                setSelectedCity(c.slug)
+                router.push(`/sa/${c.slug}`)
+              }}
             >
               <span>{c.nameAr}</span>
               <span className="city-option-price">من {c.minPrice} ر.س</span>
