@@ -448,7 +448,7 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
 - **Car detail migration (Task 6.2D) / Task 6.3 not started.**
 
 ### Task 6.2X — Fix Duplicated/Global LocalBusiness JSON-LD
-**Commit:** `206a697` (current `main` HEAD).
+**Commit:** `206a697`.
 - **File changed (1):**
   - **MODIFIED** [src/app/(site)/layout.tsx](../src/app/(site)/layout.tsx) — removed the third entry of the layout-level JSON-LD `@graph` (`generateLocalBusinessSchema(getCityBySlug('riyadh')!)`); removed the now-unused `getCityBySlug` and `generateLocalBusinessSchema` imports; kept `SITE_NAME` and `SITE_URL`.
 - **What was fixed:**
@@ -476,6 +476,61 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
   - ✅ `npm run db:seed` not run — not relevant (this task touches no schema, no data, no public-data adapters).
 - **No DB migration. No new RPC. No new npm dependency. No admin changes. No lead form changes. No JSON-LD generator changes** (`generateBreadcrumbSchema`, `generateFAQSchema`, `generateLocalBusinessSchema` still exported from `data.ts` — all page-level emitters still use them). DB overlay adapters untouched. `src/lib/data.ts` untouched. `branch.whatsapp_number` not exposed.
 - **Task 6.2D / 6.3 not started.**
+
+### Task 6.2D — Car Detail Public Page DB Overlay
+**Commit:** `369793c` (current `main` HEAD).
+- **Route affected:** `/sa/[city]/[category]/[car]` only. No other public route changed.
+- **Files changed (2):**
+  - **NEW** [src/lib/public-data/adapters/car-page.ts](../src/lib/public-data/adapters/car-page.ts) — server-only adapter; runs `getPublishedCityBySlug`, `getActiveCarCategoryBySlug`, `getActiveCarBySlug` in parallel via `Promise.all`; composes `carNameAr = ${brand_ar} ${model_ar}` to match the static `CarModel.nameAr` format; returns `{ cityNameAr, cityNameEn, categoryNameAr, categoryNameEn, carBrand, carBrandAr, carModel, carModelAr, carNameAr, carYear } | null` (null on any failure or if any of the three rows is missing/unpublished/archived; try/catch + `console.error`).
+  - **MODIFIED** [src/app/(site)/sa/[city]/[category]/[car]/page.tsx](../src/app/(site)/sa/[city]/[category]/[car]/page.tsx) — both `generateMetadata` and the page component compute six overlaid identifiers (`cityNameAr`, `categoryNameAr`, `carBrand`, `carBrandAr`, `carNameAr`, `carYear`) via `overlay?.X ?? static.X`; H1, breadcrumb, hero pills, pricing section header, specs grid labels, why-this-car header, city-tips section, similar-cars header, other-cities cards, FAQ Qs/As, SSR internal-link cluster, CTA, JSON-LD Breadcrumb names, Product `name` and `brand.name` all reference the overlaid identifiers.
+- **Approach: augmentation, not full DB swap** (same pattern as Tasks 6.2A/B/C).
+  - `src/lib/data.ts` remains the route existence / 404 boundary.
+  - DB overlay is applied only for safe scalar identity fields.
+  - Static fallback remains available — DB outage, draft/archived rows, missing rows, or any-of-three-missing all transparently fall back to `data.ts`.
+- **Overlay fields:**
+  - `cityNameAr` ← `cities.name_ar`
+  - `cityNameEn` ← `cities.name_en` (plumbed for forward compatibility).
+  - `categoryNameAr` ← `car_categories.name_ar`
+  - `categoryNameEn` ← `car_categories.name_en` (plumbed).
+  - `carBrand` ← `cars.brand` (English; consumed by Product JSON-LD `brand.name`).
+  - `carBrandAr` ← `cars.brand_ar`
+  - `carModel` ← `cars.model` (plumbed).
+  - `carModelAr` ← `cars.model_ar`
+  - **`carNameAr` composed in adapter** as `` `${brand_ar} ${model_ar}` `` to match the static `CarModel.nameAr` format ("هيونداي اكسنت" etc.).
+  - `carYear` ← `cars.year` (nullable; falls back to static when null).
+- **Any-side-missing rule.** If any of the three DB rows (city / category / car) is missing/unpublished/archived, the adapter returns null and the page falls back fully to `data.ts`. This avoids mixing DB and static values across rows on the same page.
+- **Static `data.ts` remains responsible for:**
+  - `generateStaticParams` (`cities × carModels` cartesian product — **174** car-detail paths at build time),
+  - `car.category !== cat.slug` validation (cross-segment integrity guard, the 404 boundary),
+  - `car.dailyPrice` / `car.monthlyPrice` (used in title, description, OG, Twitter, hero pill, pricing card, FAQ A, other-cities cards),
+  - **Product JSON-LD `lowPrice` / `highPrice` / `offerCount`** (`AggregateOffer` price fields verified static across 7 representative routes),
+  - `generateCarSEOContent(car, city, cat)` and the returned `seo` object (`uniqueIntro`, `cityTips`, `whyThisCar`, `pricingDetails`, `rentalProcess`, `weeklyPrice`),
+  - `car.features` (FAQ A `join`, why-this-car grid),
+  - `car.description` (FAQ A),
+  - `car.seats`, `car.transmissionAr`, `car.fuelAr` (hero pills, specs grid; Arabic-only fields with no DB analogue),
+  - `cat.icon`, `cat.minPrice` (visual + scalar with no overlay),
+  - `getCarsByCategory(cat.slug)` → `similarCars` list,
+  - `getAirportsForCity(city.slug)` (FAQ #4 interpolation),
+  - `getPartnersForCity(city.slug)` (FAQ #6 + Product `offerCount` fallback),
+  - `categoryGradients` (visual styling for similar-car cards).
+- **Pricing / offers were NOT migrated.** Adapter never queries `offers` or `branches`. `car.dailyPrice` / `car.monthlyPrice` continue to come from `data.ts.carModels[].dailyPrice`/`monthlyPrice`. **Product JSON-LD price fields remain static** — verified directly via curl on 7 prod routes: `"lowPrice":X,"highPrice":Y` matches `data.ts.carModels[].dailyPrice/monthlyPrice` exactly.
+- **JSON-LD generators unchanged.** `generateBreadcrumbSchema`, `generateFAQSchema`, `generateLocalBusinessSchema`, `generateCarSEOContent` all untouched. Breadcrumb item names use overlaid identifiers so they match the visible breadcrumb. Product `name` and `brand.name` use overlaid identifiers; Product `description` continues to come from static `seo.uniqueIntro`; Product `offers` block (prices/availability/currency/offerCount) all static.
+- **Sitemap unchanged.** [src/app/sitemap.ts](../src/app/sitemap.ts) was not touched.
+- **Build baseline unchanged: 237 static pages.**
+- **Task 6.2X invariant preserved on every car-detail route** — verified via curl: Product schema present, **zero** `LocalBusiness` blocks, `WebSite` + `Organization` present on every route.
+- **Smoke tests passed (9/9 groups PASS, all transient DB mutations restored):**
+  - **174/174 valid city × category × car triples** matched static seed (city/category `name_ar`, composed `carNameAr = brand_ar + model_ar`, `carBrandAr`, `carYear` aligned across every triple).
+  - Missing city slug — static undefined AND adapter null → page would `notFound()`.
+  - Missing category slug — same.
+  - Missing car slug — same.
+  - Draft city → adapter null → fallback. Restored.
+  - Archived category → adapter null → fallback. Restored.
+  - Archived car → adapter null → fallback. Restored.
+  - Transient `cars.model_ar` edit on `hyundai-accent` → composed overlay returned `"هيونداي اختبار: اكسنت"`; static `carModels[0].nameAr` unchanged. Restored.
+  - Pricing + features + description + SEO content stay static — `dailyPrice=79`, `monthlyPrice=1899`, `features.length=4`, `description=96c`, `seo.weeklyPrice=470`, `seo.uniqueIntro=229c` — all resolved from `data.ts`, not adapter.
+- **Rendered output verification (prod build, 7 representative routes):** title correctly interpolates composed `carNameAr` + overlaid `cityNameAr` for `hyundai-accent`/`toyota-fortuner`/`toyota-innova`/`mercedes-e-class`/`bmw-5-series`/`toyota-camry`/`toyota-hiace`; Product schema present with static `lowPrice`/`highPrice`; 0 LocalBusiness blocks per route.
+- **No DB migration. No new RPC. No new npm dependency. No admin changes. No lead form changes. No sitemap changes. No JSON-LD generator changes.** `branch.whatsapp_number` not exposed (adapter touches only `cities`, `car_categories`, and `cars` tables; no branch or offer data fetched).
+- **Task 6.3 not started.**
 
 ### Recent Operational Fixes
 
@@ -546,7 +601,7 @@ Capability gaps (do not assume any of these exist):
 - `features_json` editor on cars.
 - Rating snapshot editor on companies.
 - File-upload UI for logos and car images (URL-paste only today).
-- Public pages reading from Supabase — partial: `/sa/airports/[airport]` (Task 6.2A), `/sa/[city]` (Task 6.2B), and `/sa/[city]/[category]` (Task 6.2C) now apply DB overlays over `src/lib/data.ts`. The remaining public routes (`/sa/[city]/[category]/[car]`, `/`, `/about`, `/contact`, `/privacy`) still render purely from `src/lib/data.ts`. The category page's car grid, per-car pricing, `cat.minPrice`, `categoryGradients`, and per-category Arabic intros (`descs`) also remain on `data.ts` — list-data and pricing migration is deferred to Task 6.2D and a future SEO-content refresh.
+- Public pages reading from Supabase — partial: `/sa/airports/[airport]` (Task 6.2A), `/sa/[city]` (Task 6.2B), `/sa/[city]/[category]` (Task 6.2C), and `/sa/[city]/[category]/[car]` (Task 6.2D) now apply DB overlays over `src/lib/data.ts`. The remaining public routes (`/`, `/about`, `/contact`, `/privacy`) still render purely from `src/lib/data.ts`. **Pricing migration is still pending across all four migrated routes** — `car.dailyPrice`, `car.monthlyPrice`, `cat.minPrice`, the category car grid, `categoryGradients`, per-category Arabic intros (`descs`), per-car features/description, `generateCarSEOContent` content blocks, and Product JSON-LD `lowPrice`/`highPrice` all remain on `data.ts`. A future dedicated pricing task should migrate these once the ranking rule (e.g. "cheapest visible offer per car/city" via `offers` table) is decided.
 - ~~Layout-level `LocalBusiness` JSON-LD always emits Riyadh~~ **Fixed by Task 6.2X (`206a697`).** Every public route now has exactly one coherent `LocalBusiness` block where appropriate (correct per-city) and zero on routes that aren't local businesses (`/about`, `/contact`, `/privacy`, car detail). Layout-level JSON-LD now contains only `WebSite` + `Organization`.
 - Rate limiting on `/admin/login` (the public lead-form endpoint is rate-limited; the admin sign-in form is not — Supabase Auth's own rate limit applies but app-side is unchanged).
 - Profanity filter on `customer_notes` (URL stripping is in place; explicit profanity matching is not).
@@ -560,40 +615,45 @@ Capability gaps (do not assume any of these exist):
 
 ## 9. Recommended Next Tasks
 
-All admin CRUD is in place (Leads, Companies, Branches, Cars, Offers), the read-only public DB data layer (Task 6.1) is in place, and three public routes — `/sa/airports/[airport]` (Task 6.2A), `/sa/[city]` (Task 6.2B), and `/sa/[city]/[category]` (Task 6.2C) — now consume it via the augmentation pattern. The pre-existing duplicated-layout `LocalBusiness` JSON-LD has been cleaned up (Task 6.2X). The next public route to migrate is the car detail page.
+All admin CRUD is in place (Leads, Companies, Branches, Cars, Offers), the read-only public DB data layer (Task 6.1) is in place, and four public routes — `/sa/airports/[airport]` (Task 6.2A), `/sa/[city]` (Task 6.2B), `/sa/[city]/[category]` (Task 6.2C), and `/sa/[city]/[category]/[car]` (Task 6.2D) — now consume it via the augmentation pattern. The duplicated-layout `LocalBusiness` JSON-LD has been cleaned up (Task 6.2X). With the four detail routes done, the next step is a full SEO / structured-data regression sweep before declaring the migration complete.
 
-### Task 6.2D — Car Detail Public Page DB Overlay (**recommended next**)
+### Task 6.3 — SEO / Sitemap / Structured Data Regression Sweep (**recommended next**)
 
-Route: `/sa/[city]/[category]/[car]`. Highest cognitive load of the public migration:
+**Why now:** Four public route types are now DB-overlay-driven (airports, city, category, car detail) and one site-level structured-data cleanup is done (Task 6.2X). Before celebrating, do a single coordinated regression sweep that catches any drift across the migrated surface. This is the natural "stop the line and verify" moment.
 
-- Three-level join (city × category × car).
-- The car may have `features_json`, `description_ar`, `image_url` — admin-authored fields with content gaps that the static fallback currently fills.
-- Largest static-param fan-out (currently 174 cars permutations per the build log).
-- Pricing decision: the page currently shows `dailyPrice` from `carModels` static; live pricing lives in `offers` table with the longer visibility chain. Whether to overlay live offers is a real product decision (cheapest offer? city-bound? per-branch?) — plan carefully.
+**Scope (pure validation + docs work — no app file changes):**
+1. **Sitemap diff.** Compare `app/sitemap.ts` output before/after the full migration. Same URL set, same order, same `<lastmod>` reasoning. Confirm no URL drift.
+2. **Per-page metadata diff** across the four migrated route types. Pick one representative URL per type (e.g. `/sa/airports/king-khalid`, `/sa/jeddah`, `/sa/khobar/luxury`, `/sa/riyadh/economy/hyundai-accent`). For each: `<title>`, `<meta name="description">`, OG title/description, Twitter title/description, and `alternates.canonical` should be byte-identical to a pre-migration baseline (since DB matches static for every seeded row).
+3. **JSON-LD payload audit.** For each representative URL:
+   - Exactly one coherent `LocalBusiness` block where appropriate (validates Task 6.2X invariant).
+   - `Breadcrumb` names match the visible breadcrumb (no static/overlay divergence).
+   - `FAQPage` Qs/As match visible body.
+   - `Product` schema on car-detail with static `lowPrice`/`highPrice` (validates Task 6.2D pricing deferral).
+   - `WebSite` + `Organization` blocks present on every route.
+4. **Structured-data validation.** Run the four representative URLs through Google's Rich Results Test (or `schema.org`'s validator). Confirm no errors / warnings introduced by the migration.
+5. **Lighthouse spot-check.** SEO score on one URL per route type — no regression vs baseline.
+6. **Docs refresh.** Update `ai-docs/10_SEO_AND_CONTENT_RULES.md` if anything in the DB-overlay world should now be reflected as policy (e.g. "DB `name_ar` is the authoritative customer-visible city name; `data.ts` is the SEO fallback").
+7. **Optional:** decide whether to remove the now-unused `description`, `image`, `partnerCount`, `lat`, `lng` fields from `data.ts` (they still drive JSON-LD `LocalBusiness` and hero subtitle on the city page — leave them until those move to DB). **Recommend leaving `data.ts` intact for now** — it's the fallback source and the SEO field gap on `cities` table makes deletion premature.
 
-**Decisions to bring into the 6.2D plan:**
+**Expected file budget:** 0–1 app files (no changes expected); possibly 1 docs file (`ai-docs/10_SEO_AND_CONTENT_RULES.md`) if a policy update is needed. No DB migration, no schema changes.
 
-1. **Static-page count target.** Stay at 237. `generateStaticParams` continues to read `data.ts.carModels` so cardinality is build-time DB-independent.
-2. **What gets overlaid.** Recommendation (to confirm at plan time): the same scalar set as 6.2C — `cityNameAr`, `categoryNameAr` — plus a new `carBrandAr`, `carModelAr`, optional `carYear` if useful. Leave per-car pricing (`dailyPrice`, `monthlyPrice`), `features_json`, image URL, and the "compare offers" CTA on static for 6.2D.
-3. **Pricing list deferral.** Live offers list and "cheapest current offer" computation belong in a separate sub-task (`6.2D-offers` or a future "live pricing" sub-task) — they require a new query helper and product decisions about ranking. Do NOT bundle into 6.2D.
-4. **JSON-LD source.** Continue passing static `City` to `generateLocalBusinessSchema`. If the car page emits `Product` / `Offer` schema, those stay on `data.ts` for now.
+### Task 6.2E — Homepage + static pages migration (after 6.3)
 
-#### Subsequent sub-tasks (planned, NOT to start until 6.2D lands)
-- 6.2E — `/` (homepage) and `/about` / `/contact` / `/privacy` if they reference seeded data.
+Route candidates: `/`, `/about`, `/contact`, `/privacy`. The home page references `homeFAQs`, `cities`, `categories`, `carModels`, `airports` from `data.ts`. `/about`, `/contact`, `/privacy` are mostly hand-authored static content with no per-row interpolation; they may not need DB overlay at all. Plan once 6.3 validates the four detail routes hold together.
 
-### Task 6.3 — SEO / sitemap validation after full DB switch (final)
+### Pricing migration (future, separate task)
 
-Once Tasks 6.2A–E (+ 6.2X) are done, do the SEO regression sweep before celebrating.
+A dedicated future task should migrate per-car prices from `offers` only after the ranking rule is decided — for example, **"cheapest visible offer per car-in-city"** computed as `MIN(offers.daily_price_from)` where:
 
-**Scope:**
-- Diff `app/sitemap.ts` output before vs after the full migration. Same URL set, same order, same `<lastmod>` reasoning.
-- Diff per-page `<title>`, `<meta name="description">`, OG/Twitter, JSON-LD payloads. Where the DB has equivalent SEO copy (`seo_title_ar` / `seo_description_ar`), confirm it's used. Where the DB doesn't, confirm the fallback content matches.
-- Confirm only one coherent `LocalBusiness` block per page (validates Task 6.2X).
-- Spot-check three routes per type (one city, one category, one car, one airport) with Lighthouse + a manual SERP-preview tool.
-- Update `ai-docs/10_SEO_AND_CONTENT_RULES.md` to declare the DB as the authoritative SEO content source (where applicable).
-- Pure validation + docs work. No app file changes.
+- `offers.status='active' AND offers.public_status='published'`
+- `offers.approval_status IN ('approved','auto_approved')`
+- `offers.availability_status <> 'unavailable'`
+- Parent visibility (company / branch / car) is also published/active
+- Optional: `offers.city_id` matches the route city
 
-**Recommended priority order: 6.2D (car — HIGHER risk) → 6.2E (homepage + static pages) → 6.3.** Each step is reversible by reverting one commit. The augmentation pattern (overlay, never full swap) means the static `data.ts` fallback keeps the public site alive if any DB row is missing or draft.
+Once the ranking is settled, the existing `car-page` adapter shape can absorb `dailyPrice` / `monthlyPrice` overlay fields, and the Product JSON-LD `lowPrice` / `highPrice` shift to live data. This task is gated on the SEO sweep (6.3) and on a small product decision about how to handle cars-in-cities with zero current offers (today the static fallback is unambiguous; with overlay we'd need a "no live offer → static fallback" rule).
+
+**Recommended priority order: 6.3 (SEO sweep) → 6.2E (homepage + static pages) → pricing migration.** Each step is reversible by reverting one commit. The augmentation pattern keeps the static `data.ts` fallback alive if any DB row is missing or draft.
 
 **Important constraints for the remaining Task 6 sub-tasks:**
 - Do not change the lead form, lead routing, or admin dashboard.
@@ -608,7 +668,7 @@ Once Tasks 6.2A–E (+ 6.2X) are done, do the SEO regression sweep before celebr
 
 ## 10. Short Context for Future AI Sessions
 
-> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still render from `src/lib/data.ts`, but the safe DB read layer for the future migration is now in place at `src/lib/public-data/` (Task 6.1) — 7 server-only helpers with strict visibility filters and a deliberate `branch.whatsapp_number` exclusion so direct partner contact stays admin-side. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Admin can also manage rental partners directly: `/admin/companies` lists every company; create / edit forms cover both companies and branches; activation / deactivation / archival is via existing `status` + `public_status` enums (no physical deletes); branch WhatsApp numbers are normalised to `+9665XXXXXXXX` on save; archived companies/branches automatically drop out of the routing picker. `/admin/cars` lists the car-model catalogue with the same create / edit / archive pattern; the form pre-fills English + Arabic brand and model, slug, year (1990–2100), category (dropdown of active `car_categories`), seats (1–100), transmission (`automatic` / `manual` / none), fuel type, image URL, and description; `features_json` is preserved on edit but not editable through the UI. `/admin/offers` ties everything together: a 19-field form in four sections (Who / Pricing / Terms / Workflow) creates company × branch × car × city × airport bundles with daily/weekly/monthly price tiers; the city is server-derived from the chosen branch (the form never sends it); at least one price is required; ✨ Suggest buttons offer non-binding weekly/monthly hints; **publishing an offer requires `approval_status='approved'` (or `auto_approved`)** and **rejecting an offer auto-forces `public_status='hidden'`**; `last_updated_at` bumps only when price or availability changes — stale offers (>30d) show a red indicator. All MVP admin CRUD is now complete (Leads · Companies · Branches · Cars · Offers), the read-only public data layer is in place, and three public routes now consume it via the **augmentation** pattern: `/sa/airports/[airport]` (6.2A), `/sa/[city]` (6.2B), and `/sa/[city]/[category]` (6.2C). On every migrated route, static `data.ts` stays load-bearing (route existence, `generateStaticParams`, JSON-LD `LocalBusiness` city source for `lat`/`lng`/`partnerCount`/`description`); a server-only DB overlay augments visible scalars (`name_ar`, `min_price_from`, etc.) with a `??` fallback so DB outages, draft/archived rows, or one-side-missing transparently fall back to static. The category-page car grid, per-car pricing (`dailyPrice`), `cat.minPrice`, `categoryGradients`, and hand-authored Arabic intros (`descs`) all deliberately stayed on `data.ts` — list-data and pricing migration is queued for 6.2D. City-page Arabic titles use the `تأجير سيارات في [city]` wording (6.2B's `6960242` initially shipped a `بـ`-prefix variant; follow-up `9090d39` reverted to `في`). Build baseline holds at 237 static pages. Task 6.2X (`206a697`) cleaned up the pre-existing duplicated layout-level `LocalBusiness` JSON-LD: the `(site)` layout `@graph` now contains only `WebSite` + `Organization`, so every route has exactly one coherent `LocalBusiness` block where appropriate (correct per-city) and zero on routes that aren't places (`/about` / `/contact` / `/privacy`, car detail). Car detail (6.2D), homepage + static (6.2E), and SEO validation (6.3) follow. Latest `main` HEAD: `206a697`.
+> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still render from `src/lib/data.ts`, but the safe DB read layer for the future migration is now in place at `src/lib/public-data/` (Task 6.1) — 7 server-only helpers with strict visibility filters and a deliberate `branch.whatsapp_number` exclusion so direct partner contact stays admin-side. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Admin can also manage rental partners directly: `/admin/companies` lists every company; create / edit forms cover both companies and branches; activation / deactivation / archival is via existing `status` + `public_status` enums (no physical deletes); branch WhatsApp numbers are normalised to `+9665XXXXXXXX` on save; archived companies/branches automatically drop out of the routing picker. `/admin/cars` lists the car-model catalogue with the same create / edit / archive pattern; the form pre-fills English + Arabic brand and model, slug, year (1990–2100), category (dropdown of active `car_categories`), seats (1–100), transmission (`automatic` / `manual` / none), fuel type, image URL, and description; `features_json` is preserved on edit but not editable through the UI. `/admin/offers` ties everything together: a 19-field form in four sections (Who / Pricing / Terms / Workflow) creates company × branch × car × city × airport bundles with daily/weekly/monthly price tiers; the city is server-derived from the chosen branch (the form never sends it); at least one price is required; ✨ Suggest buttons offer non-binding weekly/monthly hints; **publishing an offer requires `approval_status='approved'` (or `auto_approved`)** and **rejecting an offer auto-forces `public_status='hidden'`**; `last_updated_at` bumps only when price or availability changes — stale offers (>30d) show a red indicator. All MVP admin CRUD is now complete (Leads · Companies · Branches · Cars · Offers), the read-only public data layer is in place, and four public routes now consume it via the **augmentation** pattern: `/sa/airports/[airport]` (6.2A), `/sa/[city]` (6.2B), `/sa/[city]/[category]` (6.2C), and `/sa/[city]/[category]/[car]` (6.2D). On every migrated route, static `data.ts` stays load-bearing (route existence, `generateStaticParams`, JSON-LD `LocalBusiness` city source for `lat`/`lng`/`partnerCount`/`description`, all pricing fields); a server-only DB overlay augments visible scalar identity (`name_ar` for city/category/car, composed `carNameAr = ${brand_ar} ${model_ar}`, `carYear`) with a `??` fallback so DB outages, draft/archived rows, or any-side-missing transparently fall back to static. **Pricing remains static across all migrated routes** — `car.dailyPrice`, `car.monthlyPrice`, `cat.minPrice`, the category car grid, `categoryGradients`, `descs`, `generateCarSEOContent`, per-car features/description, and Product JSON-LD `lowPrice`/`highPrice` all stay on `data.ts`. A future dedicated pricing task should migrate prices from `offers` once the ranking rule (e.g. "cheapest visible offer per car/city") is decided. City-page Arabic titles use the `تأجير سيارات في [city]` wording (6.2B's `6960242` initially shipped a `بـ`-prefix variant; follow-up `9090d39` reverted to `في`). Build baseline holds at 237 static pages. Task 6.2X (`206a697`) cleaned up the pre-existing duplicated layout-level `LocalBusiness` JSON-LD: the `(site)` layout `@graph` now contains only `WebSite` + `Organization`, so every route has exactly one coherent `LocalBusiness` block where appropriate (correct per-city) and zero on routes that aren't places (`/about` / `/contact` / `/privacy`, car detail). With all four detail-route migrations done, the next step is a full SEO / sitemap / structured-data regression sweep (Task 6.3) before homepage migration (6.2E) and the future pricing migration. Latest `main` HEAD: `369793c`.
 
 ---
 
