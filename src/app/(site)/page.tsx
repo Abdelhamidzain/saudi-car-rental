@@ -18,7 +18,7 @@ export default function HomePage() {
           <div className="hero-inner">
             <div className="hero-text">
               <div className="hero-badge"><span className="pulse"/>+4,200 طلب شهرياً</div>
-              <h1 className="hero-title">تأجير سيارات في السعودية<br/><span>قارن واحجز بأفضل سعر</span></h1>
+              <h1 className="hero-title">تأجير سيارات في السعودية <span>بأسعار تنافسية وخيارات موثوقة</span></h1>
               <p className="hero-subtitle">نجمع لك عروض تأجير سيارات من أكثر من 50 مكتب معتمد في الرياض وجدة والدمام. قارن الأسعار واحصل على أفضل عرض تأجير سيارة بأقل من 79 ريال يومياً.</p>
               <div className="hero-stats">
                 <div style={{textAlign:'center'}}><div className="stat-num">+50</div><div className="stat-label">مكتب معتمد</div></div>
