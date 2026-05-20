@@ -4,25 +4,32 @@ import type { Metadata } from 'next'
 import { cities, categories, getCityBySlug, getCategoryBySlug, getCarsByCategory, categoryGradients, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
+import { getCategoryPageOverlayFromDb } from '@/lib/public-data/adapters/category-page'
 
 export function generateStaticParams() { const p:{city:string;category:string}[]=[]; for(const c of cities) for(const cat of categories) p.push({city:c.slug,category:cat.slug}); return p }
 export async function generateMetadata({params}:{params:Promise<{city:string;category:string}>}):Promise<Metadata> {
-  const city=getCityBySlug((await params).city),cat=getCategoryBySlug((await params).category); if(!city||!cat) return {}
+  const {city:citySlug,category:catSlug} = await params
+  const city=getCityBySlug(citySlug),cat=getCategoryBySlug(catSlug); if(!city||!cat) return {}
+  // Augment (not replace) static city/category with DB overlay for safe scalar labels.
+  // Falls back to static when DB is down, either row is draft/archived, or column null.
+  const overlay = await getCategoryPageOverlayFromDb(citySlug, catSlug)
+  const cityNameAr = overlay?.cityNameAr ?? city.nameAr
+  const categoryNameAr = overlay?.categoryNameAr ?? cat.nameAr
   return {
-    title: `تأجير سيارات ${cat.nameAr} في ${city.nameAr} — من ${cat.minPrice} ريال/يوم`,
-    description: `تأجير سيارات ${cat.nameAr} في ${city.nameAr} بأفضل سعر. قارن عروض تأجير السيارات من الشركات المرخصة. أسعار تأجير سيارة ${cat.nameAr} تبدأ من ${cat.minPrice} ريال يومياً مع التأمين وخدمة التوصيل.`,
+    title: `تأجير سيارات ${categoryNameAr} في ${cityNameAr} — من ${cat.minPrice} ريال/يوم`,
+    description: `تأجير سيارات ${categoryNameAr} في ${cityNameAr} بأفضل سعر. قارن عروض تأجير السيارات من الشركات المرخصة. أسعار تأجير سيارة ${categoryNameAr} تبدأ من ${cat.minPrice} ريال يومياً مع التأمين وخدمة التوصيل.`,
     alternates: { canonical: `/sa/${city.slug}/${cat.slug}` },
     openGraph: {
-      title: `تأجير سيارات ${cat.nameAr} في ${city.nameAr} — من ${cat.minPrice} ريال`,
-      description: `قارن عروض تأجير السيارات من فئة ${cat.nameAr} في ${city.nameAr}. أسعار تأجير سيارة تبدأ من ${cat.minPrice} ريال يومياً.`,
+      title: `تأجير سيارات ${categoryNameAr} في ${cityNameAr} — من ${cat.minPrice} ريال`,
+      description: `قارن عروض تأجير السيارات من فئة ${categoryNameAr} في ${cityNameAr}. أسعار تأجير سيارة تبدأ من ${cat.minPrice} ريال يومياً.`,
       url: `${SITE_URL}/sa/${city.slug}/${cat.slug}`,
       type: 'website',
       locale: 'ar_SA',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `تأجير سيارات ${cat.nameAr} ${city.nameAr} — من ${cat.minPrice} ريال`,
-      description: `قارن عروض تأجير السيارات ${cat.nameAr} في ${city.nameAr}. أسعار تبدأ من ${cat.minPrice} ريال.`,
+      title: `تأجير سيارات ${categoryNameAr} ${cityNameAr} — من ${cat.minPrice} ريال`,
+      description: `قارن عروض تأجير السيارات ${categoryNameAr} في ${cityNameAr}. أسعار تبدأ من ${cat.minPrice} ريال.`,
     },
   }
 }
@@ -38,21 +45,29 @@ const descs:Record<string,(c:string)=>string>={
 }
 
 export default async function CategoryPage({params}:{params:Promise<{city:string;category:string}>}) {
-  const city=getCityBySlug((await params).city),cat=getCategoryBySlug((await params).category); if(!city||!cat) notFound()
-  const desc=(descs[cat.slug]||(c=>`تأجير ${cat.nameAr} في ${c}.`))(city.nameAr)
+  const {city:citySlug,category:catSlug} = await params
+  const city=getCityBySlug(citySlug),cat=getCategoryBySlug(catSlug); if(!city||!cat) notFound()
+  // Augment (not replace) static city/category with DB overlay for safe scalar labels.
+  // Static `city` still passed to generateLocalBusinessSchema below because the DB
+  // lacks lat/lng/partnerCount/description. cat.minPrice, cat.icon, car grid,
+  // gradients, and descs stay on static — deferred to Task 6.2D / SEO refresh.
+  const overlay = await getCategoryPageOverlayFromDb(citySlug, catSlug)
+  const cityNameAr = overlay?.cityNameAr ?? city.nameAr
+  const categoryNameAr = overlay?.categoryNameAr ?? cat.nameAr
+  const desc=(descs[cat.slug]||(c=>`تأجير ${categoryNameAr} في ${c}.`))(cityNameAr)
   const otherCats=categories.filter(c=>c.slug!==cat.slug), otherCities=cities.filter(c=>c.slug!==city.slug).slice(0,4)
   const cars=getCarsByCategory(cat.slug)
-  const faqs=[{q:`كم سعر تأجير سيارة ${cat.nameAr} في ${city.nameAr}؟`,a:`يبدأ سعر الإيجار اليومي لفئة ${cat.nameAr} في ${city.nameAr} من ${cat.minPrice} ريال. الاستئجار الشهري يوفر خصماً يصل 40% مع تغطية تأمينية شاملة.`},{q:`هل عروض تأجير السيارات تشمل التأمين والكيلومترات؟`,a:`نعم، جميع العروض تشمل التأمين الأساسي ضد الغير. يمكنك ترقيته لتأمين شامل مقابل رسوم إضافية بسيطة عند استلام المركبة.`},{q:`ما المستندات المطلوبة للاستئجار؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر ساري المفعول. الحد الأدنى للعمر 21 سنة للفئات العادية و25 للمركبات الفاخرة.`}]
-  const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:city.nameAr,url:`/sa/${city.slug}`},{name:cat.nameAr,url:`/sa/${city.slug}/${cat.slug}`}]),generateFAQSchema(faqs),generateLocalBusinessSchema(city)]}
+  const faqs=[{q:`كم سعر تأجير سيارة ${categoryNameAr} في ${cityNameAr}؟`,a:`يبدأ سعر الإيجار اليومي لفئة ${categoryNameAr} في ${cityNameAr} من ${cat.minPrice} ريال. الاستئجار الشهري يوفر خصماً يصل 40% مع تغطية تأمينية شاملة.`},{q:`هل عروض تأجير السيارات تشمل التأمين والكيلومترات؟`,a:`نعم، جميع العروض تشمل التأمين الأساسي ضد الغير. يمكنك ترقيته لتأمين شامل مقابل رسوم إضافية بسيطة عند استلام المركبة.`},{q:`ما المستندات المطلوبة للاستئجار؟`,a:`يلزم رخصة قيادة سارية وهوية وطنية أو جواز سفر ساري المفعول. الحد الأدنى للعمر 21 سنة للفئات العادية و25 للمركبات الفاخرة.`}]
+  const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:cityNameAr,url:`/sa/${city.slug}`},{name:categoryNameAr,url:`/sa/${city.slug}/${cat.slug}`}]),generateFAQSchema(faqs),generateLocalBusinessSchema(city)]}
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
     <section className="hero"><div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
       <div className="container"><div className="hero-inner"><div className="hero-text">
-        <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{city.nameAr}</Link><span className="sep">/</span><span className="current">{cat.nameAr}</span></div>
-        <h1 className="hero-title">تأجير سيارات {cat.nameAr} في <span>{city.nameAr}</span></h1>
+        <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{cityNameAr}</Link><span className="sep">/</span><span className="current">{categoryNameAr}</span></div>
+        <h1 className="hero-title">تأجير سيارات {categoryNameAr} في <span>{cityNameAr}</span></h1>
         <p className="hero-subtitle">{desc}</p>
-        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ريال/يوم</span><span className="pill pill-glass">{cat.icon} {cat.nameAr}</span><span className="pill pill-glass">شركات مرخصة</span></div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">من {cat.minPrice} ريال/يوم</span><span className="pill pill-glass">{cat.icon} {categoryNameAr}</span><span className="pill pill-glass">شركات مرخصة</span></div>
       </div><div id="form"><LazyLeadForm defaultCategorySlug={cat.slug}/></div></div></div>
     </section>
 
@@ -60,7 +75,7 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
     {/* CAR MODELS */}
     {cars.length > 0 && (
     <section className="section section-white"><div className="container">
-      <div className="section-header"><div className="section-tag">{cat.icon} السيارات المتوفرة</div><h2 className="section-title">سيارات {cat.nameAr} للإيجار في {city.nameAr}</h2><p className="section-sub">اختر الموديل المناسب وقارن العروض المتاحة</p></div>
+      <div className="section-header"><div className="section-tag">{cat.icon} السيارات المتوفرة</div><h2 className="section-title">سيارات {categoryNameAr} للإيجار في {cityNameAr}</h2><p className="section-sub">اختر الموديل المناسب وقارن العروض المتاحة</p></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(240px,1fr))',gap:20}}>{cars.map(c=>{
         const grad=categoryGradients[cat.slug]||categoryGradients.economy
         return(
@@ -82,14 +97,14 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
     )}
 
     <section className="section"><div className="container">
-      <div className="section-header"><div className="section-tag">🚗 فئات أخرى</div><h2 className="section-title">فئات أخرى متوفرة في {city.nameAr}</h2></div>
+      <div className="section-header"><div className="section-tag">🚗 فئات أخرى</div><h2 className="section-title">فئات أخرى متوفرة في {cityNameAr}</h2></div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))',gap:16}}>{otherCats.map(c=>(
         <Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`} className="cat-card"><div style={{fontSize:'2rem'}}>{c.icon}</div><div className="cat-name">{c.nameAr}</div><div className="cat-price">من {c.minPrice} ريال</div></Link>
       ))}</div>
     </div></section>
 
     <section className="section section-white"><div className="container">
-      <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير سيارات {cat.nameAr} في مدن أخرى</h2>
+      <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير سيارات {categoryNameAr} في مدن أخرى</h2>
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:16}}>{otherCities.map(c=>(
         <Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`} className="link-card"><div className="link-card-name">{c.nameAr}</div><div className="link-card-sub">من {cat.minPrice} ريال</div></Link>
       ))}</div>
@@ -98,18 +113,18 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
     </NoSSR>
 
     <section className="section" id="faq"><div className="container-sm">
-      <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة عن تأجير سيارات {cat.nameAr} في {city.nameAr}</h2></div>
+      <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة عن تأجير سيارات {categoryNameAr} في {cityNameAr}</h2></div>
       <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
     </div></section>
 
     {/* SSR INTERNAL LINKS */}
     <div className="ssr-links">
       <div className="container">
-        <h2 className="ssr-links-title">تأجير سيارات {cat.nameAr} في مدن أخرى</h2>
+        <h2 className="ssr-links-title">تأجير سيارات {categoryNameAr} في مدن أخرى</h2>
         <div className="ssr-links-grid">
-          {cities.filter(c=>c.slug!==city.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`}>{cat.icon} {cat.nameAr} {c.nameAr}</Link>)}
+          {cities.filter(c=>c.slug!==city.slug).slice(0,5).map(c=><Link key={c.slug} href={`/sa/${c.slug}/${cat.slug}`}>{cat.icon} {categoryNameAr} {c.nameAr}</Link>)}
         </div>
-        <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من فئات أخرى في {city.nameAr}</h2>
+        <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة من فئات أخرى في {cityNameAr}</h2>
         <div className="ssr-links-grid">
           {categories.filter(c=>c.slug!==cat.slug).map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr}</Link>)}
         </div>
