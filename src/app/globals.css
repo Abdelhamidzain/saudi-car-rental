@@ -76,7 +76,8 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 
 /* ===== GLASS FORM ===== */
 /* FIX: CLS — explicit min-height prevents layout shift */
-.glass-form{background:rgba(255,255,255,0.06);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:32px;position:relative;overflow:hidden;min-height:480px}
+.glass-form{background:rgba(255,255,255,0.06);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:32px;position:relative;overflow:hidden;min-height:480px;box-sizing:border-box;width:100%;max-width:100%}
+.hero-inner>*{min-width:0}
 .glass-form::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;background:linear-gradient(90deg,#D4A853,#F0D78C,#D4A853)}
 .glass-form-title{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-size:1.25rem;font-weight:800;color:#fff;margin-bottom:4px}
 /* FIX: Contrast — was 0.5, now 0.65 */
@@ -88,12 +89,14 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 .form-input:focus{border-color:#D4A853}
 .form-row{display:grid;grid-template-columns:1fr;gap:12px}
 @media(min-width:640px){.form-row{grid-template-columns:1fr 1fr}}
-.form-group{margin-bottom:16px}
+.form-group{margin-bottom:16px;min-width:0}
 .form-submit{width:100%;padding:16px;border-radius:12px;font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-size:1.1rem;font-weight:800;cursor:pointer;margin-top:8px;background:linear-gradient(135deg,#D4A853,#B8912E);color:#0D1B2A;border:none;transition:transform .3s,box-shadow .3s}
 .form-submit:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(212,168,83,0.35)}
 /* FIX: Contrast — was 0.3, now 0.5 */
 .form-note{text-align:center;font-size:.75rem;color:rgba(255,255,255,0.55);margin-top:12px}
 @media(max-width:640px){.glass-form{padding:20px;min-height:auto;border-radius:18px}.glass-form-title{font-size:1.1rem}.glass-form-sub{margin-bottom:18px}.form-group{margin-bottom:14px}.form-input{padding:12px 14px}}
+@media(max-width:480px){.container{padding:0 16px}}
+@media(max-width:1023px){#main{padding-bottom:88px}}
 .category-strip{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:thin;scroll-snap-type:x proximity;cursor:grab;touch-action:pan-x}
 .category-strip::-webkit-scrollbar{height:6px}
 .category-strip::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:3px}
