@@ -75,7 +75,7 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
         <h1 className="hero-title">تأجير سيارات من <span>{airportNameAr}</span></h1>
         <p className="hero-subtitle">{info[ap.slug]||`تتوفر خدمات الإيجار في ${airportNameAr} من شركات المكاتب المعتمدة. احجز الآن واستلم سيارتك فور وصولك.`}</p>
         <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">✈️ {airportCode}</span><span className="pill pill-accent">من {cityMinPrice} ريال/يوم</span><span className="pill pill-glass">استلام فوري</span><span className="pill pill-glass">المكاتب المعتمدة</span></div>
-      </div><div id="form"><LazyLeadForm airportSlug={ap.slug}/></div></div></div>
+      </div><div id="form"><LazyLeadForm defaultCitySlug={city.slug} airportSlug={ap.slug}/></div></div></div>
     </section>
 
     <NoSSR>

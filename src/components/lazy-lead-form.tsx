@@ -5,6 +5,7 @@ type LazyLeadFormProps = {
   selectedCarSlug?: string
   airportSlug?: string
   defaultCategorySlug?: string
+  defaultCitySlug?: string
 }
 
 const LeadForm = dynamic(() => import('./lead-form').then(m => ({ default: m.LeadForm })), {

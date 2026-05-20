@@ -123,7 +123,7 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
                 <span className="pill pill-glass">{cat.icon} {categoryNameAr}</span>
               </div>
             </div>
-            <div id="form"><LazyLeadForm selectedCarSlug={car.slug} defaultCategorySlug={cat.slug} /></div>
+            <div id="form"><LazyLeadForm defaultCitySlug={city.slug} selectedCarSlug={car.slug} defaultCategorySlug={cat.slug} /></div>
           </div>
         </div>
       </section>

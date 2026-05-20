@@ -12,14 +12,15 @@ type LeadFormProps = {
   selectedCarSlug?: string
   airportSlug?: string
   defaultCategorySlug?: string
+  defaultCitySlug?: string
 }
 
-export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug }: LeadFormProps = {}) {
+export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, defaultCitySlug }: LeadFormProps = {}) {
   const { selectedCity, setSelectedCity } = useCity()
   const pathname = usePathname()
   const today = todayInRiyadh()
 
-  const [city, setCity] = useState('')
+  const [city, setCity] = useState(defaultCitySlug ?? '')
   const [pickup, setPickup] = useState(today)
   const [ret, setRet] = useState('')
   const [vehicle, setVehicle] = useState(defaultCategorySlug ?? '')

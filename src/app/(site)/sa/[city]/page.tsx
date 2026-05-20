@@ -66,7 +66,7 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
           <p className="hero-subtitle">{city.description}</p>
           <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-glass">{city.partnerCount} شركة معتمدة</span><span className="pill pill-accent">من {cityMinPrice} ريال/يوم</span>{ap.length>0&&<span className="pill pill-glass">✈️ توصيل المطار</span>}</div>
         </div>
-        <div id="form"><LazyLeadForm/></div>
+        <div id="form"><LazyLeadForm defaultCitySlug={city.slug}/></div>
       </div></div>
     </section>
 
