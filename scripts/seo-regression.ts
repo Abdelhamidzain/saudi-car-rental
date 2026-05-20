@@ -1,10 +1,29 @@
 /**
- * SEO / Sitemap / Structured Data regression sweep (Task 6.3).
+ * SEO / Sitemap / Structured Data regression sweep (Task 6.3 + Task 7).
  *
  * Usage:
- *   npm run seo:check               # default, read-only — does NOT mutate DB
- *   npm run seo:check -- --fallback # opt-in fallback pass with transient DB
- *                                   #   writes (always restored in try/finally)
+ *   npm run seo:check                              # local, read-only
+ *   npm run seo:check -- --fallback                # local + opt-in DB pass
+ *   BASE=https://my-site.vercel.app npm run seo:check   # remote (e.g. Vercel)
+ *
+ * When BASE is set:
+ *   - Skips the local prod-server boot (target is already remote).
+ *   - Skips the .next/prerender-manifest.json route-count check (it's a
+ *     local-only build artefact; doesn't exist on Vercel's runner).
+ *   - Replaces the manifest check with a sanity sweep: fetch 5 evenly-spaced
+ *     sitemap URLs and assert each returns 200 (catches deploy-time route
+ *     drift even without access to the build manifest).
+ *   - All other assertions (metadata, JSON-LD, privacy) run unchanged.
+ *
+ * When BASE is unset:
+ *   - Original local behaviour: boot/reuse a prod server on PORT=3299, run
+ *     all assertions against http://localhost:3299, including the prerender
+ *     manifest check.
+ *
+ * --fallback works in both modes BUT mutates the DB connected to the env
+ * vars in .env.local. **Do not pair --fallback with a production BASE
+ * unless that's truly intended** — the script prints a confirmation prompt
+ * to stderr if it detects this combo.
  *
  * What it asserts (default, read-only):
  *   1. Build baseline: 236 prerendered routes (from .next/prerender-manifest.json).
@@ -42,12 +61,31 @@
 import { spawn, execSync, type ChildProcess } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { get as httpGet } from "node:http";
+import { get as httpsGet } from "node:https";
 import { createClient } from "@supabase/supabase-js";
 
 // ─── Config ──────────────────────────────────────────────────────────────
 const PORT = Number(process.env.SEO_CHECK_PORT ?? 3299);
-const BASE = `http://localhost:${PORT}`;
+const REMOTE_BASE = process.env.BASE?.replace(/\/$/, "") ?? "";
+const IS_REMOTE = REMOTE_BASE.length > 0;
+const BASE = IS_REMOTE ? REMOTE_BASE : `http://localhost:${PORT}`;
 const RUN_FALLBACK = process.argv.includes("--fallback");
+
+if (IS_REMOTE && !/^https?:\/\//.test(BASE)) {
+  console.error(`FATAL: BASE must start with http:// or https:// (got: ${BASE})`);
+  process.exit(2);
+}
+
+async function warnIfDangerousFallback(): Promise<void> {
+  if (!IS_REMOTE || !RUN_FALLBACK) return;
+  // Heuristic: a custom production domain + --fallback is a foot-gun.
+  if (BASE.includes("vercel.app") || BASE.includes("localhost")) return;
+  console.error(`\n⚠ WARNING: --fallback is enabled against a non-localhost / non-Vercel-preview BASE (${BASE}).`);
+  console.error(`   This will mutate the DB connected to .env.local — likely your production Supabase.`);
+  console.error(`   The mutations are restored in try/finally, but a mid-run crash leaves drift.`);
+  console.error(`   Sleeping 5 seconds — Ctrl+C now to abort.\n`);
+  await new Promise((r) => setTimeout(r, 5000));
+}
 
 // Routes tested by the default pass.
 const ROUTES = {
@@ -83,13 +121,23 @@ function check(name: string, condition: boolean, detail?: string) {
 }
 
 // ─── HTTP helpers ────────────────────────────────────────────────────────
-function fetchUrl(url: string): Promise<{ status: number; body: string }> {
+function fetchUrl(url: string, maxRedirects = 3): Promise<{ status: number; body: string }> {
+  const getter = url.startsWith("https://") ? httpsGet : httpGet;
   return new Promise((resolve, reject) => {
-    const req = httpGet(url, { timeout: 10_000 }, (res) => {
+    const req = getter(url, { timeout: 15_000, headers: { "user-agent": "seo-regression/1.0" } }, (res) => {
+      // Follow redirects (Vercel sometimes returns 308 from custom domains).
+      const status = res.statusCode ?? 0;
+      const loc = res.headers.location;
+      if ([301, 302, 307, 308].includes(status) && loc && maxRedirects > 0) {
+        res.resume();
+        const next = loc.startsWith("http") ? loc : new URL(loc, url).toString();
+        fetchUrl(next, maxRedirects - 1).then(resolve, reject);
+        return;
+      }
       let body = "";
       res.setEncoding("utf8");
       res.on("data", (c) => (body += c));
-      res.on("end", () => resolve({ status: res.statusCode ?? 0, body }));
+      res.on("end", () => resolve({ status, body }));
     });
     req.on("error", reject);
     req.on("timeout", () => { req.destroy(); reject(new Error(`timeout ${url}`)); });
@@ -180,6 +228,16 @@ function countPrerenderedRoutes(): number {
 let spawnedServer: ChildProcess | null = null;
 
 async function ensureServer(): Promise<void> {
+  if (IS_REMOTE) {
+    // Sanity-check the remote URL is reachable.
+    const { status } = await fetchUrl(`${BASE}/`).catch(() => ({ status: 0 }));
+    if (status === 0) {
+      console.error(`FATAL: cannot reach ${BASE}/ — is the URL correct and the deploy live?`);
+      process.exit(2);
+    }
+    console.log(`Targeting remote BASE=${BASE} (status / = ${status}).`);
+    return;
+  }
   if (await isPortListening(PORT)) {
     console.log(`Detected prod server already listening on :${PORT} — reusing.`);
     return;
@@ -208,14 +266,19 @@ function stopServer(): void {
 
 // ─── Group 1: build + sitemap ────────────────────────────────────────────
 async function checkBuildAndSitemap(): Promise<void> {
-  console.log("\n[1/5] Build artefacts + sitemap");
+  console.log(`\n[1/5] ${IS_REMOTE ? "Remote sitemap + URL reachability" : "Build artefacts + sitemap"}`);
 
-  const prerenderedRoutes = countPrerenderedRoutes();
-  check(
-    `Prerendered route count = ${EXPECTED_PRERENDERED_ROUTES}`,
-    prerenderedRoutes === EXPECTED_PRERENDERED_ROUTES,
-    prerenderedRoutes === -1 ? ".next/prerender-manifest.json missing — was the build run?" : `actual=${prerenderedRoutes}`,
-  );
+  if (IS_REMOTE) {
+    // The prerender manifest is a local-only artefact. Replace it with a
+    // remote sanity sweep: fetch 5 evenly-spaced sitemap URLs.
+  } else {
+    const prerenderedRoutes = countPrerenderedRoutes();
+    check(
+      `Prerendered route count = ${EXPECTED_PRERENDERED_ROUTES}`,
+      prerenderedRoutes === EXPECTED_PRERENDERED_ROUTES,
+      prerenderedRoutes === -1 ? ".next/prerender-manifest.json missing — was the build run?" : `actual=${prerenderedRoutes}`,
+    );
+  }
 
   const sm = await fetchUrl(`${BASE}/sitemap.xml`);
   check("/sitemap.xml returns 200", sm.status === 200, `actual=${sm.status}`);
@@ -231,6 +294,34 @@ async function checkBuildAndSitemap(): Promise<void> {
 
   const hasQuery = locs.filter((u) => u.includes("?") || u.includes("#"));
   check("No sitemap URL contains query/fragment", hasQuery.length === 0, hasQuery.slice(0, 3).join(", "));
+
+  if (IS_REMOTE && locs.length > 0) {
+    // Sample 5 evenly-spaced URLs and assert they all return 200. Catches
+    // route-drift on the deployed runner without needing the build manifest.
+    //
+    // If the sitemap URLs point at a DIFFERENT host than BASE (typical when
+    // testing a Vercel preview URL while NEXT_PUBLIC_SITE_URL is set to the
+    // intended production domain), rewrite the fetch URL to use BASE. We're
+    // verifying the deploy serves the path correctly; the canonical URL
+    // embedded in the sitemap is an env-config concern documented in the
+    // runbook (§2: NEXT_PUBLIC_SITE_URL on Vercel).
+    const sitemapHost = (() => { try { return new URL(locs[0]).host; } catch { return ""; } })();
+    const baseHost = (() => { try { return new URL(BASE).host; } catch { return ""; } })();
+    const hostMismatch = sitemapHost && baseHost && sitemapHost !== baseHost;
+    if (hostMismatch) {
+      console.log(`  ℹ Sitemap URLs reference host=${sitemapHost}, BASE host=${baseHost} — fetching paths against BASE.`);
+    }
+    const step = Math.max(1, Math.floor(locs.length / 5));
+    const samples = [0, step, step * 2, step * 3, locs.length - 1].map((i) => locs[i]).filter(Boolean);
+    for (const sourceUrl of samples) {
+      const fetchTarget = hostMismatch
+        ? (() => { try { return BASE + new URL(sourceUrl).pathname; } catch { return sourceUrl; } })()
+        : sourceUrl;
+      const { status } = await fetchUrl(fetchTarget).catch(() => ({ status: 0 }));
+      const label = hostMismatch ? new URL(fetchTarget).pathname || "/" : sourceUrl.replace(BASE, "");
+      check(`Remote sitemap URL reachable: ${label}`, status === 200, `actual=${status}, fetched=${fetchTarget}`);
+    }
+  }
 }
 
 // ─── Group 2: metadata patterns ──────────────────────────────────────────
@@ -488,7 +579,8 @@ async function runFallbackPass(): Promise<void> {
 
 // ─── Main ────────────────────────────────────────────────────────────────
 async function main(): Promise<void> {
-  console.log(`SEO regression sweep — port=${PORT}, fallback=${RUN_FALLBACK ? "on" : "off"}`);
+  console.log(`SEO regression sweep — BASE=${BASE}${IS_REMOTE ? "" : ` (local)`}, fallback=${RUN_FALLBACK ? "on" : "off"}`);
+  await warnIfDangerousFallback();
 
   try {
     await ensureServer();
