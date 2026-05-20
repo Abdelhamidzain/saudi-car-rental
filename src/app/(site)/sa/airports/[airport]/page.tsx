@@ -1,9 +1,8 @@
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import type { Metadata } from 'next'
-import { airports, categories, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
-import { LazyLeadForm } from '@/components/lazy-lead-form'
+import { airports, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { NoSSR } from '@/components/no-ssr'
+import AirportPageClientContent from '@/components/airport-page-client-content'
 import { getAirportPageOverlayFromDb } from '@/lib/public-data/adapters/airport-page'
 
 export function generateStaticParams() { return airports.map(a=>({airport:a.slug})) }
@@ -35,21 +34,10 @@ export async function generateMetadata({params}:{params:Promise<{airport:string}
   }
 }
 
-const info:Record<string,string>={
-  'king-khalid':`يقع مطار الملك خالد الدولي شمال الرياض ويخدم أكثر من 30 مليون مسافر سنوياً. تتوفر خدمات تأجير سيارات مباشرة في صالات الوصول من خلال عدة مكاتب إيجار مرخصة. يمكنك حجز سيارة واستلامها فور وصولك.`,
-  'king-abdulaziz':`يعد مطار الملك عبدالعزيز الدولي البوابة الجوية لمدينة جدة ونقطة العبور الرئيسية للحجاج والمعتمرين. تتوفر مكاتب إيجار في جميع صالات المطار مع إمكانية إيجار مركبة بأسعار تنافسية تبدأ من 99 ريال يومياً.`,
-  'king-fahd':`مطار الملك فهد الدولي هو أكبر مطار مساحةً في العالم ويخدم المنطقة الشرقية. يوفر المطار خدمات خدمات الإيجار عبر شركات معتمدة متعددة مع خيارات تأجير سيارات اقتصادية وفاخرة.`,
-  'prince-mohammed':`مطار الأمير محمد بن عبدالعزيز يخدم زوار المسجد النبوي والمدينة المنورة. تتوفر خدمة تأجير سيارة مباشرة عند الوصول مع إمكانية التوصيل لأي موقع داخل المدينة.`,
-  'taif':`مطار الطائف الدولي يخدم المصطافين والزوار القادمين لمدينة الورد والهدا والشفا. تتوفر خدمات استئجار مركبات بأسعار مناسبة مع خيارات دفع رباعي للتنقل في المناطق الجبلية.`
-}
-
 export default async function AirportPage({params}:{params:Promise<{airport:string}>}) {
   const slug=(await params).airport
   const ap=getAirportBySlug(slug); if(!ap) notFound()
   const city=getCityBySlug(ap.citySlug); if(!city) notFound()
-  // DB overlay augments visible text only. Static `city` still feeds
-  // generateLocalBusinessSchema (it has the lat/lng/partnerCount/nameEn that
-  // the DB doesn't have today). Per Task 6.2A approved approach.
   const overlay=await getAirportPageOverlayFromDb(slug)
   const airportNameAr=overlay?.airportNameAr ?? ap.nameAr
   const airportCode=overlay?.airportCode ?? ap.code
@@ -62,83 +50,21 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
     {q:`هل يمكن تسليم المركبة في موقع مختلف؟`,a:`عدد من الشركاء المعتمدين يوفرون مرونة كاملة في نقاط التسليم سواء داخل نفس المدينة أو في مدينة مغايرة. يُرجى تحديد ذلك مسبقاً عند تعبئة الطلب حيث قد تُفرض رسوم رمزية إضافية حسب المسافة وسياسة المؤجر.`},
     {q:`ما الوثائق والشروط اللازمة للاستئجار؟`,a:`يُشترط إبراز رخصة قيادة صالحة سواء محلية أو دولية مصحوبة بإثبات هوية رسمي كالبطاقة الوطنية أو جواز السفر الساري. يجب ألا يقل عمر المستأجر عن واحد وعشرين عاماً مع إمكانية طلب إيداع ضمان مالي قابل للاسترداد الكامل عند إتمام العقد.`},
   ]
-  // NOTE: generateLocalBusinessSchema receives the FULL static city — it
-  // needs lat/lng/partnerCount/nameEn which aren't in the DB schema. JSON-LD
-  // therefore remains byte-identical regardless of DB state.
   const jsonLd={'@context':'https://schema.org','@graph':[generateBreadcrumbSchema([{name:SITE_NAME,url:'/'},{name:`تأجير سيارات ${cityNameAr}`,url:`/sa/${city.slug}`},{name:`تأجير سيارات ${airportCode}`,url:`/sa/airports/${ap.slug}`}]),generateFAQSchema(faqs),generateLocalBusinessSchema(city)]}
+
+  const introText = `تأجير سيارات من ${airportNameAr} يساعدك على ترتيب تنقلك بعد الوصول بسهولة، سواء كانت رحلتك للعمل أو السياحة أو زيارة عائلية. اختر المدينة والفئة المناسبة، وأرسل طلبك ليتم متابعة الخيارات المتاحة حسب التوفر.`
 
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
     <section className="hero"><div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
       <div className="container"><div className="hero-inner"><div className="hero-text">
-        <div className="breadcrumb"><Link href="/">الرئيسية</Link><span className="sep">/</span><Link href={`/sa/${city.slug}`}>{cityNameAr}</Link><span className="sep">/</span><span className="current">{airportCode}</span></div>
+        <NoSSR><AirportPageClientContent slot="breadcrumb" airportSlug={ap.slug} citySlug={city.slug} airportNameAr={airportNameAr} airportCode={airportCode} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
         <h1 className="hero-title">تأجير سيارات من <span>{airportNameAr}</span></h1>
-        <p className="hero-subtitle">{info[ap.slug]||`تتوفر خدمات الإيجار في ${airportNameAr} من شركات المكاتب المعتمدة. احجز الآن واستلم سيارتك فور وصولك.`}</p>
-        <div style={{display:'flex',flexWrap:'wrap',gap:12,justifyContent:'center'}}><span className="pill pill-accent">✈️ {airportCode}</span><span className="pill pill-accent">من {cityMinPrice} ريال/يوم</span><span className="pill pill-glass">استلام فوري</span><span className="pill pill-glass">المكاتب المعتمدة</span></div>
-      </div><div id="form"><LazyLeadForm defaultCitySlug={city.slug} airportSlug={ap.slug}/></div></div></div>
+        <p className="hero-subtitle">{introText}</p>
+        <NoSSR><AirportPageClientContent slot="pills" airportSlug={ap.slug} citySlug={city.slug} airportNameAr={airportNameAr} airportCode={airportCode} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
+      </div><div id="form"><NoSSR><AirportPageClientContent slot="form" airportSlug={ap.slug} citySlug={city.slug} airportNameAr={airportNameAr} airportCode={airportCode} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR></div></div></div>
     </section>
 
-    <NoSSR>
-    {/* WHY RENT FROM AIRPORT */}
-    <section className="section section-white"><div className="container">
-      <div className="section-header"><div className="section-tag">✨ لماذا الاستئجار من المطار</div><h2 className="section-title">مميزات تأجير سيارة من {airportNameAr}</h2><p className="section-sub">وفّر وقتك واستلم سيارتك مباشرة — بدون انتظار</p></div>
-      <div className="features-grid">
-        {[
-          {icon:'✈️',title:'استلام فوري من المطار',desc:`استلم سيارتك من صالة الوصول في ${airportNameAr} مباشرة بدون انتظار تاكسي أو نقل عام`},
-          {icon:'💰',title:'أسعار إيجار تنافسية',desc:`أسعار الإيجار تبدأ من ${cityMinPrice} ريال يومياً — قارن العروض واختر الأنسب`},
-          {icon:'🔄',title:'تسليم مرن عند المغادرة',desc:'أعد السيارة لمكتب الإيجار في المطار قبل رحلتك مباشرة بدون عناء'},
-          {icon:'✅',title:'مكاتب إيجار مرخصة',desc:'جميع شركاء حاصلون على ترخيص هيئة النقل العام في المملكة'},
-        ].map((f,i)=>(
-          <div key={i} className="feature-card"><div className="feature-icon">{f.icon}</div><div className="feature-title">{f.title}</div><div className="feature-desc">{f.desc}</div></div>
-        ))}
-      </div>
-    </div></section>
-
-    <section className="section"><div className="container">
-      <div className="section-header"><div className="section-tag">🚗 فئات المركبات المتاحة</div><h2 className="section-title">فئات سيارات للتأجير من {cityNameAr}</h2><p className="section-sub">اختر فئة السيارة المناسبة لرحلتك من {airportNameAr}</p></div>
-      <div className="cats-grid">{categories.map(cat=>(
-        <Link key={cat.slug} href={`/sa/${city.slug}/${cat.slug}`} className="cat-card"><div style={{fontSize:'2rem'}}>{cat.icon}</div><div className="cat-name">{cat.nameAr}</div><div className="cat-price">من {cat.minPrice} ريال</div></Link>
-      ))}</div>
-    </div></section>
-
-    </NoSSR>
-
-    <section className="section section-white" id="faq"><div className="container-sm">
-      <div className="section-header"><div className="section-tag">❓ أسئلة شائعة</div><h2 className="section-title">أسئلة شائعة عن الاستئجار من {airportNameAr}</h2></div>
-      <div className="faq-list">{faqs.map((f,i)=>(<details key={i} className="faq-item"><summary>{f.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary><p>{f.a}</p></details>))}</div>
-    </div></section>
-
-    {/* SSR INTERNAL LINKS */}
-    <div className="ssr-links">
-      <div className="container">
-        <h2 className="ssr-links-title">تأجير سيارات في {cityNameAr}</h2>
-        <div className="ssr-links-grid">
-          {categories.map(c=><Link key={c.slug} href={`/sa/${city.slug}/${c.slug}`}>{c.icon} {c.nameAr} {cityNameAr}</Link>)}
-        </div>
-        <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من مطارات أخرى</h2>
-        <div className="ssr-links-grid">
-          {airports.filter(a=>a.slug!==ap.slug).map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>{a.code} — {a.nameAr.replace(' الدولي','')}</Link>)}
-        </div>
-      </div>
-    </div>
-
-    <NoSSR>
-    {/* CTA */}
-    <section className="section"><div className="container">
-      <div className="cta-box">
-        <div className="hero-glow" style={{width:288,height:288,top:-80,right:-80}}/>
-        <div className="cta-title">احجز تأجير سيارة من {airportNameAr} الآن</div>
-        <div className="cta-desc">قدّم طلب استئجار مركبة واستلم سيارتك فور وصولك — تأجير السيارات أسهل مع منصتنا</div>
-        <Link href="#form" className="cta-btn">قدّم طلبك مجاناً ←</Link>
-      </div>
-    </div></section>
-
-    <section className="section section-white"><div className="container">
-      <h2 className="section-title" style={{textAlign:'center',marginBottom:32}}>تأجير سيارات من مطارات أخرى</h2>
-      <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(180px,1fr))',gap:16}}>{airports.filter(a=>a.slug!==ap.slug).map(a=>(
-        <Link key={a.slug} href={`/sa/airports/${a.slug}`} className="link-card-white link-card"><div style={{fontFamily:"'Cairo',sans-serif",fontSize:'1.25rem',fontWeight:900,color:'#D4A853',marginBottom:4}}>{a.code}</div><div className="link-card-sub">تأجير سيارة من {a.nameAr.replace(' الدولي','')}</div></Link>
-      ))}</div>
-    </div></section>
-    </NoSSR>
+    <NoSSR><AirportPageClientContent slot="body" airportSlug={ap.slug} citySlug={city.slug} airportNameAr={airportNameAr} airportCode={airportCode} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
   </>)
 }
