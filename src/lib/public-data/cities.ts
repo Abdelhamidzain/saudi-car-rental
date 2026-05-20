@@ -38,3 +38,20 @@ export async function getPublishedCityBySlug(slug: string): Promise<PublicCity |
   if (error || !data) return null;
   return data as unknown as PublicCity;
 }
+
+/**
+ * Resolves a city by UUID (used by adapters that hold a `city_id` foreign key,
+ * such as the airport-page adapter resolving `airports.city_id`).
+ */
+export async function getPublishedCityById(id: string): Promise<PublicCity | null> {
+  if (!id) return null;
+  const { data, error } = await getSupabaseAdminClient()
+    .from("cities")
+    .select(CITY_PUBLIC_COLUMNS)
+    .eq("id", id)
+    .eq("status", "active")
+    .eq("public_status", "published")
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as unknown as PublicCity;
+}
