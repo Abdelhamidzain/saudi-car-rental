@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { airports, getCityBySlug, getAirportBySlug, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { NoSSR } from '@/components/no-ssr'
+import { SeoPageHero } from '@/components/seo-page-hero'
 import AirportPageClientContent from '@/components/airport-page-client-content'
 import { getAirportPageOverlayFromDb } from '@/lib/public-data/adapters/airport-page'
 
@@ -54,17 +55,19 @@ export default async function AirportPage({params}:{params:Promise<{airport:stri
 
   const introText = `تأجير سيارات من ${airportNameAr} يساعدك على ترتيب تنقلك بعد الوصول بسهولة، سواء كانت رحلتك للعمل أو السياحة أو زيارة عائلية. اختر المدينة والفئة المناسبة، وأرسل طلبك ليتم متابعة الخيارات المتاحة حسب التوفر.`
 
+  const clientProps = { airportSlug: ap.slug, citySlug: city.slug, airportNameAr, airportCode, cityNameAr, cityMinPrice, faqs }
+
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
-    <section className="hero"><div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
-      <div className="container"><div className="hero-inner"><div className="hero-text">
-        <NoSSR><AirportPageClientContent slot="breadcrumb" airportSlug={ap.slug} citySlug={city.slug} airportNameAr={airportNameAr} airportCode={airportCode} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
-        <h1 className="hero-title">تأجير سيارات من <span>{airportNameAr}</span></h1>
-        <p className="hero-subtitle">{introText}</p>
-        <NoSSR><AirportPageClientContent slot="pills" airportSlug={ap.slug} citySlug={city.slug} airportNameAr={airportNameAr} airportCode={airportCode} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
-      </div><div id="form"><NoSSR><AirportPageClientContent slot="form" airportSlug={ap.slug} citySlug={city.slug} airportNameAr={airportNameAr} airportCode={airportCode} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR></div></div></div>
-    </section>
 
-    <NoSSR><AirportPageClientContent slot="body" airportSlug={ap.slug} citySlug={city.slug} airportNameAr={airportNameAr} airportCode={airportCode} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
+    <SeoPageHero
+      h1={<>تأجير سيارات من <span>{airportNameAr}</span></>}
+      introText={introText}
+      preH1={<AirportPageClientContent slot="breadcrumb" {...clientProps}/>}
+      postIntro={<AirportPageClientContent slot="pills" {...clientProps}/>}
+      rightColumn={<AirportPageClientContent slot="form" {...clientProps}/>}
+    />
+
+    <NoSSR><AirportPageClientContent slot="body" {...clientProps}/></NoSSR>
   </>)
 }

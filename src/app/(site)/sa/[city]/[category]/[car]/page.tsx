@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { cities, carModels, getCityBySlug, getCategoryBySlug, getCarBySlug, getAirportsForCity, getPartnersForCity, generateFAQSchema, generateBreadcrumbSchema, generateCarSEOContent, SITE_NAME, SITE_URL } from '@/lib/data'
 import { NoSSR } from '@/components/no-ssr'
+import { SeoPageHero } from '@/components/seo-page-hero'
 import CarPageClientContent from '@/components/car-page-client-content'
 import { getCarPageOverlayFromDb } from '@/lib/public-data/adapters/car-page'
 
@@ -87,28 +88,22 @@ export default async function CarPage({ params }: { params: Promise<{ city: stri
 
   const introText = `تأجير سيارة ${carNameAr} في ${cityNameAr} خيار مناسب لمن يبحث عن سيارة ${categoryNameAr} واضحة المواصفات وسهلة الطلب. راجع تفاصيل السيارة، ثم أرسل طلبك ليتم متابعة الخيارات المتاحة حسب المدينة والتوفر.`
 
+  const clientProps = { citySlug: city.slug, catSlug: cat.slug, carSlug: car.slug, cityNameAr, categoryNameAr, carBrandAr, carNameAr, carYear, faqs }
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <section className="hero">
-        <div className="hero-grid" />
-        <div className="hero-glow" style={{ width: 400, height: 400, top: -100, right: -100 }} />
-        <div className="hero-glow" style={{ width: 300, height: 300, bottom: -50, left: -50 }} />
-        <div className="container">
-          <div className="hero-inner">
-            <div className="hero-text">
-              <NoSSR><CarPageClientContent slot="breadcrumb" citySlug={city.slug} catSlug={cat.slug} carSlug={car.slug} cityNameAr={cityNameAr} categoryNameAr={categoryNameAr} carBrandAr={carBrandAr} carNameAr={carNameAr} carYear={carYear} faqs={faqs}/></NoSSR>
-              <h1 className="hero-title">تأجير سيارة {carNameAr} في <span>{cityNameAr}</span></h1>
-              <p className="hero-subtitle">{introText}</p>
-              <NoSSR><CarPageClientContent slot="pills" citySlug={city.slug} catSlug={cat.slug} carSlug={car.slug} cityNameAr={cityNameAr} categoryNameAr={categoryNameAr} carBrandAr={carBrandAr} carNameAr={carNameAr} carYear={carYear} faqs={faqs}/></NoSSR>
-            </div>
-            <div id="form"><NoSSR><CarPageClientContent slot="form" citySlug={city.slug} catSlug={cat.slug} carSlug={car.slug} cityNameAr={cityNameAr} categoryNameAr={categoryNameAr} carBrandAr={carBrandAr} carNameAr={carNameAr} carYear={carYear} faqs={faqs}/></NoSSR></div>
-          </div>
-        </div>
-      </section>
+      <SeoPageHero
+        h1={<>تأجير سيارة {carNameAr} في <span>{cityNameAr}</span></>}
+        introText={introText}
+        extraDecorations={<div className="hero-glow" style={{ width: 300, height: 300, bottom: -50, left: -50 }} />}
+        preH1={<CarPageClientContent slot="breadcrumb" {...clientProps}/>}
+        postIntro={<CarPageClientContent slot="pills" {...clientProps}/>}
+        rightColumn={<CarPageClientContent slot="form" {...clientProps}/>}
+      />
 
-      <NoSSR><CarPageClientContent slot="body" citySlug={city.slug} catSlug={cat.slug} carSlug={car.slug} cityNameAr={cityNameAr} categoryNameAr={categoryNameAr} carBrandAr={carBrandAr} carNameAr={carNameAr} carYear={carYear} faqs={faqs}/></NoSSR>
+      <NoSSR><CarPageClientContent slot="body" {...clientProps}/></NoSSR>
     </>
   )
 }

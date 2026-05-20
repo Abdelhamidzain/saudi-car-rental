@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { cities, getCityBySlug, getAirportsForCity, getPartnersForCity, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { NoSSR } from '@/components/no-ssr'
+import { SeoPageHero } from '@/components/seo-page-hero'
 import CityPageClientContent from '@/components/city-page-client-content'
 import { getCityPageOverlayFromDb } from '@/lib/public-data/adapters/city-page'
 
@@ -50,22 +51,19 @@ export default async function CityPage({params}:{params:Promise<{city:string}>})
 
   const introText = `تأجير سيارات في ${cityNameAr} أصبح أسهل مع خيارات تناسب تنقلك اليومي أو رحلتك داخل المملكة. اختر المدينة والفئة المناسبة، وأرسل طلبك ليتم ترشيح الخيارات المتاحة حسب احتياجك والتوفر.`
 
+  const clientProps = { citySlug: city.slug, cityNameAr, cityMinPrice, faqs }
+
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
 
-    <section className="hero">
-      <div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
-      <div className="container"><div className="hero-inner">
-        <div className="hero-text">
-          <NoSSR><CityPageClientContent slot="breadcrumb" citySlug={city.slug} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
-          <h1 className="hero-title">تأجير سيارات في <span>{cityNameAr}</span></h1>
-          <p className="hero-subtitle">{introText}</p>
-          <NoSSR><CityPageClientContent slot="pills" citySlug={city.slug} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
-        </div>
-        <div id="form"><NoSSR><CityPageClientContent slot="form" citySlug={city.slug} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR></div>
-      </div></div>
-    </section>
+    <SeoPageHero
+      h1={<>تأجير سيارات في <span>{cityNameAr}</span></>}
+      introText={introText}
+      preH1={<CityPageClientContent slot="breadcrumb" {...clientProps}/>}
+      postIntro={<CityPageClientContent slot="pills" {...clientProps}/>}
+      rightColumn={<CityPageClientContent slot="form" {...clientProps}/>}
+    />
 
-    <NoSSR><CityPageClientContent slot="body" citySlug={city.slug} cityNameAr={cityNameAr} cityMinPrice={cityMinPrice} faqs={faqs}/></NoSSR>
+    <NoSSR><CityPageClientContent slot="body" {...clientProps}/></NoSSR>
   </>)
 }

@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { cities, categories, getCityBySlug, getCategoryBySlug, generateFAQSchema, generateBreadcrumbSchema, generateLocalBusinessSchema, SITE_NAME, SITE_URL } from '@/lib/data'
 import { NoSSR } from '@/components/no-ssr'
+import { SeoPageHero } from '@/components/seo-page-hero'
 import CategoryPageClientContent from '@/components/category-page-client-content'
 import { getCategoryPageOverlayFromDb } from '@/lib/public-data/adapters/category-page'
 
@@ -42,17 +43,19 @@ export default async function CategoryPage({params}:{params:Promise<{city:string
 
   const introText = `تأجير سيارات ${categoryNameAr} في ${cityNameAr} مناسب لمن يبحث عن سيارة تلائم طبيعة الرحلة، سواء للتنقل اليومي أو السفر أو الزيارات. اختر الفئة المناسبة، وأرسل طلبك ليتم عرض الخيارات المتاحة حسب المدينة والتوفر.`
 
+  const clientProps = { citySlug: city.slug, catSlug: cat.slug, cityNameAr, categoryNameAr, faqs }
+
   return (<>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd)}}/>
-    <section className="hero"><div className="hero-grid"/><div className="hero-glow" style={{width:400,height:400,top:-100,right:-100}}/>
-      <div className="container"><div className="hero-inner"><div className="hero-text">
-        <NoSSR><CategoryPageClientContent slot="breadcrumb" citySlug={city.slug} catSlug={cat.slug} cityNameAr={cityNameAr} categoryNameAr={categoryNameAr} faqs={faqs}/></NoSSR>
-        <h1 className="hero-title">تأجير سيارات {categoryNameAr} في <span>{cityNameAr}</span></h1>
-        <p className="hero-subtitle">{introText}</p>
-        <NoSSR><CategoryPageClientContent slot="pills" citySlug={city.slug} catSlug={cat.slug} cityNameAr={cityNameAr} categoryNameAr={categoryNameAr} faqs={faqs}/></NoSSR>
-      </div><div id="form"><NoSSR><CategoryPageClientContent slot="form" citySlug={city.slug} catSlug={cat.slug} cityNameAr={cityNameAr} categoryNameAr={categoryNameAr} faqs={faqs}/></NoSSR></div></div></div>
-    </section>
 
-    <NoSSR><CategoryPageClientContent slot="body" citySlug={city.slug} catSlug={cat.slug} cityNameAr={cityNameAr} categoryNameAr={categoryNameAr} faqs={faqs}/></NoSSR>
+    <SeoPageHero
+      h1={<>تأجير سيارات {categoryNameAr} في <span>{cityNameAr}</span></>}
+      introText={introText}
+      preH1={<CategoryPageClientContent slot="breadcrumb" {...clientProps}/>}
+      postIntro={<CategoryPageClientContent slot="pills" {...clientProps}/>}
+      rightColumn={<CategoryPageClientContent slot="form" {...clientProps}/>}
+    />
+
+    <NoSSR><CategoryPageClientContent slot="body" {...clientProps}/></NoSSR>
   </>)
 }
