@@ -1,4 +1,4 @@
-import { airports, getCarBySlug, getCategoryBySlug } from '@/lib/data'
+import { airports, getCarBySlug, getCategoryBySlug, getCityBySlug } from '@/lib/data'
 
 export function buildRouteFromContext(targetCitySlug: string, currentPathname: string): string {
   const fallback = `/sa/${targetCitySlug}`
@@ -29,5 +29,19 @@ export function buildRouteFromContext(targetCitySlug: string, currentPathname: s
     return fallback
   }
 
+  return fallback
+}
+
+export function buildInCityRoute(citySlug: string, categorySlug: string, carSlug: string): string {
+  if (!citySlug || !getCityBySlug(citySlug)) return '/'
+  const fallback = `/sa/${citySlug}`
+  const cat = categorySlug ? getCategoryBySlug(categorySlug) : undefined
+  if (carSlug) {
+    const car = getCarBySlug(carSlug)
+    if (car && cat && car.category === cat.slug) return `/sa/${citySlug}/${cat.slug}/${car.slug}`
+    if (cat) return `/sa/${citySlug}/${cat.slug}`
+    return fallback
+  }
+  if (cat) return `/sa/${citySlug}/${cat.slug}`
   return fallback
 }

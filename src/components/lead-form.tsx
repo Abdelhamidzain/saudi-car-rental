@@ -9,6 +9,8 @@ import { todayInRiyadh } from '@/lib/leads/date-utils'
 import { buildRouteFromContext } from '@/lib/search/url-builder'
 import type { CreateLeadError } from '@/lib/leads/types'
 import { DateRangePicker } from './search/date-range-picker'
+import { AirportModeToggle } from './search/airport-mode-toggle'
+import { useSearch } from './search/search-context'
 
 type LeadFormProps = {
   selectedCarSlug?: string
@@ -19,21 +21,33 @@ type LeadFormProps = {
 
 export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, defaultCitySlug }: LeadFormProps = {}) {
   const { selectedCity, setSelectedCity } = useCity()
+  const search = useSearch()
   const pathname = usePathname() || ''
   const router = useRouter()
   const today = todayInRiyadh()
   const isAirportRoute = pathname.startsWith('/sa/airports/')
 
   const [city, setCity] = useState(defaultCitySlug ?? '')
-  const [pickup, setPickup] = useState(today)
-  const [ret, setRet] = useState('')
-  const [vehicle, setVehicle] = useState(defaultCategorySlug ?? '')
+  const pickup = search.pickupDate
+  const ret = search.returnDate
+  const vehicle = search.categorySlug || defaultCategorySlug || ''
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
   const [honey, setHoney] = useState('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [leadNumber, setLeadNumber] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+
+  // If a user keeps the site open past midnight, the search context's
+  // pickupDate (initialized once on provider mount) can drift into the past.
+  // On mount, snap pickup forward to today if it's stale.
+  useEffect(() => {
+    if (pickup && pickup < today) {
+      const nextRet = ret && ret >= today ? ret : ''
+      search.setDateRange(today, nextRet)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (selectedCity) setCity(selectedCity)
@@ -61,7 +75,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
   }
 
   function handleVehicleChange(slug: string) {
-    setVehicle(slug)
+    search.setCategorySlug(slug)
     if (!slug) return
     if (isAirportRoute) return
     if (!city) return
@@ -70,7 +84,8 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
   }
 
   useEffect(() => {
-    if (pickup && ret && ret < pickup) setRet(pickup)
+    if (pickup && ret && ret < pickup) search.setDateRange(pickup, pickup)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pickup, ret])
 
   function readUtmFromLocation() {
@@ -158,11 +173,13 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
         </select>
       </div>
 
+      <AirportModeToggle citySlug={city} disabled={isPending} />
+
       <DateRangePicker
         today={today}
         pickup={pickup}
         ret={ret}
-        onChange={(p, r) => { setPickup(p); setRet(r) }}
+        onChange={(p, r) => search.setDateRange(p, r)}
         disabled={isPending}
       />
 

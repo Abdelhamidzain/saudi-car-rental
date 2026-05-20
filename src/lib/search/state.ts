@@ -70,5 +70,15 @@ export function deriveSearchStateFromPathname(pathname: string): Partial<RouteCo
 export function applyRouteContext(prev: RouteContext, pathname: string): RouteContext {
   if (!pathname.startsWith('/sa/')) return prev
   const derived = deriveSearchStateFromPathname(pathname)
+  // Airport routes don't carry category/car in their URL — preserve the user's
+  // prior category/car pick so an in-city → airport toggle keeps their selection.
+  if (pathname.startsWith('/sa/airports/')) {
+    return {
+      ...EMPTY_ROUTE_CONTEXT,
+      ...derived,
+      categorySlug: prev.categorySlug,
+      carSlug: prev.carSlug,
+    }
+  }
   return { ...EMPTY_ROUTE_CONTEXT, ...derived }
 }
