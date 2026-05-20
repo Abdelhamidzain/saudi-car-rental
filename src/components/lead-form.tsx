@@ -73,13 +73,13 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
     if (!slug || slug === defaultCitySlug) return
     // Airport routes: keep airport semantics (map to target city's airport).
     if (isAirportRoute) {
-      router.push(buildRouteFromContext(slug, pathname))
+      router.push(buildRouteFromContext(slug, pathname), { scroll: false })
       return
     }
     // Other routes: prefer the user's SearchProvider category/car selections,
     // which already mirror the URL on /sa/[city]/... pages and carry the
     // user's homepage/no-city picks on routes that don't expose them in the URL.
-    router.push(buildInCityRoute(slug, search.categorySlug, search.carSlug))
+    router.push(buildInCityRoute(slug, search.categorySlug, search.carSlug), { scroll: false })
   }
 
   function handleVehicleChange(slug: string) {
@@ -90,7 +90,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
     if (isAirportRoute) return
     if (!city) return
     if (slug === defaultCategorySlug) return
-    router.push(`/sa/${city}/${slug}`)
+    router.push(`/sa/${city}/${slug}`, { scroll: false })
   }
 
   function handleCarChange(slug: string) {
@@ -99,7 +99,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
     if (isAirportRoute) return
     if (!city || !vehicle) return
     if (slug === car) return
-    router.push(`/sa/${city}/${vehicle}/${slug}`)
+    router.push(`/sa/${city}/${vehicle}/${slug}`, { scroll: false })
   }
 
   useEffect(() => {

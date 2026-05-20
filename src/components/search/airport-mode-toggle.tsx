@@ -30,13 +30,13 @@ export function AirportModeToggle({ citySlug, disabled = false }: Props) {
   function selectInCity() {
     if (inCityDisabled) return
     if (!isAirportRoute) return
-    router.push(buildInCityRoute(citySlug, categorySlug, carSlug))
+    router.push(buildInCityRoute(citySlug, categorySlug, carSlug), { scroll: false })
   }
 
   function selectAirport() {
     if (airportDisabled || !ap) return
     if (isAirportRoute && pathname === `/sa/airports/${ap.slug}`) return
-    router.push(`/sa/airports/${ap.slug}`)
+    router.push(`/sa/airports/${ap.slug}`, { scroll: false })
   }
 
   const btn = (active: boolean, btnDisabled: boolean, isLast: boolean): CSSProperties => ({
