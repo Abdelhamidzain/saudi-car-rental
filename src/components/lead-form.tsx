@@ -7,6 +7,7 @@ import { createLead } from '@/lib/leads/create-lead'
 import { CONSENT_TEXT_AR } from '@/lib/leads/consent'
 import { todayInRiyadh } from '@/lib/leads/date-utils'
 import { buildRouteFromContext } from '@/lib/search/url-builder'
+import { addDays, diffDays } from '@/lib/search/date-presets'
 import type { CreateLeadError } from '@/lib/leads/types'
 import { DateRangePicker } from './search/date-range-picker'
 import { AirportModeToggle } from './search/airport-mode-toggle'
@@ -40,11 +41,13 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
 
   // If a user keeps the site open past midnight, the search context's
   // pickupDate (initialized once on provider mount) can drift into the past.
-  // On mount, snap pickup forward to today if it's stale.
+  // On mount, snap pickup forward to today while preserving the rental
+  // duration so the active preset chip (اليوم / أسبوع / …) stays correct.
   useEffect(() => {
     if (pickup && pickup < today) {
-      const nextRet = ret && ret >= today ? ret : ''
-      search.setDateRange(today, nextRet)
+      const wantedDays = ret && ret >= pickup ? diffDays(pickup, ret) : 1
+      const safeDays = wantedDays > 0 ? wantedDays : 1
+      search.setDateRange(today, addDays(today, safeDays))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -180,6 +183,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
         pickup={pickup}
         ret={ret}
         onChange={(p, r) => search.setDateRange(p, r)}
+        onPresetChange={(hint) => search.setDurationHint(hint)}
         disabled={isPending}
       />
 

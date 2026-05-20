@@ -17,7 +17,7 @@ export type RouteContext = Pick<SearchState, 'citySlug' | 'categorySlug' | 'carS
 
 export function getDefaultSearchDates(): { pickupDate: string; returnDate: string } {
   const t = todayInRiyadh()
-  return { pickupDate: t, returnDate: addDays(t, 3) }
+  return { pickupDate: t, returnDate: addDays(t, 1) }
 }
 
 const EMPTY_ROUTE_CONTEXT: RouteContext = {

@@ -29,7 +29,7 @@ function buildInitialState(pathname: string): SearchState {
     airportMode: derived.airportMode ?? false,
     pickupDate: dates.pickupDate,
     returnDate: dates.returnDate,
-    durationHint: '',
+    durationHint: 'today',
   }
 }
 

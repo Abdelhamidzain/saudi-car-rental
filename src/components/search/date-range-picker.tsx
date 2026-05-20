@@ -20,6 +20,7 @@ type Props = {
   disabled?: boolean
   pickupInputId?: string
   returnInputId?: string
+  onPresetChange?: (preset: PresetId | 'custom') => void
 }
 
 const chipStyle = (active: boolean, disabled: boolean): CSSProperties => ({
@@ -45,31 +46,41 @@ export function DateRangePicker({
   disabled = false,
   pickupInputId = 'lead-pickup',
   returnInputId = 'lead-return',
+  onPresetChange,
 }: Props) {
-  const initialMode: Mode = detectPreset(today, pickup, ret) ?? 'custom'
-  const [mode, setMode] = useState<Mode>(initialMode)
+  // Sticky override only when the user explicitly chose custom (clicked
+  // مخصص or hand-edited a date). Otherwise the active preset is derived
+  // live from (pickup, ret), so external updates — overnight snap-forward,
+  // route navigation, etc — keep the chip in sync.
+  const [customOverride, setCustomOverride] = useState(false)
+  const detected = detectPreset(today, pickup, ret)
+  const mode: Mode = customOverride ? 'custom' : (detected ?? 'custom')
 
   const days = diffDays(pickup, ret)
 
   function applyPreset(id: PresetId) {
     const p = DATE_PRESETS.find(x => x.id === id)
     if (!p) return
-    setMode(id)
+    setCustomOverride(false)
+    onPresetChange?.(id)
     onChange(addDays(today, p.pickupOffset), addDays(today, p.returnOffset))
   }
 
   function enterCustom() {
-    setMode('custom')
+    setCustomOverride(true)
+    onPresetChange?.('custom')
   }
 
   function setPickupDate(v: string) {
-    setMode('custom')
+    setCustomOverride(true)
+    onPresetChange?.('custom')
     const nextRet = !ret || ret < v ? v : ret
     onChange(v, nextRet)
   }
 
   function setReturnDate(v: string) {
-    setMode('custom')
+    setCustomOverride(true)
+    onPresetChange?.('custom')
     onChange(pickup, v)
   }
 
