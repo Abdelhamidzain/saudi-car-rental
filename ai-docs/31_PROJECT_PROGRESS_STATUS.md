@@ -331,7 +331,7 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
   - **`branch.whatsapp_number` is NOT in any returned shape** — verified by introspecting `PublicOffer.branch` keys (`id, district, address_ar`).
 
 ### Task 6.2A — Airport Public Page DB Overlay
-**Commit:** `abbd9b9` (current `main` HEAD).
+**Commit:** `abbd9b9`.
 - **Route affected:** `/sa/airports/[airport]` only. No other public route changed.
 - **Files changed (3):**
   - **NEW** [src/lib/public-data/adapters/airport-page.ts](../src/lib/public-data/adapters/airport-page.ts) — server-only DB overlay adapter; converts snake_case DB rows to the camelCase shape the airport page JSX already consumes; returns `null` on any failure → page falls back to static.
@@ -360,6 +360,48 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
   - JSON-LD safety — static Riyadh retains `nameEn`, `partnerCount`, `lat`, `lng` for `generateLocalBusinessSchema`.
 - **No DB migration. No new RPC. No new npm dependency. No admin changes. No lead form changes. No sitemap changes. No JSON-LD generator changes.** `branch.whatsapp_number` is not exposed (adapter returns only the 4 approved fields).
 - **Task 6.2B / 6.3 not started.**
+
+### Task 6.2B — City Public Page DB Overlay
+**Commit:** `6960242` (current `main` HEAD).
+- **Route affected:** `/sa/[city]` only. No other public route changed.
+- **Files changed (2):**
+  - **NEW** [src/lib/public-data/adapters/city-page.ts](../src/lib/public-data/adapters/city-page.ts) — server-only adapter; returns `{ cityNameAr, cityNameEn, cityMinPrice } | null` on any failure → page falls back to static.
+  - **MODIFIED** [src/app/(site)/sa/[city]/page.tsx](../src/app/(site)/sa/[city]/page.tsx) — both `generateMetadata` and the page component compute `cityNameAr` / `cityMinPrice` via `overlay?.X ?? static.X`; visible H1, breadcrumb, hero pill, section headers, SSR internal links, and FAQ Qs/As all reference the overlaid identifiers; `city.description` (hero subtitle) and `city.partnerCount` (body copy + JSON-LD) intentionally kept on static; `generateLocalBusinessSchema(city)` still receives the unchanged static `City` object.
+- **Approach: augmentation, not full DB swap** (same pattern as Task 6.2A).
+  - `src/lib/data.ts` remains the load-bearing base.
+  - The DB overlay is applied only for safe city fields.
+  - Static fallback remains available — if DB is down, the row is missing/draft/hidden/archived, or the column is null, the page renders exactly as it did before Task 6.2B.
+- **Overlay fields:**
+  - `cityNameAr` ← `cities.name_ar`
+  - `cityMinPrice` ← `cities.min_price_from`
+  - `cityNameEn` ← `cities.name_en` (plumbed through for forward compatibility; no active consumer on this page today).
+- **Static `data.ts` remains the source for:**
+  - route existence / 404 boundary,
+  - `generateStaticParams` (6 city slugs at build time),
+  - JSON-LD `LocalBusiness` (`lat`, `lng`, `partnerCount`, `description`, full City template),
+  - hero subtitle (`city.description`),
+  - `partnerCount` (body copy + FAQ + metadata description),
+  - `cityGuides`, `categories`, `carModels`, `categoryGradients`, `getAirportsForCity`, `getPartnersForCity`.
+- **JSON-LD remains safe** — `generateLocalBusinessSchema(city)` still receives the static `City` object (DB schema lacks `lat`/`lng`/`partnerCount`/`description`). `LocalBusiness.name` keeps the static `${SITE_NAME} — ${city.nameAr}` template. Breadcrumb name uses the overlaid `cityNameAr` (matches the visible breadcrumb on the same page).
+- **Sitemap unchanged.** [src/app/sitemap.ts](../src/app/sitemap.ts) was not touched.
+- **Arabic SEO title wording improvement.** A small module-scope helper `formatCityWithArabicBa(cityNameAr)` returns `` `ب${cityNameAr}` `` (concatenation works for both "ال"-prefixed and bare city names). Applied to the three city-page titles only (descriptions kept verbatim). Rendered output for all 6 city slugs:
+  - `/sa/riyadh` → `تأجير سيارات بالرياض — أسعار من 89 ريال/يوم`
+  - `/sa/jeddah` → `تأجير سيارات بجدة — أسعار من 99 ريال/يوم`
+  - `/sa/dammam` → `تأجير سيارات بالدمام — أسعار من 79 ريال/يوم`
+  - `/sa/makkah` → `تأجير سيارات بمكة المكرمة — أسعار من 95 ريال/يوم`
+  - `/sa/madinah` → `تأجير سيارات بالمدينة المنورة — أسعار من 92 ريال/يوم`
+  - `/sa/khobar` → `تأجير سيارات بالخبر — أسعار من 42 ريال/يوم`
+  - Verified by `grep -c "ب "` against `<title>` / `og:title` / `twitter:title` on all 6 pages → **zero matches** of `ب` followed by a space.
+  - JSON-LD `LocalBusiness.name` unchanged (still `تأجير سيارات — الرياض` template for Riyadh, etc.) — title wording change is metadata-only.
+- **Build baseline unchanged: 237 static pages.**
+- **Smoke tests passed (5/5 groups PASS, all transient DB mutations restored):**
+  - All 6 city pages — DB overlay matches static (`name_ar` identical; `min_price_from` aligned for every row: 89/99/79/95/92/42 SAR).
+  - Missing slug — `getCityBySlug` undefined AND adapter null → page would `notFound()`.
+  - Draft DB row — flipping `riyadh.public_status='draft'` makes adapter return null → page falls back to static; row restored to `published`.
+  - Temporary DB name edit — changing `riyadh.name_ar` makes adapter reflect the edit; static source unchanged; row restored.
+  - JSON-LD safety — static Riyadh retains `lat`, `lng`, `partnerCount`, `description`, `nameEn` for `generateLocalBusinessSchema` + hero subtitle.
+- **No DB migration. No new RPC. No new npm dependency. No admin changes. No lead form changes. No sitemap changes. No JSON-LD generator changes.** `branch.whatsapp_number` is not exposed (adapter touches only the `cities` table; no branch data fetched).
+- **Task 6.2C / 6.3 not started.**
 
 ### Recent Operational Fixes
 
@@ -430,7 +472,7 @@ Capability gaps (do not assume any of these exist):
 - `features_json` editor on cars.
 - Rating snapshot editor on companies.
 - File-upload UI for logos and car images (URL-paste only today).
-- Public pages reading from Supabase — partial: `/sa/airports/[airport]` now applies a DB overlay over `src/lib/data.ts` (Task 6.2A). The other public routes (`/sa/[city]`, `/sa/[city]/[category]`, `/sa/[city]/[category]/[car]`, `/`, `/about`, `/contact`, `/privacy`) still render purely from `src/lib/data.ts`.
+- Public pages reading from Supabase — partial: `/sa/airports/[airport]` (Task 6.2A) and `/sa/[city]` (Task 6.2B) now apply DB overlays over `src/lib/data.ts`. The remaining public routes (`/sa/[city]/[category]`, `/sa/[city]/[category]/[car]`, `/`, `/about`, `/contact`, `/privacy`) still render purely from `src/lib/data.ts`.
 - Rate limiting on `/admin/login` (the public lead-form endpoint is rate-limited; the admin sign-in form is not — Supabase Auth's own rate limit applies but app-side is unchanged).
 - Profanity filter on `customer_notes` (URL stripping is in place; explicit profanity matching is not).
 - Password reset flow.
@@ -443,34 +485,42 @@ Capability gaps (do not assume any of these exist):
 
 ## 9. Recommended Next Tasks
 
-All admin CRUD is in place (Leads, Companies, Branches, Cars, Offers), the read-only public DB data layer (Task 6.1) is in place, and `/sa/airports/[airport]` is the first public route consuming it via the augmentation pattern (Task 6.2A). What's left in Task 6 is extending the same augmentation pattern to the remaining public routes, then validating SEO.
+All admin CRUD is in place (Leads, Companies, Branches, Cars, Offers), the read-only public DB data layer (Task 6.1) is in place, and two public routes — `/sa/airports/[airport]` (Task 6.2A) and `/sa/[city]` (Task 6.2B) — now consume it via the augmentation pattern. What's left in Task 6 is extending the same pattern to the remaining public routes, then validating SEO.
 
-### Task 6.2B — Choose next public route for DB overlay (**recommended next**)
+### Task 6.2C — Category Public Page DB Overlay (**recommended next, plan carefully**)
 
-Before implementing, **pick the safest remaining route**. The three candidates and their risk levels:
+Route: `/sa/[city]/[category]` (42 permutations at most — 6 cities × 7 categories).
 
-#### Option A — `/sa/[city]` (city detail page) — **LOW risk, recommended**
-- **Why low risk.** Six static params (cities seeded today: `riyadh`, `jeddah`, `dammam`, `makkah`, `madinah`, `khobar`); only one entity per page; the DB row for cities already exists and is identical in shape to the airport flow (`name_ar`, `min_price_from`, `seo_title_ar`, `seo_description_ar`). Same augmentation pattern as 6.2A — overlay a small set of text fields, keep static `data.ts` as load-bearing base, keep JSON-LD on the static city (DB lacks `lat`/`lng`/`partnerCount`/`nameEn`, the same gap that drove 6.2A's augmentation decision).
-- **Cross-table dependencies.** None beyond the city row itself, unless the page also lists categories or partner counts — those would stay on `data.ts` for now.
-- **Static-page count impact.** Zero; same 6 city pages as today.
-- **Smoke-test pattern.** Identical to 6.2A — for each of 6 city slugs, compare overlay vs static; flip one row to draft; edit one `name_ar` transiently.
-- **Recommendation: do this next.** Highest similarity to 6.2A, lowest cognitive load, smallest blast radius among the remaining routes.
+**This is the first list-bearing public page in the migration. It is meaningfully more complex than 6.2A/6.2B and must be planned carefully.** Unlike the airport and city pages — which interpolate ~4 scalar fields from a single DB row — the category page is a multi-entity composition:
 
-#### Option B — `/sa/[city]/[category]` (category page) — **MEDIUM risk**
-- **Why medium.** This page is a join of city × category, with a list of cars/offers below the fold. Static params multiply (6 cities × 7 categories = 42 combinations, minus any excluded pairs). The page likely renders a list of offers — touching that list means deciding whether to overlay the **catalogue** (cars/offers visibility) at the same time as the city/category text, which expands scope.
-- **Cross-table dependencies.** City + category + (probably) offers/cars lists. The offers visibility rule from Task 6.1 is the longer one (`public_status='published' AND approval_status IN ('approved','auto_approved') AND availability_status <> 'unavailable'` plus parent-status filters), so visibility regressions are more subtle to verify.
-- **Static-page count impact.** Potentially significant if `generateStaticParams` starts reading from DB and the seed set ≠ `data.ts` set. Needs an explicit "params still come from `data.ts`" decision, same as 6.2A.
-- **Recommendation: defer until after the city page.** Tackle once the augmentation pattern is proven on a list-bearing route.
+- **City context** (already partly migrated via the 6.2B adapter): `cityNameAr`, `cityMinPrice`, breadcrumb / metadata interpolation.
+- **Category context** (new): the `car_categories` row — `name_ar`, `name_en`, `icon`, plus the static-only `minPrice` baseline currently hard-coded in `data.ts`'s `categories` array.
+- **Car/offer list** (new — the hard part): the page renders cars or offers belonging to this category. Today `data.ts` exposes `carModels` filtered by `category` slug. Migrating this list means deciding **which** DB query backs it:
+  - `getActiveCarsByCategorySlug(categorySlug)` — catalogue of models (no city, no pricing).
+  - `getPublicOffersByCitySlug(citySlug)` filtered by category — city-specific available offers, with prices and partner data.
+  - Some hybrid: cars from the catalogue + the cheapest live offer per car.
+- **Static-only ancillary data:** `categoryGradients` (visual styling), category icons (already on `car_categories.icon` in DB but data.ts has them too), `cityGuides`, internal-link blocks, FAQ copy templates.
+- **Pricing assumptions in copy:** Hand-authored phrases like *"الفئة الفاخرة تبدأ من 359 ريال"* live in the page's FAQ/body — these are template constants, not derived from DB, and overlaying `cityMinPrice` doesn't touch them. They should stay static for 6.2C and be reviewed in a separate SEO-content task.
 
-#### Option C — `/sa/[city]/[category]/[car]` (car detail page) — **HIGHER risk**
-- **Why higher risk.** Three-level join (city × category × car); the car may have `features_json` and a hero image — both are admin-authored fields with content gaps that the static fallback currently fills. The largest static-param fan-out of all public routes (could be ~70+ permutations depending on which cars are seeded per category × city).
-- **Cross-table dependencies.** City + category + car + (likely) at least one offer query to compute "starts-from" pricing. Each layer multiplies the failure surface.
-- **Static-page count impact.** Largest; any drift between `data.ts` permutations and DB-visible permutations would change route count.
-- **Recommendation: defer to last among the three.** Land 6.2B (city) and 6.2C (category) first; the patterns and helpers learned there make 6.2D far safer.
+**Decisions to bring into the 6.2C plan before any code is written:**
 
-#### Subsequent sub-tasks (planned, NOT to start until earlier ones land)
-- 6.2C — `/sa/[city]/[category]` (category page).
-- 6.2D — `/sa/[city]/[category]/[car]` (car detail page).
+1. **What gets overlaid vs left static.** Recommendation (to be confirmed at plan time): overlay only the **city-scoped scalars already proven in 6.2B** (`cityNameAr`, `cityMinPrice`) plus a new **category-scoped scalar set** (`categoryNameAr`, `categoryIcon`, optionally `categoryMinPrice` if a DB column exists — needs verification). Leave the car/offer list backed by `data.ts.carModels` for 6.2C; migrating the list is its own sub-task and should NOT be bundled here.
+2. **`generateStaticParams` source.** Stays on `data.ts` — same decision as 6.2A/6.2B. Build-time DB-independent; route existence / 404 boundary unchanged.
+3. **JSON-LD source.** `generateLocalBusinessSchema(city)` continues to receive the **static** `City` (same `lat`/`lng`/`partnerCount` gap as before). If the category page emits an additional schema (e.g. `ItemList` for the car grid), that schema stays on static `carModels` for 6.2C to avoid coupling the migration to a list-data move.
+4. **Cross-page link copy.** The page links to airport pages (already on DB-overlaid airport) and back to the city page (DB-overlaid city). Confirm link text uses the same overlaid `cityNameAr` so the city name is consistent across the three migrated routes.
+5. **FAQ Q&A templates with embedded numbers.** Phrases like "تبدأ من 135 ريال" / "تبدأ من 359 ريال" are hand-authored and price-bracketed. They should stay static for 6.2C and be flagged for the SEO-content refresh task.
+6. **Static-page count target.** Must stay at 237 — verify in the build log. If `generateStaticParams` cardinality drifts because of any DB read, treat as a regression.
+
+**Risk callouts:**
+- **List-data drift.** The biggest risk is silently overlaying the car/offer list and discovering during the diff that the public page now shows a different number of cars than yesterday. Mitigation: scope 6.2C to scalars only; defer list migration to 6.2D (or split into 6.2C-list as a separate sub-task).
+- **Category icon source.** Both `data.ts.categories[].icon` and `car_categories.icon` exist. Pick one as the visual source for 6.2C and pin it; mixing would cause visual flicker if admin edits the DB icon.
+- **Arabic title wording carryover.** Apply the same `formatCityWithArabicBa(...)` helper introduced in 6.2B (still inline in the city page today). Plan whether to extract it into `src/lib/arabic-text.ts` at 6.2C time — there's now a second consumer, which is the natural moment to lift it from inline.
+- **Visibility filter parity.** Active categories use `status='active'` only (no `public_status` column on `car_categories`). Verified in Task 6.1; reconfirm at plan time.
+
+**Approved file budget at plan time (estimate, subject to plan approval):** 2 files — 1 new adapter (`src/lib/public-data/adapters/category-page.ts`) + 1 modified page (`src/app/(site)/sa/[city]/[category]/page.tsx`). If the Arabic-helper extraction is approved, +1 file (`src/lib/arabic-text.ts`). Total 2–3 files.
+
+#### Subsequent sub-tasks (planned, NOT to start until 6.2C lands)
+- 6.2D — `/sa/[city]/[category]/[car]` (car detail page) — **HIGHER risk**: three-level join, pricing per car, image URLs, features. Plan once 6.2C's adapter shape is settled.
 - 6.2E — `/` (homepage) and `/about` / `/contact` / `/privacy` if they reference seeded data.
 
 ### Task 6.3 — SEO / sitemap validation after full DB switch (final)
@@ -484,7 +534,7 @@ Once Tasks 6.2A–E are done, do the SEO regression sweep before celebrating.
 - Update `ai-docs/10_SEO_AND_CONTENT_RULES.md` to declare the DB as the authoritative SEO content source (where applicable).
 - Pure validation + docs work. No app file changes.
 
-**Recommended priority order: 6.2B (city — LOW risk) → 6.2C (category — MEDIUM) → 6.2D (car — HIGHER) → 6.2E (homepage + static pages) → 6.3.** Each step is reversible by reverting one commit. The augmentation pattern (overlay, never full swap) means the static `data.ts` fallback keeps the public site alive if any DB row is missing or draft.
+**Recommended priority order: 6.2C (category — MEDIUM, plan carefully) → 6.2D (car — HIGHER) → 6.2E (homepage + static pages) → 6.3.** Each step is reversible by reverting one commit. The augmentation pattern (overlay, never full swap) means the static `data.ts` fallback keeps the public site alive if any DB row is missing or draft.
 
 **Important constraints for the remaining Task 6 sub-tasks:**
 - Do not change the lead form, lead routing, or admin dashboard.
@@ -499,7 +549,7 @@ Once Tasks 6.2A–E are done, do the SEO regression sweep before celebrating.
 
 ## 10. Short Context for Future AI Sessions
 
-> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still render from `src/lib/data.ts`, but the safe DB read layer for the future migration is now in place at `src/lib/public-data/` (Task 6.1) — 7 server-only helpers with strict visibility filters and a deliberate `branch.whatsapp_number` exclusion so direct partner contact stays admin-side. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Admin can also manage rental partners directly: `/admin/companies` lists every company; create / edit forms cover both companies and branches; activation / deactivation / archival is via existing `status` + `public_status` enums (no physical deletes); branch WhatsApp numbers are normalised to `+9665XXXXXXXX` on save; archived companies/branches automatically drop out of the routing picker. `/admin/cars` lists the car-model catalogue with the same create / edit / archive pattern; the form pre-fills English + Arabic brand and model, slug, year (1990–2100), category (dropdown of active `car_categories`), seats (1–100), transmission (`automatic` / `manual` / none), fuel type, image URL, and description; `features_json` is preserved on edit but not editable through the UI. `/admin/offers` ties everything together: a 19-field form in four sections (Who / Pricing / Terms / Workflow) creates company × branch × car × city × airport bundles with daily/weekly/monthly price tiers; the city is server-derived from the chosen branch (the form never sends it); at least one price is required; ✨ Suggest buttons offer non-binding weekly/monthly hints; **publishing an offer requires `approval_status='approved'` (or `auto_approved`)** and **rejecting an offer auto-forces `public_status='hidden'`**; `last_updated_at` bumps only when price or availability changes — stale offers (>30d) show a red indicator. All MVP admin CRUD is now complete (Leads · Companies · Branches · Cars · Offers), the read-only public data layer is in place, and the first public route — `/sa/airports/[airport]` — now consumes it via the **augmentation** pattern (Task 6.2A): static `data.ts` stays load-bearing (route existence, `generateStaticParams`, JSON-LD city source); a server-only DB overlay augments visible airport/city text with a `??` fallback so DB outages, draft rows, or unpublished parents transparently fall back to static. Build baseline holds at 237 static pages. Next public routes (`/sa/[city]`, category, car detail, homepage) are queued under Tasks 6.2B–E, then SEO validation in 6.3. Latest `main` HEAD: `abbd9b9`.
+> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still render from `src/lib/data.ts`, but the safe DB read layer for the future migration is now in place at `src/lib/public-data/` (Task 6.1) — 7 server-only helpers with strict visibility filters and a deliberate `branch.whatsapp_number` exclusion so direct partner contact stays admin-side. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Admin can also manage rental partners directly: `/admin/companies` lists every company; create / edit forms cover both companies and branches; activation / deactivation / archival is via existing `status` + `public_status` enums (no physical deletes); branch WhatsApp numbers are normalised to `+9665XXXXXXXX` on save; archived companies/branches automatically drop out of the routing picker. `/admin/cars` lists the car-model catalogue with the same create / edit / archive pattern; the form pre-fills English + Arabic brand and model, slug, year (1990–2100), category (dropdown of active `car_categories`), seats (1–100), transmission (`automatic` / `manual` / none), fuel type, image URL, and description; `features_json` is preserved on edit but not editable through the UI. `/admin/offers` ties everything together: a 19-field form in four sections (Who / Pricing / Terms / Workflow) creates company × branch × car × city × airport bundles with daily/weekly/monthly price tiers; the city is server-derived from the chosen branch (the form never sends it); at least one price is required; ✨ Suggest buttons offer non-binding weekly/monthly hints; **publishing an offer requires `approval_status='approved'` (or `auto_approved`)** and **rejecting an offer auto-forces `public_status='hidden'`**; `last_updated_at` bumps only when price or availability changes — stale offers (>30d) show a red indicator. All MVP admin CRUD is now complete (Leads · Companies · Branches · Cars · Offers), the read-only public data layer is in place, and two public routes now consume it via the **augmentation** pattern: `/sa/airports/[airport]` (Task 6.2A) and `/sa/[city]` (Task 6.2B). On both routes static `data.ts` stays load-bearing (route existence, `generateStaticParams`, JSON-LD source for `lat`/`lng`/`partnerCount`); a server-only DB overlay augments visible airport/city scalars (`name_ar`, `min_price_from`) with a `??` fallback so DB outages, draft/archived rows, or unpublished parents transparently fall back to static. City-page Arabic titles now use the cleaner `بـ`-prefix wording (`تأجير سيارات بالرياض`, `بجدة`, `بالدمام`, `بمكة المكرمة`, `بالمدينة المنورة`, `بالخبر`) via a small inline `formatCityWithArabicBa` helper. Build baseline holds at 237 static pages. Next public route (category page) is queued as Task 6.2C and must be planned carefully — it's the first list-bearing migration. Car detail (6.2D), homepage + static (6.2E), and SEO validation (6.3) follow. Latest `main` HEAD: `6960242`.
 
 ---
 
