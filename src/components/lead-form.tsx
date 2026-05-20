@@ -1,12 +1,14 @@
 'use client'
 import { useState, useEffect, useTransition } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { cities, categories } from '@/lib/data'
 import { useCity } from './city-context'
 import { createLead } from '@/lib/leads/create-lead'
 import { CONSENT_TEXT_AR } from '@/lib/leads/consent'
 import { todayInRiyadh } from '@/lib/leads/date-utils'
+import { buildRouteFromContext } from '@/lib/search/url-builder'
 import type { CreateLeadError } from '@/lib/leads/types'
+import { DateRangePicker } from './search/date-range-picker'
 
 type LeadFormProps = {
   selectedCarSlug?: string
@@ -17,8 +19,10 @@ type LeadFormProps = {
 
 export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, defaultCitySlug }: LeadFormProps = {}) {
   const { selectedCity, setSelectedCity } = useCity()
-  const pathname = usePathname()
+  const pathname = usePathname() || ''
+  const router = useRouter()
   const today = todayInRiyadh()
+  const isAirportRoute = pathname.startsWith('/sa/airports/')
 
   const [city, setCity] = useState(defaultCitySlug ?? '')
   const [pickup, setPickup] = useState(today)
@@ -51,6 +55,18 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
   function handleCityChange(slug: string) {
     setCity(slug)
     setSelectedCity(slug)
+    if (slug && slug !== defaultCitySlug) {
+      router.push(buildRouteFromContext(slug, pathname))
+    }
+  }
+
+  function handleVehicleChange(slug: string) {
+    setVehicle(slug)
+    if (!slug) return
+    if (isAirportRoute) return
+    if (!city) return
+    if (slug === defaultCategorySlug) return
+    router.push(`/sa/${city}/${slug}`)
   }
 
   useEffect(() => {
@@ -142,20 +158,17 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
         </select>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor="lead-pickup" className="form-label">تاريخ الاستلام</label>
-          <input id="lead-pickup" type="date" className="form-input" min={today} value={pickup} onChange={e => { setPickup(e.target.value); if (!ret || ret < e.target.value) setRet(e.target.value) }} style={{ colorScheme: 'dark' }} aria-required="true" disabled={isPending} />
-        </div>
-        <div className="form-group">
-          <label htmlFor="lead-return" className="form-label">تاريخ التسليم</label>
-          <input id="lead-return" type="date" className="form-input" min={pickup || today} value={ret} onChange={e => setRet(e.target.value)} style={{ colorScheme: 'dark' }} aria-required="true" disabled={isPending} />
-        </div>
-      </div>
+      <DateRangePicker
+        today={today}
+        pickup={pickup}
+        ret={ret}
+        onChange={(p, r) => { setPickup(p); setRet(r) }}
+        disabled={isPending}
+      />
 
       <div className="form-group">
         <label htmlFor="lead-vehicle" className="form-label">نوع السيارة</label>
-        <select id="lead-vehicle" className="form-input" value={vehicle} onChange={e => setVehicle(e.target.value)} aria-required="true" disabled={isPending}>
+        <select id="lead-vehicle" className="form-input" value={vehicle} onChange={e => handleVehicleChange(e.target.value)} aria-required="true" disabled={isPending}>
           <option value="">اختر النوع</option>
           {categories.map(c => <option key={c.slug} value={c.slug}>{c.icon} {c.nameAr}</option>)}
         </select>
