@@ -21,6 +21,7 @@ type Props = {
   pickupInputId?: string
   returnInputId?: string
   onPresetChange?: (preset: PresetId | 'custom') => void
+  hideLabel?: boolean
 }
 
 const chipStyle = (active: boolean, disabled: boolean): CSSProperties => ({
@@ -47,6 +48,7 @@ export function DateRangePicker({
   pickupInputId = 'lead-pickup',
   returnInputId = 'lead-return',
   onPresetChange,
+  hideLabel = false,
 }: Props) {
   // Sticky override only when the user explicitly chose custom (clicked
   // مخصص or hand-edited a date). Otherwise the active preset is derived
@@ -87,7 +89,7 @@ export function DateRangePicker({
   return (
     <div className="form-group">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-        <label className="form-label" style={{ marginBottom: 0 }}>مدة التأجير</label>
+        {!hideLabel && <label className="form-label" style={{ marginBottom: 0 }}>مدة التأجير</label>}
         {pickup && ret && days > 0 && (
           <span style={{ fontSize: '.75rem', color: 'rgba(255,255,255,0.7)', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             <span dir="ltr" style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>

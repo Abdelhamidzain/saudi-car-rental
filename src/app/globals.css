@@ -97,6 +97,11 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 @media(max-width:640px){.glass-form{padding:20px;min-height:auto;border-radius:18px}.glass-form-title{font-size:1.1rem}.glass-form-sub{margin-bottom:18px}.form-group{margin-bottom:14px}.form-input{padding:12px 14px}}
 @media(max-width:480px){.container{padding:0 16px}}
 @media(max-width:1023px){#main{padding-bottom:88px}}
+.form-section{margin-bottom:22px;min-width:0}
+.form-section:last-of-type{margin-bottom:0}
+.form-section .form-group:last-child{margin-bottom:0}
+.form-section-title{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-size:.9rem;font-weight:800;color:#F0D78C;margin-bottom:12px;letter-spacing:.01em}
+@media(max-width:640px){.form-section{margin-bottom:18px}.form-section-title{font-size:.85rem;margin-bottom:10px}}
 .category-strip{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:thin;scroll-snap-type:x proximity;cursor:grab;touch-action:pan-x}
 .category-strip::-webkit-scrollbar{height:6px}
 .category-strip::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:3px}

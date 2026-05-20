@@ -41,6 +41,7 @@ export function CategoryCardSelector({
   disabled = false,
   labelText = 'نوع السيارة',
 }: Props) {
+  const hasLabel = labelText.trim().length > 0
   const stripRef = useRef<HTMLDivElement>(null)
   // Mouse-drag state. Touch pointers fall through to native overflow scrolling.
   const drag = useRef<{ startX: number; startScroll: number; moved: boolean; pointerId: number } | null>(null)
@@ -89,12 +90,13 @@ export function CategoryCardSelector({
 
   return (
     <div className="form-group">
-      <div id="category-card-label" className="form-label">{labelText}</div>
+      {hasLabel && <div id="category-card-label" className="form-label">{labelText}</div>}
       <div
         ref={stripRef}
         className="category-strip"
         role="group"
-        aria-labelledby="category-card-label"
+        aria-labelledby={hasLabel ? 'category-card-label' : undefined}
+        aria-label={hasLabel ? undefined : 'نوع السيارة'}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={finishDrag}

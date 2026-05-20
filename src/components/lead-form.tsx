@@ -169,64 +169,77 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
       <div className="glass-form-title">ابحث عن سيارتك</div>
       <div className="glass-form-sub">احصل على أفضل العروض مجاناً</div>
 
-      <div className="form-group">
-        <label htmlFor="lead-city" className="form-label">المدينة</label>
-        <select id="lead-city" className="form-input" value={city} onChange={e => handleCityChange(e.target.value)} aria-required="true" disabled={isPending}>
-          <option value="">اختر المدينة</option>
-          {cities.map(c => <option key={c.slug} value={c.slug}>{c.nameAr}</option>)}
-        </select>
-      </div>
-
-      <AirportModeToggle citySlug={city} disabled={isPending} />
-
-      <DateRangePicker
-        today={today}
-        pickup={pickup}
-        ret={ret}
-        onChange={(p, r) => search.setDateRange(p, r)}
-        onPresetChange={(hint) => search.setDurationHint(hint)}
-        disabled={isPending}
-      />
-
-      <CategoryCardSelector
-        value={vehicle}
-        onChange={handleVehicleChange}
-        categories={categories}
-        disabled={isPending}
-      />
-
-      <div className="form-group">
-        <label htmlFor="lead-phone" className="form-label">رقم الجوال</label>
-        <input id="lead-phone" type="tel" className="form-input" placeholder="05XXXXXXXX" dir="ltr" value={phone} onChange={e => setPhone(e.target.value)} aria-required="true" autoComplete="tel" disabled={isPending} />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="lead-notes" className="form-label">ملاحظات إضافية (اختياري)</label>
-        <textarea
-          id="lead-notes"
-          className="form-input"
-          placeholder="مثال: كرسي أطفال، توصيل لموقع معين، إيجار شهري"
-          rows={2}
-          maxLength={500}
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          disabled={isPending}
-          style={{ resize: 'vertical', minHeight: 56 }}
-        />
-      </div>
-
-      <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}><input tabIndex={-1} value={honey} onChange={e => setHoney(e.target.value)} autoComplete="off" /></div>
-
-      {errorMsg && (
-        <div role="alert" style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fecaca', fontSize: '.85rem' }}>
-          {errorMsg}
+      <section className="form-section" aria-label="الموقع">
+        <div className="form-section-title">أين تحتاج السيارة؟</div>
+        <div className="form-group">
+          <label htmlFor="lead-city" className="form-label">المدينة</label>
+          <select id="lead-city" className="form-input" value={city} onChange={e => handleCityChange(e.target.value)} aria-required="true" disabled={isPending}>
+            <option value="">اختر المدينة</option>
+            {cities.map(c => <option key={c.slug} value={c.slug}>{c.nameAr}</option>)}
+          </select>
         </div>
-      )}
+        <AirportModeToggle citySlug={city} disabled={isPending} />
+      </section>
 
-      <button className="form-submit" onClick={submit} type="button" aria-label="أرسل طلب تأجير سيارة مجاناً" disabled={isPending}>
-        {isPending ? 'جاري الإرسال…' : 'أرسل طلبي ←'}
-      </button>
-      <div className="form-note">{CONSENT_TEXT_AR}</div>
+      <section className="form-section" aria-label="مدة التأجير">
+        <div className="form-section-title">مدة التأجير</div>
+        <DateRangePicker
+          today={today}
+          pickup={pickup}
+          ret={ret}
+          onChange={(p, r) => search.setDateRange(p, r)}
+          onPresetChange={(hint) => search.setDurationHint(hint)}
+          disabled={isPending}
+          hideLabel
+        />
+      </section>
+
+      <section className="form-section" aria-label="نوع السيارة">
+        <div className="form-section-title">نوع السيارة</div>
+        <CategoryCardSelector
+          value={vehicle}
+          onChange={handleVehicleChange}
+          categories={categories}
+          disabled={isPending}
+          labelText=""
+        />
+      </section>
+
+      <section className="form-section" aria-label="بيانات التواصل">
+        <div className="form-section-title">بيانات التواصل</div>
+        <div className="form-group">
+          <label htmlFor="lead-phone" className="form-label">رقم الجوال</label>
+          <input id="lead-phone" type="tel" className="form-input" placeholder="05XXXXXXXX" dir="ltr" value={phone} onChange={e => setPhone(e.target.value)} aria-required="true" autoComplete="tel" disabled={isPending} />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="lead-notes" className="form-label">ملاحظات إضافية (اختياري)</label>
+          <textarea
+            id="lead-notes"
+            className="form-input"
+            placeholder="مثال: كرسي أطفال، توصيل لموقع معين، إيجار شهري"
+            rows={2}
+            maxLength={500}
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            disabled={isPending}
+            style={{ resize: 'vertical', minHeight: 56 }}
+          />
+        </div>
+
+        <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px' }}><input tabIndex={-1} value={honey} onChange={e => setHoney(e.target.value)} autoComplete="off" /></div>
+
+        {errorMsg && (
+          <div role="alert" style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fecaca', fontSize: '.85rem' }}>
+            {errorMsg}
+          </div>
+        )}
+
+        <button className="form-submit" onClick={submit} type="button" aria-label="أرسل طلب تأجير سيارة مجاناً" disabled={isPending}>
+          {isPending ? 'جاري الإرسال…' : 'أرسل طلبي ←'}
+        </button>
+        <div className="form-note">{CONSENT_TEXT_AR}</div>
+      </section>
     </div>
   )
 }
