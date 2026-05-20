@@ -33,6 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <Link href="/admin/leads">Leads</Link>
             <Link href="/admin/companies">Companies</Link>
             <Link href="/admin/cars">Cars</Link>
+            <Link href="/admin/offers">Offers</Link>
           </nav>
           <div className="admin-side-foot">Saudi Car Rental — MVP</div>
         </aside>
