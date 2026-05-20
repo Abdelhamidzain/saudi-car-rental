@@ -249,7 +249,7 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
 - **Deferred (still not built):** `working_hours` JSON editor; rating snapshot fields editor; logo file upload (URL-only for now); audit log of company/branch changes; partial UNIQUE constraint on main-branch.
 
 ### Task 5.2A — Car CRUD
-**Commit:** `3fbbe44` (current `main` HEAD).
+**Commit:** `3fbbe44`.
 - **Admin routes added:**
   - `/admin/cars` — list with `status` filter; "+ New car" CTA visible to owner/admin only.
   - `/admin/cars/new` — create form (full-page host).
@@ -270,6 +270,39 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
 - **No DB migration. No new RPC. No new npm dependency. No public site changes. No lead form changes. No routing logic changes. No company/branch CRUD changes.** Sidebar nav gains a third link: **Cars** (next to Leads + Companies).
 - **Smoke test highlights (21/21 PASS, transient test car cleaned up):** validator rejects bad slug / year `1989` / year `"abc"` / seats `0` / seats `101` / transmission `"rocket"` / bad URL / bad enum / missing `category_id`; empty optional fields stored as null; DB CRUD round-trips; `cars_slug_key` rejects duplicates; `cars_year_range` rejects `1989`; `cars_transmission_check` rejects `"rocket"`; archival works.
 - **Deferred (still not built):** `features_json` editor; car-category CRUD; image-upload UI (URL-paste only); audit log of car CRUD changes.
+
+### Task 5.2B — Offer CRUD
+**Commit:** `e452939` (current `main` HEAD).
+- **Admin routes added:**
+  - `/admin/offers` — list with three filters (`approval_status`, `public_status`, `company_id`); "+ New offer" CTA visible to owner/admin only; rows highlight `last_updated_at` in red when > 30 days old.
+  - `/admin/offers/new` — full-page create form.
+  - `/admin/offers/[id]` — two-column edit form + meta card with `created_at` / `updated_at` / `last_updated_at`; renders a "stale price" warning card when `last_updated_at` is null or > 30 days.
+- **Offers CRUD:**
+  - List with filter trio (approval, public, company); sorted by `last_updated_at` desc.
+  - Create + edit via a single shared `<OfferForm/>` client component (4-section layout: Who / Pricing / Terms / Workflow).
+  - Activation / deactivation / archival via existing `status` + `public_status` enums.
+  - **No physical delete.**
+- **Fields supported by the form (19 total):** `company_id`, `branch_id`, `city_id` (server-derived from branch), `car_id`, `airport_id` (optional), `daily_price_from`, `weekly_price_from`, `monthly_price_from`, `deposit_amount`, `insurance_included` (tri-state), `insurance_type`, `mileage_limit`, `delivery_available`, `airport_delivery_available`, `price_status`, `availability_status`, `approval_status`, `public_status`, `status`.
+- **Cascading picker:**
+  - Company picker first.
+  - Branch picker filtered client-side by selected company.
+  - City auto-fills (read-only) from the chosen branch — the form never sends `city_id`; the server reads `branch.city_id` and writes it on save.
+  - Server-side branch–company FK consistency check in [src/lib/admin/offers/upsert.ts](../src/lib/admin/offers/upsert.ts) (`resolveBranchCityForCompany`) catches URL-tampering.
+- **Pricing rules:**
+  - At least one of daily / weekly / monthly required — enforced by the validator.
+  - ✨ Suggest buttons on weekly + monthly compute from daily (`weekly = round(daily × 7 × 0.85)`, `monthly = round(daily × 30 × 0.70)`); click-once-then-edit; never auto-applied. Stored DB values are the source of truth.
+  - All prices must be ≥ 0 — validator + DB CHECK as defence in depth.
+- **Approval / publication state machine:**
+  - `public_status='published'` rejected unless `approval_status` is `approved` or `auto_approved` — soft gate, enforced by the validator with `not_approved_for_publish`.
+  - `approval_status='rejected'` auto-forces `public_status='hidden'` in the same save — implemented by `applyRejectAutoReset` in [actions.ts](../src/app/(admin)/admin/offers/actions.ts).
+  - Owner/admin can approve and publish in a single edit — no separate review role yet. A future Task 6+ might split this when partners self-submit via a company dashboard.
+- **`last_updated_at` discipline** (per the migration 010 column comment):
+  - **Set to now()** on INSERT.
+  - **Bumped to now() on UPDATE** only when at least one of `daily_price_from` / `weekly_price_from` / `monthly_price_from` / `availability_status` changes. Other field changes (e.g. `insurance_type`) leave `last_updated_at` untouched.
+- **New server-only library modules (5 files):** `offers/{validate,list,get,upsert}.ts`, `branches/list-all.ts`. Each carries `import "server-only"`.
+- **No DB migration. No new RPC. No new npm dependency. No public site changes. No lead form changes. No routing logic changes. No companies / branches / cars CRUD changes.** Sidebar nav gains a fourth link: **Offers** (Leads · Companies · Cars · Offers).
+- **Smoke test highlights (21/21 PASS, transient test offer cleaned up):** validator covers at-least-one-price rule, negative price/deposit/mileage rejection, bad enum, approval gate (publish without approval rejected; publish with approved/auto_approved accepted), invalid UUIDs; CRUD round-trip; `last_updated_at` correctly **does not** bump when only `insurance_type` changes but **does** bump when `daily_price` changes; branch–company mismatch identified at sanity-check level; DB CHECKs `offers_daily_price_non_negative` and `offers_deposit_non_negative` reject negatives.
+- **Deferred (still not built):** parent-status guard (admin can publish an offer whose parent company / branch / car is archived); offer-price history table; bulk operations; offer images; date-windowed availability; image / file upload UI.
 
 ### Recent Operational Fixes
 
@@ -331,9 +364,11 @@ Capability gaps (do not assume any of these exist):
 - Customer follow-up form / table data entry.
 - Admin reports / overview dashboard.
 - Company dashboard (Phase 2).
-- Offers CRUD in admin.
 - Car-category CRUD in admin (admin picks from seed-only set today; new categories require SQL).
-- Audit log of company / branch / car CRUD changes (relying on `updated_at` only).
+- Audit log of company / branch / car / offer CRUD changes (relying on `updated_at` only).
+- Parent-status guard on offer publish (admin can currently publish an offer whose company / branch / car is archived).
+- Offer price history (only `last_updated_at` timestamp; no per-change row).
+- Offer bulk operations (multi-select approve / publish / archive).
 - `working_hours` JSON editor on branches.
 - `features_json` editor on cars.
 - Rating snapshot editor on companies.
@@ -351,41 +386,65 @@ Capability gaps (do not assume any of these exist):
 
 ## 9. Recommended Next Tasks
 
-### Task 5.2B — Offer CRUD (**recommended next**)
+All admin CRUD is now in place (Leads, Companies, Branches, Cars, Offers). The remaining unlock for actually showing admin-authored data to customers is **Task 6 — Public-page DB migration**. This is the largest and most risk-bearing task left in the MVP because it touches every public route, the SEO surface, the sitemap, and the static-page count. Plan in three gradual sub-tasks with a fallback at every step.
 
-Offers are the densest entity in the system — they pull together everything the other CRUD tasks built: a `company_id`, a `branch_id`, a `car_id`, a `city_id`, three independent price tiers, and a 4-state approval workflow. Plan this one carefully before implementing.
+### Task 6.1 — Read-only DB data layer for public pages (**recommended next**)
+
+Add server-only helpers that read the same shapes the public pages currently consume from `src/lib/data.ts`, **without touching any public-page UI**. Zero behaviour change. The goal is to land + smoke-test the data plumbing in isolation.
 
 **Scope:**
-- Admin routes: `/admin/offers` (list + filter), `/admin/offers/new`, `/admin/offers/[id]`.
-- Offer columns per [migration 010](../supabase/migrations/20260519000010_create_offers.sql): `company_id`, `branch_id`, `car_id`, `city_id`, `daily_price_from`, `weekly_price_from`, `monthly_price_from`, `deposit`, `insurance_info`, `mileage_limit`, `airport_delivery_available`, `price_status`, `availability_status`, `approval_status`, `last_updated_at`, `public_status`, `status`. Confirm the exact column names against the migration before the plan locks in — the live schema is authoritative.
-- **Approval workflow.** The existing `approval_status` enum has `pending_review` / `approved` / `rejected` / `auto_approved`. The form should default new offers to `pending_review` and **prevent** the admin from setting `public_status='published'` unless `approval_status='approved'` (or `auto_approved`). Soft UI-layer enforcement is fine for MVP; a future migration could add a DB CHECK that pairs the two columns.
-- **Cascading pickers.** Picking a company should filter branches to that company; picking a city should additionally filter branches to that city. Same UX pattern as the Task 4.1 routing panel; the underlying helper (`listBranchesForCompanyForAdmin`) already exists and can be reused.
-- **Sidebar nav.** Adds a fourth link: **Offers**.
-- **Reuses existing helpers from Tasks 5.1 + 5.2A:**
-  - `listCompaniesForAdmin` ([src/lib/admin/companies/list.ts](../src/lib/admin/companies/list.ts))
-  - `listBranchesForCompanyForAdmin` ([src/lib/admin/branches/list-for-company.ts](../src/lib/admin/branches/list-for-company.ts))
-  - `listCarsForAdmin` ([src/lib/admin/cars/list.ts](../src/lib/admin/cars/list.ts))
-  - `listActiveCities` ([src/lib/admin/cities/list.ts](../src/lib/admin/cities/list.ts))
-- **Price handling.** The seed/demo formula `weekly_price_from = round(daily_price_from × 7 × 0.85, 2)` is only for seed data. The admin form accepts all three tiers independently; once an admin edits an offer, the stored values are authoritative. The form should NOT auto-compute weekly/monthly from daily.
-- **Approx file count:** 1 layout edit + 3 pages + 1 form + 1 actions + ~5 helpers = **~11 files**, same ballpark as Task 5.1.
-- **No DB migration. No new RPC. No new npm dep.** Pure UI on top of the existing schema.
+- New module `src/lib/public-data/` mirroring the existing `src/lib/data.ts` exports:
+  - `getCities()`, `getCityBySlug(slug)`
+  - `getCategories()`, `getCategoryBySlug(slug)`
+  - `getCars()`, `getCarBySlug(slug)`, `getCarsByCategory(slug)`
+  - `getAirports()`, `getAirportBySlug(slug)`, `getAirportsForCity(slug)`
+  - `getCompaniesByCity(slug)` (publicly visible only — `status='active' AND public_status='published'`)
+  - `getOffersByCity(slug)` / `getOffersByCar(slug)` (visible only — `status='active' AND public_status='published' AND approval_status IN ('approved','auto_approved')` per the migration 010 table comment)
+- Each helper carries `import "server-only"`.
+- Shapes match the existing `data.ts` types so future migrations can swap drop-in.
+- **No UI consumes these yet.** Pure data layer.
+- Smoke test verifies row counts and shape compatibility.
+- Approx file count: ~6 helpers + (optional) 1 shared types file = **~7 files**.
 
-**Open planning questions for when we plan it:**
-1. Should `last_updated_at` be auto-written by the server action on every save, or stored separately from the trigger-managed `updated_at`? (Implication: two timestamp columns, two meanings.)
-2. Should the list page expose a "pending review" filter as the default, or show everything? (Founder workflow choice.)
-3. Should soft-rejecting an offer (`approval_status='rejected'`) also force `public_status='hidden'`? (Probably yes — codify in the form.)
+### Task 6.2 — Switch selected public pages to DB with fallback to `src/lib/data.ts`
 
-### Task 6 — Public-page DB migration (future)
+Pick **one** low-stakes route first (suggested: `/sa/airports/[airport]`, which is the simplest), wire it to the new DB helpers, keep a try/catch fallback to `src/lib/data.ts` so a DB outage doesn't take the page down. Build + Lighthouse + visual diff before expanding to other routes.
 
-Out of MVP scope today, but worth noting: once Task 5.2B lands and admin can author offers via the UI, the public pages will still be reading from `src/lib/data.ts` static arrays. Migrating the public hero, city pages, category pages, car pages, and airport pages to read from Supabase is the unlock for actually using admin-authored data on the live site. Plan as Task 6 when 5.2B is done.
+**Scope:**
+- Wire `/sa/airports/[airport]` and `/sa/[city]` to read from DB helpers.
+- Keep `getCarByMakeModel`, `generateCarSEOContent`, and other display-only helpers from `data.ts` as-is.
+- Implement a `withFallback(dbCall, fileFallback)` helper so a DB failure renders the previous content instead of erroring.
+- Confirm `generateStaticParams` returns identical sets for each route.
+- Update Vercel build expectation: same **236 static** pages.
+- Don't touch the lead form (already DB-backed).
+- Approx file count: small refactor — ~5 pages + 1 fallback helper = **~6 files**.
 
-**Recommended priority order: 5.2B → 6.** Offers are the last MVP CRUD; once it's in, public-page migration becomes the bottleneck between admin-authored data and customer-visible content.
+### Task 6.3 — SEO / sitemap validation after DB switch
+
+Verify the migration didn't regress public SEO before going wider.
+
+**Scope:**
+- Diff `app/sitemap.ts` output before vs after — must include the same URLs.
+- Diff per-page `<title>`, `<meta name="description">`, OG tags, JSON-LD payloads — admin data should match `data.ts` defaults for the seeded entities.
+- Lighthouse + Surfer/Ahrefs spot-check on three routes per type (one city, one category, one car, one airport).
+- Update `ai-docs/10_SEO_AND_CONTENT_RULES.md` with the new authoritative source.
+- No new app files; pure docs + validation work.
+
+**Recommended priority order: 6.1 → 6.2 → 6.3.** Each step is reversible by reverting one commit. The data layer ships first with zero UX impact; the page switch is gated on it; SEO validation is gated on the page switch. If at any point we find regressions, the fallback path keeps the public site alive.
+
+**Important constraints for Task 6 (all three sub-tasks):**
+- Do not change the lead form, lead routing, or admin dashboard.
+- Do not change the schema. Use existing visibility rules (`status='active' AND public_status='published'` for companies; the longer rule for offers).
+- Customer-data privacy unchanged — public reads expose no leads, no admin notes, no internal trust levels.
+- Service-role usage stays server-only.
+- Static-page count stays at 236.
+- Once 6.1+6.2+6.3 are done, the public site reflects admin-authored content and `src/lib/data.ts` can be deleted in a follow-up.
 
 ---
 
 ## 10. Short Context for Future AI Sessions
 
-> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Admin can also manage rental partners directly: `/admin/companies` lists every company; create / edit forms cover both companies and branches; activation / deactivation / archival is via existing `status` + `public_status` enums (no physical deletes); branch WhatsApp numbers are normalised to `+9665XXXXXXXX` on save; archived companies/branches automatically drop out of the routing picker. `/admin/cars` lists the car-model catalogue with the same create / edit / archive pattern; the form pre-fills English + Arabic brand and model, slug, year (1990–2100), category (dropdown of active `car_categories`), seats (1–100), transmission (`automatic` / `manual` / none), fuel type, image URL, and description; `features_json` is preserved on edit but not editable through the UI. Latest `main` HEAD: `3fbbe44`.
+> Saudi car rental **comparison and lead-generation** platform. MVP only: no bookings, no payments, no final-price guarantees, no auto-routing. Customer fills an Arabic form on the public site (city, dates, vehicle, phone, **optional notes**) → lead saved in Supabase with an atomic activity-log entry → admin reviews and routes the lead in `/admin/leads`. The admin can manually assign or **reassign** a lead to a company/branch (each assignment creates a new `lead_company_routing` row; older routings stay visible as history; `leads.assigned_*` pointers advance to the latest), generate an Arabic WhatsApp message (customer notes auto-included when present), copy it to clipboard, click **Open WhatsApp** — which now uses a real `<a href="https://wa.me/9665...?text=…" target="_blank">` link so WhatsApp opens reliably with the message prefilled — and mark the routing as sent (auto-advances status from `new`/`reviewed` to `sent_to_company`). Every action is logged. **Manual-first** is preserved: no WhatsApp Business API, no n8n, no automation, no booking/payment, no company dashboard. Public pages still read from `src/lib/data.ts`; migrating them to Supabase is **not** in scope yet. Service-role key is server-only; admin pages use cookie auth via `@supabase/ssr` and gate roles app-side. The lead form is rate-limited at 10/hour per IP, flags potential duplicates (same phone within 24h) to admin without blocking submissions, strips URLs out of customer notes, and computes the pickup-date default + minimum from Asia/Riyadh — same source the server validator uses — so the form never pre-fills a date the server would reject. Admin can also manage rental partners directly: `/admin/companies` lists every company; create / edit forms cover both companies and branches; activation / deactivation / archival is via existing `status` + `public_status` enums (no physical deletes); branch WhatsApp numbers are normalised to `+9665XXXXXXXX` on save; archived companies/branches automatically drop out of the routing picker. `/admin/cars` lists the car-model catalogue with the same create / edit / archive pattern; the form pre-fills English + Arabic brand and model, slug, year (1990–2100), category (dropdown of active `car_categories`), seats (1–100), transmission (`automatic` / `manual` / none), fuel type, image URL, and description; `features_json` is preserved on edit but not editable through the UI. `/admin/offers` ties everything together: a 19-field form in four sections (Who / Pricing / Terms / Workflow) creates company × branch × car × city × airport bundles with daily/weekly/monthly price tiers; the city is server-derived from the chosen branch (the form never sends it); at least one price is required; ✨ Suggest buttons offer non-binding weekly/monthly hints; **publishing an offer requires `approval_status='approved'` (or `auto_approved`)** and **rejecting an offer auto-forces `public_status='hidden'`**; `last_updated_at` bumps only when price or availability changes — stale offers (>30d) show a red indicator. All MVP admin CRUD is now complete (Leads · Companies · Branches · Cars · Offers). Latest `main` HEAD: `e452939`.
 
 ---
 
