@@ -1,7 +1,7 @@
 // ===== SITE CONFIG =====
 export const SITE_NAME = 'تأجير سيارات'
 export const SITE_NAME_EN = 'Cars Renting'
-export const SITE_URL = 'https://cars-renting.com'
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.cars-renting.com'
 
 // ===== CITIES =====
 export interface City {
