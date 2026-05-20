@@ -35,6 +35,19 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
     if (selectedCity) setCity(selectedCity)
   }, [selectedCity])
 
+  // Mirror the URL-derived defaultCitySlug into CityContext so the global
+  // header city-selector-btn reflects the page's city on first load. This
+  // runs on mount and whenever defaultCitySlug changes (e.g. client-side
+  // navigation to a different city's page). Manual user picks via the
+  // form/header dropdowns still win — they fire setSelectedCity directly,
+  // and this effect doesn't re-fire because defaultCitySlug hasn't changed.
+  useEffect(() => {
+    if (defaultCitySlug && defaultCitySlug !== selectedCity) {
+      setSelectedCity(defaultCitySlug)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultCitySlug])
+
   function handleCityChange(slug: string) {
     setCity(slug)
     setSelectedCity(slug)
