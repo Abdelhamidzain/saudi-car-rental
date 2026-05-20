@@ -19,7 +19,7 @@ export default function FooterInner() {
         </div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} {SITE_NAME}. جميع الحقوق محفوظة</span><span>صُنع بـ ❤️ في السعودية</span></div>
       </footer>
-      <div className="mobile-cta hide-desktop"><Link href="#form">احصل على عرض تأجير</Link></div>
+      <div className="mobile-cta"><Link href="#form">احصل على أفضل عرض الآن</Link></div>
     </>
   )
 }
