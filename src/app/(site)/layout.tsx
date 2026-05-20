@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { SITE_NAME, SITE_URL } from '@/lib/data'
 import { CityProvider } from '@/components/city-context'
+import { SearchProvider } from '@/components/search/search-context'
 import { ClientHeader } from '@/components/client-header'
 import { ClientFooter } from '@/components/client-footer'
 
@@ -26,15 +27,17 @@ export const metadata: Metadata = {
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <CityProvider>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
-        '@context':'https://schema.org','@graph':[
-          {'@type':'WebSite',name:SITE_NAME,url:SITE_URL,inLanguage:'ar'},
-          {'@type':'Organization',name:SITE_NAME,url:SITE_URL},
-        ]
-      })}} />
-      <ClientHeader/>
-      <main id="main">{children}</main>
-      <ClientFooter/>
+      <SearchProvider>
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context':'https://schema.org','@graph':[
+            {'@type':'WebSite',name:SITE_NAME,url:SITE_URL,inLanguage:'ar'},
+            {'@type':'Organization',name:SITE_NAME,url:SITE_URL},
+          ]
+        })}} />
+        <ClientHeader/>
+        <main id="main">{children}</main>
+        <ClientFooter/>
+      </SearchProvider>
     </CityProvider>
   )
 }
