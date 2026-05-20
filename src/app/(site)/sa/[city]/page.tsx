@@ -6,12 +6,6 @@ import { LazyLeadForm } from '@/components/lazy-lead-form'
 import { NoSSR } from '@/components/no-ssr'
 import { getCityPageOverlayFromDb } from '@/lib/public-data/adapters/city-page'
 
-// Prefixes an Arabic city name with the preposition "بـ" (no space).
-// "الرياض" → "بالرياض" · "جدة" → "بجدة" · "مكة المكرمة" → "بمكة المكرمة"
-function formatCityWithArabicBa(cityNameAr: string): string {
-  return `ب${cityNameAr}`
-}
-
 export function generateStaticParams() { return cities.map(c=>({city:c.slug})) }
 export async function generateMetadata({params}:{params:Promise<{city:string}>}):Promise<Metadata> {
   const slug = (await params).city
@@ -21,13 +15,12 @@ export async function generateMetadata({params}:{params:Promise<{city:string}>})
   const overlay = await getCityPageOverlayFromDb(slug)
   const cityNameAr = overlay?.cityNameAr ?? city.nameAr
   const cityMinPrice = overlay?.cityMinPrice ?? city.minPrice
-  const cityBa = formatCityWithArabicBa(cityNameAr)
   return {
-    title: `تأجير سيارات ${cityBa} — أسعار من ${cityMinPrice} ريال/يوم`,
+    title: `تأجير سيارات في ${cityNameAr} — أسعار من ${cityMinPrice} ريال/يوم`,
     description: `تأجير سيارات في ${cityNameAr} من ${city.partnerCount} شركة معتمدة. قارن عروض تأجير السيارات واحصل على أفضل سعر تأجير سيارة يبدأ من ${cityMinPrice} ريال يومياً مع التأمين وخدمة التوصيل للمطار.`,
     alternates: { canonical: `/sa/${city.slug}` },
     openGraph: {
-      title: `تأجير سيارات ${cityBa} — من ${cityMinPrice} ريال`,
+      title: `تأجير سيارات في ${cityNameAr} — من ${cityMinPrice} ريال`,
       description: `قارن عروض تأجير السيارات في ${cityNameAr} من ${city.partnerCount} شركة. أسعار تأجير سيارة تبدأ من ${cityMinPrice} ريال يومياً.`,
       url: `${SITE_URL}/sa/${city.slug}`,
       type: 'website',
@@ -35,7 +28,7 @@ export async function generateMetadata({params}:{params:Promise<{city:string}>})
     },
     twitter: {
       card: 'summary_large_image',
-      title: `تأجير سيارات ${cityBa} — من ${cityMinPrice} ريال`,
+      title: `تأجير سيارات في ${cityNameAr} — من ${cityMinPrice} ريال`,
       description: `قارن عروض تأجير السيارات في ${cityNameAr}. أسعار تبدأ من ${cityMinPrice} ريال يومياً.`,
     },
   }
