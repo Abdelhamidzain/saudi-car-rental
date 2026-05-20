@@ -1,17 +1,18 @@
 'use client'
 import { useState, useEffect, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { cities, categories } from '@/lib/data'
+import { cities, categories, carModels } from '@/lib/data'
 import { useCity } from './city-context'
 import { createLead } from '@/lib/leads/create-lead'
 import { CONSENT_TEXT_AR } from '@/lib/leads/consent'
 import { todayInRiyadh } from '@/lib/leads/date-utils'
-import { buildRouteFromContext } from '@/lib/search/url-builder'
+import { buildRouteFromContext, buildInCityRoute } from '@/lib/search/url-builder'
 import { addDays, diffDays } from '@/lib/search/date-presets'
 import type { CreateLeadError } from '@/lib/leads/types'
 import { DateRangePicker } from './search/date-range-picker'
 import { AirportModeToggle } from './search/airport-mode-toggle'
 import { CategoryCardSelector } from './search/category-card-selector'
+import { CarModelSelector } from './search/car-model-selector'
 import { useSearch } from './search/search-context'
 
 type LeadFormProps = {
@@ -33,6 +34,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
   const pickup = search.pickupDate
   const ret = search.returnDate
   const vehicle = search.categorySlug || defaultCategorySlug || ''
+  const car = search.carSlug || selectedCarSlug || ''
   const [phone, setPhone] = useState('')
   const [notes, setNotes] = useState('')
   const [honey, setHoney] = useState('')
@@ -73,18 +75,36 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
   function handleCityChange(slug: string) {
     setCity(slug)
     setSelectedCity(slug)
-    if (slug && slug !== defaultCitySlug) {
+    if (!slug || slug === defaultCitySlug) return
+    // Airport routes: keep airport semantics (map to target city's airport).
+    if (isAirportRoute) {
       router.push(buildRouteFromContext(slug, pathname))
+      return
     }
+    // Other routes: prefer the user's SearchProvider category/car selections,
+    // which already mirror the URL on /sa/[city]/... pages and carry the
+    // user's homepage/no-city picks on routes that don't expose them in the URL.
+    router.push(buildInCityRoute(slug, search.categorySlug, search.carSlug))
   }
 
   function handleVehicleChange(slug: string) {
     search.setCategorySlug(slug)
+    // Picking a different category invalidates the previously selected car.
+    if (slug && slug !== vehicle) search.setCarSlug('')
     if (!slug) return
     if (isAirportRoute) return
     if (!city) return
     if (slug === defaultCategorySlug) return
     router.push(`/sa/${city}/${slug}`)
+  }
+
+  function handleCarChange(slug: string) {
+    search.setCarSlug(slug)
+    if (!slug) return
+    if (isAirportRoute) return
+    if (!city || !vehicle) return
+    if (slug === car) return
+    router.push(`/sa/${city}/${vehicle}/${slug}`)
   }
 
   useEffect(() => {
@@ -124,7 +144,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
         pickup_date: pickup,
         return_date: ret,
         category_slug: vehicle || null,
-        selected_car_slug: selectedCarSlug ?? null,
+        selected_car_slug: car || null,
         airport_slug: airportSlug ?? null,
         request_type: 'best_offer',
         pickup_location: null,
@@ -200,6 +220,18 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
           value={vehicle}
           onChange={handleVehicleChange}
           categories={categories}
+          disabled={isPending}
+          labelText=""
+        />
+      </section>
+
+      <section className="form-section" aria-label="موديل السيارة">
+        <div className="form-section-title">موديل السيارة</div>
+        <CarModelSelector
+          value={car}
+          onChange={handleCarChange}
+          cars={carModels}
+          categorySlug={vehicle}
           disabled={isPending}
           labelText=""
         />
