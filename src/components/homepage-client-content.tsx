@@ -1,0 +1,239 @@
+'use client'
+
+/**
+ * Homepage client content — renders everything on the homepage EXCEPT the
+ * H1 and the surrounding hero scaffolding, all on the client after hydration.
+ *
+ * Slot-based so the same component can fill multiple positions inside the
+ * SSR-rendered hero structure (badge above the H1, subtitle/stats below it,
+ * lead-form mount in the right column) plus everything below the hero.
+ *
+ * Combined with `dynamic({ ssr: false })` at the import site, none of this
+ * renders to the server HTML. The H1 stays as the only visible text in raw
+ * SSR; this component fills in the rest post-hydration to preserve the
+ * current visual layout.
+ */
+
+import Link from 'next/link'
+import {
+  cities,
+  categories,
+  airports,
+  carModels,
+  categoryGradients,
+  homeFAQs,
+} from '@/lib/data'
+import { LazyLeadForm } from './lazy-lead-form'
+
+type Slot = 'hero-pre-h1' | 'hero-post-h1' | 'hero-form' | 'body'
+
+export default function HomepageClientContent({ slot }: { slot: Slot }) {
+  if (slot === 'hero-pre-h1') {
+    return <div className="hero-badge"><span className="pulse"/>+4,200 طلب شهرياً</div>
+  }
+
+  if (slot === 'hero-post-h1') {
+    return (
+      <>
+        <p className="hero-subtitle">نجمع لك عروض تأجير سيارات من أكثر من 50 مكتب معتمد في الرياض وجدة والدمام. قارن الأسعار واحصل على أفضل عرض تأجير سيارة بأقل من 79 ريال يومياً.</p>
+        <div className="hero-stats">
+          <div style={{textAlign:'center'}}><div className="stat-num">+50</div><div className="stat-label">مكتب معتمد</div></div>
+          <div style={{textAlign:'center'}}><div className="stat-num">12</div><div className="stat-label">وجهة</div></div>
+          <div style={{textAlign:'center'}}><div className="stat-num">4.8 ★</div><div className="stat-label">تقييم العملاء</div></div>
+        </div>
+      </>
+    )
+  }
+
+  if (slot === 'hero-form') {
+    return <LazyLeadForm/>
+  }
+
+  if (slot === 'body') {
+    return (
+      <>
+        {/* SSR H2 SECTIONS (now client) */}
+        <section className="section section-white"><div className="container" style={{maxWidth:900}}>
+          <h2 className="section-title" style={{textAlign:'center',marginBottom:16}}>لماذا تختار منصة تأجير سيارات؟</h2>
+          <p style={{textAlign:'center',fontSize:'.95rem',color:'#4B5563',lineHeight:2,maxWidth:700,margin:'0 auto'}}>نجمع لك عروض تأجير السيارات من أكثر من خمسين مكتب مرخص في ست مدن سعودية. قارن الأسعار والمواصفات واحصل على أفضل عرض تأجير سيارة خلال دقائق — بدون رسوم وبدون التزام. جميع الشركاء حاصلون على ترخيص هيئة النقل العام بالمملكة.</p>
+        </div></section>
+
+        <section className="section"><div className="container" style={{maxWidth:900}}>
+          <h2 className="section-title" style={{textAlign:'center',marginBottom:16}}>خدمات تأجير السيارات المتوفرة</h2>
+          <p style={{textAlign:'center',fontSize:'.95rem',color:'#4B5563',lineHeight:2,maxWidth:700,margin:'0 auto'}}>نوفر سبع فئات من المركبات تشمل السيارات الاقتصادية والسيدان المتوسطة والدفع الرباعي والفاخرة والعائلية ذات السبعة مقاعد والبيك أب والفان الجماعي. تتوفر عقود يومية وأسبوعية وشهرية مع إمكانية الاستلام من المطار أو التوصيل لأي موقع داخل المدينة.</p>
+        </div></section>
+
+        {/* CITIES */}
+        <section className="section section-white" id="cities">
+          <div className="container">
+            <div className="section-header">
+              <div className="section-tag">🏙️ المدن الرئيسية</div>
+              <h2 className="section-title">تأجير سيارات في المدن الرئيسية</h2>
+              <p className="section-sub">اختر وجهتك وقارن العروض المتوفرة حالياً من أفضل شركات التأجير</p>
+            </div>
+            <div className="cities-grid">
+              {cities.map((city,i)=>(
+                <Link key={city.slug} href={`/sa/${city.slug}`} className={`city-card ${i===0?'city-card-large':''}`}>
+                  <div className="city-overlay"/>
+                  <div className="city-price">من {city.minPrice} ريال</div>
+                  <div className="city-content">
+                    <div className="city-name">{city.nameAr}</div>
+                    <div className="city-meta">
+                      <span>🏢 {city.partnerCount} شركة</span>
+                      <span>📍 {city.nameEn}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* WHY US */}
+        <section className="section">
+          <div className="container">
+            <div className="section-header">
+              <div className="section-tag">✨ لماذا تختارنا</div>
+              <h2 className="section-title">لماذا تختار منصتنا؟</h2>
+              <p className="section-sub">نجمع لك أفضل العروض من شركات التأجير المرخصة في المملكة</p>
+            </div>
+            <div className="features-grid">
+              {[
+                {icon:'⚡',title:'مقارنة شفافة',desc:'قارن أسعار جميع الشركات في مكان واحد بكل شفافية وبدون رسوم مخفية'},
+                {icon:'🔄',title:'تحديث دوري',desc:'نحدّث الأسعار والعروض بشكل مستمر لنضمن لك أفضل سعر متاح'},
+                {icon:'✅',title:'شركات مرخصة',desc:'نعرض عروضاً حصرية من مؤسسات حاصلة على ترخيص هيئة النقل'},
+                {icon:'🚀',title:'حجز سريع',desc:'أرسل طلبك واحصل على أفضل العروض خلال دقائق مباشرة على جوالك'},
+              ].map((f,i)=>(
+                <div key={i} className="feature-card">
+                  <div className="feature-icon">{f.icon}</div>
+                  <div className="feature-title">{f.title}</div>
+                  <div className="feature-desc">{f.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CATEGORIES */}
+        <section className="section section-white">
+          <div className="container">
+            <div className="section-header">
+              <div className="section-tag">🚗 فئات السيارات</div>
+              <h2 className="section-title">فئات سيارات للتأجير</h2>
+              <p className="section-sub">اختر الفئة المناسبة لرحلتك واحتياجاتك</p>
+            </div>
+            <div className="cats-grid">
+              {categories.map(cat=>(
+                <Link key={cat.slug} href={`/sa/riyadh/${cat.slug}`} className="cat-card">
+                  <div className="cat-emoji">{cat.icon}</div>
+                  <div className="cat-name">{cat.nameAr}</div>
+                  <div className="cat-price">من {cat.minPrice} ريال يومياً</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* POPULAR CARS */}
+        <section className="section">
+          <div className="container">
+            <div className="section-header">
+              <div className="section-tag">⭐ الأكثر طلباً</div>
+              <h2 className="section-title">السيارات الأكثر طلباً للتأجير</h2>
+              <p className="section-sub">أشهر الموديلات المتوفرة للإيجار في المملكة العربية السعودية</p>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(220px,1fr))',gap:16}}>
+              {carModels.filter((_,i)=>[0,1,5,6,10,15,20,25].includes(i)).slice(0,8).map(c=>{
+                const catObj=categories.find(ct=>ct.slug===c.category)
+                const grad=categoryGradients[c.category]||categoryGradients.economy
+                return(
+                  <Link key={c.slug} href={`/sa/riyadh/${c.category}/${c.slug}`} style={{textDecoration:'none',display:'block',position:'relative',borderRadius:16,overflow:'hidden',height:190,background:`linear-gradient(135deg,${grad.from},${grad.to})`,transition:'transform .4s,box-shadow .4s'}}>
+                    <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(13,27,42,0.9) 0%,rgba(13,27,42,0.15) 60%)'}}/>
+                    <div style={{position:'absolute',top:14,left:14,zIndex:2,background:'rgba(212,168,83,0.9)',color:'#0D1B2A',padding:'4px 12px',borderRadius:50,fontSize:'.65rem',fontWeight:700}}>من {c.dailyPrice} ريال</div>
+                    <div style={{position:'absolute',top:14,right:14,zIndex:2,fontSize:'1.5rem'}}>{catObj?.icon}</div>
+                    <div style={{position:'absolute',bottom:0,right:0,left:0,padding:18,zIndex:2}}>
+                      <div style={{fontFamily:"'Cairo',sans-serif",fontSize:'1.1rem',fontWeight:800,color:'#fff'}}>{c.nameAr}</div>
+                      <div style={{fontSize:'.7rem',color:'rgba(255,255,255,0.7)',marginTop:4}}>{c.brandAr} • {c.seats} مقاعد • {c.transmissionAr}</div>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* AIRPORTS */}
+        <section className="section section-dark">
+          <div className="container">
+            <div className="section-header">
+              <div className="section-tag section-tag-dark">✈️ المطارات</div>
+              <h2 className="section-title section-title-white">تأجير سيارة من المطار</h2>
+              <p className="section-sub section-sub-light">استلم سيارتك مباشرة عند وصولك للمطار</p>
+            </div>
+            <div className="airports-grid">
+              {airports.map(ap=>(
+                <Link key={ap.slug} href={`/sa/airports/${ap.slug}`} className="airport-card">
+                  <div className="airport-code">{ap.code}</div>
+                  <div className="airport-name">{ap.nameAr.replace(' الدولي','')}</div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="section" id="faq">
+          <div className="container-sm">
+            <div className="section-header">
+              <div className="section-tag">❓ أسئلة شائعة</div>
+              <h2 className="section-title">أسئلة متكررة حول استئجار السيارات</h2>
+            </div>
+            <div className="faq-list">
+              {homeFAQs.map((faq,i)=>(
+                <details key={i} className="faq-item">
+                  <summary>{faq.q}<svg className="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+                  <p>{faq.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* INTERNAL LINKS */}
+        <div className="ssr-links">
+          <div className="container">
+            <h2 className="ssr-links-title">تأجير سيارات حسب المدينة</h2>
+            <div className="ssr-links-grid">
+              {cities.map((c,i)=><Link key={c.slug} href={`/sa/${c.slug}`}>{i===0?'تأجير سيارات':'إيجار مركبات'} {c.nameAr}</Link>)}
+            </div>
+            <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير سيارة حسب الفئة</h2>
+            <div className="ssr-links-grid">
+              {categories.map(c=><Link key={c.slug} href={`/sa/riyadh/${c.slug}`}>{c.icon} {c.nameAr}</Link>)}
+            </div>
+            <h2 className="ssr-links-title" style={{marginTop:20}}>تأجير السيارات من المطارات</h2>
+            <div className="ssr-links-grid">
+              {airports.map(a=><Link key={a.slug} href={`/sa/airports/${a.slug}`}>{a.code} — {a.nameAr.replace(' الدولي','')}</Link>)}
+            </div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <section className="section section-white">
+          <div className="container">
+            <div className="cta-box">
+              <div className="hero-glow" style={{width:288,height:288,top:-80,right:-80}}/>
+              <div className="hero-glow" style={{width:192,height:192,bottom:-60,left:-60}}/>
+              <div className="cta-title">ابدأ رحلتك الآن</div>
+              <div className="cta-desc">قدّم طلب تأجير سيارة خلال ثوانٍ واستلم أفضل عرض متاح</div>
+              <Link href="#form" className="cta-btn">قدّم طلبك مجاناً ←</Link>
+            </div>
+          </div>
+        </section>
+
+        <div className="disclaimer"><p><strong>تنبيه:</strong> هذا الموقع دليل إلكتروني لمقارنة عروض تأجير السيارات ولا يُجري عمليات حجز مباشرة. الأسعار المدرجة ابتدائية وقابلة للتغيير.</p></div>
+      </>
+    )
+  }
+
+  return null
+}
