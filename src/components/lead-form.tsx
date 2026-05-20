@@ -11,6 +11,7 @@ import { addDays, diffDays } from '@/lib/search/date-presets'
 import type { CreateLeadError } from '@/lib/leads/types'
 import { DateRangePicker } from './search/date-range-picker'
 import { AirportModeToggle } from './search/airport-mode-toggle'
+import { CategoryCardSelector } from './search/category-card-selector'
 import { useSearch } from './search/search-context'
 
 type LeadFormProps = {
@@ -187,13 +188,12 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
         disabled={isPending}
       />
 
-      <div className="form-group">
-        <label htmlFor="lead-vehicle" className="form-label">نوع السيارة</label>
-        <select id="lead-vehicle" className="form-input" value={vehicle} onChange={e => handleVehicleChange(e.target.value)} aria-required="true" disabled={isPending}>
-          <option value="">اختر النوع</option>
-          {categories.map(c => <option key={c.slug} value={c.slug}>{c.icon} {c.nameAr}</option>)}
-        </select>
-      </div>
+      <CategoryCardSelector
+        value={vehicle}
+        onChange={handleVehicleChange}
+        categories={categories}
+        disabled={isPending}
+      />
 
       <div className="form-group">
         <label htmlFor="lead-phone" className="form-label">رقم الجوال</label>
