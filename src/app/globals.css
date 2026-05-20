@@ -102,6 +102,16 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 .form-section .form-group:last-child{margin-bottom:0}
 .form-section-title{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-size:.9rem;font-weight:800;color:#F0D78C;margin-bottom:12px;letter-spacing:.01em}
 @media(max-width:640px){.form-section{margin-bottom:18px}.form-section-title{font-size:.85rem;margin-bottom:10px}}
+.lead-modal-backdrop{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}
+.lead-modal{position:relative;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;background:#0D1B2A;background-image:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:28px 24px;box-shadow:0 30px 60px rgba(0,0,0,0.5);color:#fff;box-sizing:border-box}
+.lead-modal::before{content:'';position:absolute;top:0;right:0;left:0;height:3px;background:linear-gradient(90deg,#D4A853,#F0D78C,#D4A853);border-radius:18px 18px 0 0}
+.lead-modal-close{position:absolute;top:10px;left:10px;width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);font-size:1.4rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;font-family:inherit;transition:all .2s}
+.lead-modal-close:hover{color:#fff;border-color:rgba(255,255,255,0.25)}
+.lead-modal-close:disabled{opacity:.5;cursor:not-allowed}
+.lead-modal-title{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-size:1.2rem;font-weight:800;color:#fff;margin:6px 0 6px}
+.lead-modal-sub{font-size:.85rem;color:rgba(255,255,255,0.65);margin-bottom:18px;line-height:1.7}
+.lead-modal-summary{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:12px 14px;margin-bottom:18px;font-size:.85rem;color:rgba(255,255,255,0.8);display:flex;flex-direction:column;gap:6px}
+@media(max-width:640px){.lead-modal-backdrop{align-items:flex-end;padding:0}.lead-modal{max-width:100%;border-radius:18px 18px 0 0;max-height:92vh;padding:24px 20px}.lead-modal::before{border-radius:18px 18px 0 0}}
 .category-strip{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:thin;scroll-snap-type:x proximity;cursor:grab;touch-action:pan-x}
 .category-strip::-webkit-scrollbar{height:6px}
 .category-strip::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:3px}
