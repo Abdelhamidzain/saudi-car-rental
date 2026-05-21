@@ -166,6 +166,12 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
         />
       </section>
 
+      {/* Stable marker for the floating-CTA observer: it represents the
+          actionable end of the form (error region + main CTA), not the
+          top of the form, so the floating CTA only hides once the user
+          has actually reached the action area. */}
+      <div id="lead-form-action" aria-hidden="true" />
+
       {errorMsg && (
         <div role="alert" style={{ marginBottom: 12, padding: '10px 14px', borderRadius: 10, background: 'rgba(220,38,38,0.15)', border: '1px solid rgba(220,38,38,0.4)', color: '#fecaca', fontSize: '.85rem' }}>
           {errorMsg}
