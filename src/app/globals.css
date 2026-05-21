@@ -241,8 +241,9 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 .link-card-sub{font-size:.75rem;color:#4B5563;margin-top:4px}
 
 /* ===== MOBILE CTA ===== */
-.mobile-cta{position:fixed;bottom:0;left:0;right:0;z-index:40;padding:12px;background:rgba(13,27,42,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.1)}
+.mobile-cta{position:fixed;bottom:0;left:0;right:0;z-index:40;padding:12px;background:rgba(13,27,42,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,0.1);transition:transform .25s ease, opacity .25s ease}
 .mobile-cta a{display:block;width:100%;text-align:center;background:#D4A853;color:#0D1B2A;padding:14px;border-radius:16px;font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-weight:800;font-size:1rem}
+.mobile-cta-hidden{transform:translateY(110%);opacity:0;pointer-events:none}
 @media(min-width:1024px){.mobile-cta{display:none}}
 
 

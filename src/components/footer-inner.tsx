@@ -1,8 +1,37 @@
 'use client'
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 import { cities, SITE_NAME } from '@/lib/data'
 
+// CTA height + safety: hide the floating CTA when the form's top enters
+// the bottom ~80 px of the viewport so it slides out cleanly before the
+// form's own submit area becomes visible.
+const FORM_NEAR_ROOT_MARGIN = '0px 0px -80px 0px'
+
+function isFormNearViewport(el: HTMLElement): boolean {
+  const rect = el.getBoundingClientRect()
+  const h = window.innerHeight || document.documentElement.clientHeight
+  return rect.top < h - 80 && rect.bottom > 0
+}
+
 export default function FooterInner() {
+  const [nearForm, setNearForm] = useState(false)
+
+  useEffect(() => {
+    const target = document.getElementById('form')
+    if (!target) return
+    // Synchronous initial check so we don't flash the CTA if the form is
+    // already in view on first paint (typical on hero-based SEO pages).
+    setNearForm(isFormNearViewport(target))
+    if (typeof IntersectionObserver === 'undefined') return
+    const io = new IntersectionObserver(
+      ([entry]) => setNearForm(entry.isIntersecting),
+      { rootMargin: FORM_NEAR_ROOT_MARGIN, threshold: 0 },
+    )
+    io.observe(target)
+    return () => io.disconnect()
+  }, [])
+
   return (
     <>
       <footer className="site-footer">
@@ -19,7 +48,9 @@ export default function FooterInner() {
         </div>
         <div className="footer-bottom"><span>© {new Date().getFullYear()} {SITE_NAME}. جميع الحقوق محفوظة</span><span>صُنع بـ ❤️ في السعودية</span></div>
       </footer>
-      <div className="mobile-cta"><Link href="#form">احصل على أفضل عرض الآن</Link></div>
+      <div className={'mobile-cta' + (nearForm ? ' mobile-cta-hidden' : '')} aria-hidden={nearForm}>
+        <Link href="#form" tabIndex={nearForm ? -1 : 0}>احصل على أفضل عرض الآن</Link>
+      </div>
     </>
   )
 }
