@@ -58,6 +58,17 @@ export function CarModelSelector({
       .sort((a, b) => a.dailyPrice - b.dailyPrice)
   }, [cars, categorySlug])
 
+  // Pin the selected car at the start of the strip so the user's current
+  // pick stays visible after route changes. We only reorder when the
+  // selected slug actually exists in the filtered (current-category) list;
+  // a stale selection from a previous category is ignored, not forced in.
+  const orderedCars = useMemo(() => {
+    if (!value) return filtered
+    const idx = filtered.findIndex(c => c.slug === value)
+    if (idx < 0) return filtered
+    return [filtered[idx], ...filtered.slice(0, idx), ...filtered.slice(idx + 1)]
+  }, [value, filtered])
+
   // Bring the selected car into view on mount, when the value changes, and
   // when the filtered set changes (e.g. after a category swap). Skip when
   // already fully visible so we don't fight manual user scroll.
@@ -102,7 +113,7 @@ export function CarModelSelector({
         aria-labelledby={hasLabel ? 'car-model-label' : undefined}
         aria-label={hasLabel ? undefined : 'موديل السيارة'}
       >
-        {filtered.map(c => {
+        {orderedCars.map(c => {
           const active = value === c.slug
           return (
             <button

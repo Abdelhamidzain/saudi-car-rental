@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
 import type { Category } from '@/lib/data'
 
 type Props = {
@@ -49,6 +49,17 @@ export function CategoryCardSelector({
   const stripRef = useRef<HTMLDivElement>(null)
   const btnRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map())
 
+  // Pin the selected category at the start of the strip so the user's
+  // current pick is always visible first after a route change or remount.
+  // When nothing is selected — or the selection isn't a known category —
+  // we render the original order untouched.
+  const orderedCategories = useMemo(() => {
+    if (!value) return categories
+    const idx = categories.findIndex(c => c.slug === value)
+    if (idx < 0) return categories
+    return [categories[idx], ...categories.slice(0, idx), ...categories.slice(idx + 1)]
+  }, [value, categories])
+
   // Bring the selected card into view on mount and whenever the selection
   // changes. We skip when the card is already fully visible so we don't
   // fight a user who has manually scrolled to a different region.
@@ -71,7 +82,7 @@ export function CategoryCardSelector({
         aria-labelledby={hasLabel ? 'category-card-label' : undefined}
         aria-label={hasLabel ? undefined : 'نوع السيارة'}
       >
-        {categories.map(c => {
+        {orderedCategories.map(c => {
           const active = value === c.slug
           return (
             <button
