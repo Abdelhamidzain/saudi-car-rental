@@ -102,6 +102,18 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
     router.push(`/sa/${city}/${vehicle}/${slug}`, { scroll: false })
   }
 
+  // Autocomplete pick: a car may belong to a category other than the
+  // currently selected one, so this sets BOTH category and car, then
+  // applies the same route rules as the rest of the form.
+  function handleCarSelect(carSlug: string, catSlug: string) {
+    if (!carSlug || !catSlug) return
+    search.setCategorySlug(catSlug)
+    search.setCarSlug(carSlug)
+    if (isAirportRoute) return
+    if (!city) return
+    router.push(`/sa/${city}/${catSlug}/${carSlug}`, { scroll: false })
+  }
+
   useEffect(() => {
     if (pickup && ret && ret < pickup) search.setDateRange(pickup, pickup)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -160,7 +172,9 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
         <CarModelSelector
           value={car}
           onChange={handleCarChange}
+          onAutocompleteSelect={handleCarSelect}
           cars={carModels}
+          categories={categories}
           categorySlug={vehicle}
           labelText=""
         />
