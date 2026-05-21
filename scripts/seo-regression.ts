@@ -105,10 +105,10 @@ const ROUTES = {
 } as const;
 
 // Expected prerendered-route count (from .next/prerender-manifest.json's
-// `routes` key) and sitemap entry count. Note: the build log says
-// "237/237 static pages" — that figure includes worker tasks beyond
-// the routes object; 236 is the authoritative prerendered-route count.
-const EXPECTED_PRERENDERED_ROUTES = 236;
+// `routes` key) and sitemap entry count. The count rose from 236 to 237
+// when Task 11.8A added the `/sa` → `/` redirect page (a prerendered
+// route that is intentionally NOT in the sitemap).
+const EXPECTED_PRERENDERED_ROUTES = 237;
 const EXPECTED_SITEMAP_COUNT = 231;
 
 // ─── Result tracking ─────────────────────────────────────────────────────
