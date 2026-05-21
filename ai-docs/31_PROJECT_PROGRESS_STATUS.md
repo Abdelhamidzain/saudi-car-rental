@@ -1941,10 +1941,30 @@ These rules override anything else. They come from `ai-docs/01_NON_NEGOTIABLE_RU
   - `npm run seo:check` — **240/240 PASS** locally.
 - **Next recommended task:** Task 11.12 — Production smoke test for the autocomplete; then Task 12 — Analytics + Search Console + Controlled Indexing.
 
+### Task 11.12 — Production Smoke Test for Car Autocomplete Flow
+
+- **Type:** verification only — no code change, no commit of source files.
+- **Automated production checks:**
+  - `BASE=https://www.cars-renting.com npm run seo:check` → **244/244 PASS** (no regression from the Task 11.11 autocomplete deploy; no private-field leakage).
+  - `/` → HTTP 200.
+  - `/sa` → HTTP 307 redirect to `/` (Task 11.8A redirect live in production).
+  - `/sa/jeddah/7-seater/hyundai-staria` → HTTP 200 (the autocomplete target route resolves).
+- **Manual browser autocomplete smoke test — PASSED:**
+  - Homepage no-category autocomplete works — the search input is usable before any category is selected.
+  - Searching `Staria` shows `Hyundai Staria` in the suggestions.
+  - Selecting `Hyundai Staria` infers category `7-seater` and selects the car; the category card highlights `7-seater` and the car strip pins the car first.
+  - Selecting city `Jeddah` afterwards routes correctly to `/sa/jeddah/7-seater/hyundai-staria` with scroll preserved near the form.
+  - Airport-route autocomplete behavior passed (search/select keeps the airport URL, context updates; toggling `داخل المدينة` routes to the in-city car route).
+  - No-match behavior passed — `لا توجد سيارات مطابقة لهذا البحث` shows with no crash.
+  - Floating CTA remains hidden on mobile/tablet as intended (Task 11.9 temporary CSS rule).
+  - No bugs found in the manual autocomplete smoke.
+- **Result:** production is healthy and the Phase 11 search-to-modal lead flow including the car autocomplete is verified. **Safe to proceed to Task 12.**
+
 ### Recent Operational Fixes
 
 A running list of post-task fixes that don't constitute new tasks:
 
+- **Task 11.12 — autocomplete production smoke passed** (`seo:check` 244/244; manual browser smoke of the homepage/city/airport/keyboard/no-match autocomplete flows — no bugs). See the Task 11.12 entry above.
 - **`cc10e59` — Car-name autocomplete in `<CarModelSelector>`: ranked global suggestions (matches `nameAr`/`nameEn`/`brand`/`brandAr`/`slug`, current-category boost, top 6), keyboard navigable, inline dropdown; picking a suggestion infers category + car and routes per the existing city/airport/no-city rules via new `handleCarSelect`.** See the Task 11.11 entry above.
 - **`c4fc557` — In-form car-name search added to `<CarModelSelector>` (matches `nameAr`/`nameEn`/`brand`/`brandAr`/`slug`, selected car always retained + pinned first); mobile/tablet floating CTA temporarily hidden via one documented CSS rule (`footer-inner.tsx` logic intact).** See the Task 11.9 entry above.
 - **`17ffdf6` — `/sa` now redirects to `/` via a `redirect('/')` page (was a 404); regression baseline bumped 236 → 237 for the new prerendered redirect route; smoke-test lead `SCR-202605-00011` verified read-only (valid, consistent, untouched).** See the Task 11.8A entry above.
