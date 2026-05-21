@@ -179,6 +179,7 @@ export function LeadForm({ selectedCarSlug, airportSlug, defaultCategorySlug, de
       )}
 
       <button
+        id="lead-form-submit"
         className="form-submit"
         onClick={openModal}
         type="button"

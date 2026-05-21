@@ -3,15 +3,19 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { cities, SITE_NAME } from '@/lib/data'
 
-// CTA height + safety: hide the floating CTA when the form's action-area
-// marker enters the viewport (minus the bottom ~80 px the CTA occupies),
-// so it slides out cleanly once the user reaches the main submit area.
-const FORM_NEAR_ROOT_MARGIN = '0px 0px -80px 0px'
+// Buffer accounting for the floating CTA's own height plus mobile Safari's
+// bottom browser chrome. The floating CTA hides once the internal form
+// submit button reaches the viewport above this bottom band, so the two
+// CTAs never overlap.
+const ACTION_BOTTOM_BUFFER_PX = 120
 
-function isActionAreaNearViewport(el: HTMLElement): boolean {
+// True when the internal form action target is visible / near-visible —
+// i.e. the floating CTA should hide. Recomputed on every scroll/resize
+// frame so it stays correct under mobile Safari's dynamic viewport.
+function isActionTargetVisible(el: HTMLElement): boolean {
   const rect = el.getBoundingClientRect()
   const h = window.innerHeight || document.documentElement.clientHeight
-  return rect.top < h - 80 && rect.bottom > 0
+  return rect.top < h - ACTION_BOTTOM_BUFFER_PX && rect.bottom > 0
 }
 
 export default function FooterInner() {
@@ -20,37 +24,61 @@ export default function FooterInner() {
   useEffect(() => {
     let io: IntersectionObserver | null = null
     let rafId = 0
+    let scrollRaf = 0
     let tries = 0
+    let target: HTMLElement | null = null
     const MAX_TRIES = 40 // ~0.6s — enough for the lazy lead form to mount
 
+    function evaluate() {
+      if (target) setNearForm(isActionTargetVisible(target))
+    }
+
+    function onScrollResize() {
+      if (scrollRaf) return
+      scrollRaf = requestAnimationFrame(() => {
+        scrollRaf = 0
+        evaluate()
+      })
+    }
+
     function start() {
-      const marker = document.getElementById('lead-form-action')
+      const submit = document.getElementById('lead-form-submit')
       const fallback = document.getElementById('form')
-      // Prefer the precise action marker. The lead form is lazy-loaded, so
-      // the marker may not be in the DOM yet — retry briefly while #form
-      // exists before settling for the broader #form anchor.
-      if (!marker && fallback && tries < MAX_TRIES) {
+      // Prefer the precise submit button. The lead form is lazy-loaded, so
+      // the button may not be in the DOM yet — retry briefly while #form
+      // exists before settling for a broader anchor.
+      if (!submit && fallback && tries < MAX_TRIES) {
         tries++
         rafId = requestAnimationFrame(start)
         return
       }
-      const target = marker ?? fallback
+      // Priority: #lead-form-submit → #lead-form-action → #form.
+      target = submit
+        ?? document.getElementById('lead-form-action')
+        ?? fallback
       if (!target) return
-      // Synchronous initial check so we don't flash the CTA if the action
-      // area is already in view on first paint.
-      setNearForm(isActionAreaNearViewport(target))
-      if (typeof IntersectionObserver === 'undefined') return
-      io = new IntersectionObserver(
-        ([entry]) => setNearForm(entry.isIntersecting),
-        { rootMargin: FORM_NEAR_ROOT_MARGIN, threshold: 0 },
-      )
-      io.observe(target)
+      evaluate()
+      if (typeof IntersectionObserver !== 'undefined') {
+        // The observer is only a cheap trigger; the actual decision is the
+        // getBoundingClientRect math in evaluate(), which is reliable under
+        // mobile Safari's collapsing/expanding bottom chrome.
+        io = new IntersectionObserver(evaluate, {
+          rootMargin: `0px 0px -${ACTION_BOTTOM_BUFFER_PX}px 0px`,
+          threshold: 0,
+        })
+        io.observe(target)
+      }
+      window.addEventListener('scroll', onScrollResize, { passive: true })
+      window.addEventListener('resize', onScrollResize)
     }
 
     start()
     return () => {
       io?.disconnect()
       if (rafId) cancelAnimationFrame(rafId)
+      if (scrollRaf) cancelAnimationFrame(scrollRaf)
+      window.removeEventListener('scroll', onScrollResize)
+      window.removeEventListener('resize', onScrollResize)
     }
   }, [])
 
