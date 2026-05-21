@@ -61,6 +61,9 @@ export function CarModelSelector({
     if (e.button !== 0) return
     const el = stripRef.current
     if (!el) return
+    // Reset any stale suppress flag from a prior aborted gesture so a fresh
+    // click below the drag threshold is never accidentally swallowed.
+    suppressClick.current = false
     drag.current = { startX: e.clientX, startScroll: el.scrollLeft, moved: false, pointerId: e.pointerId }
     try { el.setPointerCapture(e.pointerId) } catch {}
   }
@@ -129,7 +132,6 @@ export function CarModelSelector({
         onPointerMove={onPointerMove}
         onPointerUp={finishDrag}
         onPointerCancel={finishDrag}
-        onPointerLeave={finishDrag}
       >
         {filtered.map(c => {
           const active = value === c.slug

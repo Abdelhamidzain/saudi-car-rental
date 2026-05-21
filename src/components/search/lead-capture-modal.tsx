@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useTransition } from 'react'
+import { createPortal } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import { createLead } from '@/lib/leads/create-lead'
 import { CONSENT_TEXT_AR } from '@/lib/leads/consent'
@@ -117,6 +118,7 @@ export function LeadCaptureModal({
   }
 
   if (!isOpen) return null
+  if (typeof document === 'undefined') return null
 
   const cityNameAr = cities.find(c => c.slug === citySlug)?.nameAr
   const categoryNameAr = categories.find(c => c.slug === categorySlug)?.nameAr
@@ -125,7 +127,7 @@ export function LeadCaptureModal({
   const days = diffDays(pickupDate, returnDate)
 
   if (leadNumber) {
-    return (
+    return createPortal(
       <div className="lead-modal-backdrop" onClick={handleClose} role="presentation">
         <div
           className="lead-modal"
@@ -151,11 +153,12 @@ export function LeadCaptureModal({
             <button className="form-submit" onClick={handleClose} type="button">إغلاق</button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body,
     )
   }
 
-  return (
+  return createPortal(
     <div className="lead-modal-backdrop" onClick={handleClose} role="presentation">
       <div
         className="lead-modal"
@@ -261,6 +264,7 @@ export function LeadCaptureModal({
         </button>
         <div className="form-note">{CONSENT_TEXT_AR}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
