@@ -1,5 +1,5 @@
 'use client'
-import { useMemo, useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useMemo, useRef, type CSSProperties } from 'react'
 import type { CarModel } from '@/lib/data'
 
 type Props = {
@@ -10,8 +10,6 @@ type Props = {
   disabled?: boolean
   labelText?: string
 }
-
-const DRAG_THRESHOLD_PX = 6
 
 const cardStyle = (active: boolean, disabled: boolean): CSSProperties => ({
   flexShrink: 0,
@@ -34,6 +32,12 @@ const cardStyle = (active: boolean, disabled: boolean): CSSProperties => ({
   scrollSnapAlign: 'start',
 })
 
+function isFullyVisibleWithin(child: HTMLElement, parent: HTMLElement): boolean {
+  const cr = child.getBoundingClientRect()
+  const pr = parent.getBoundingClientRect()
+  return cr.left >= pr.left && cr.right <= pr.right
+}
+
 export function CarModelSelector({
   value,
   onChange,
@@ -44,8 +48,7 @@ export function CarModelSelector({
 }: Props) {
   const hasLabel = labelText.trim().length > 0
   const stripRef = useRef<HTMLDivElement>(null)
-  const drag = useRef<{ startX: number; startScroll: number; moved: boolean; pointerId: number } | null>(null)
-  const suppressClick = useRef(false)
+  const btnRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map())
 
   const filtered = useMemo(() => {
     if (!categorySlug) return []
@@ -55,47 +58,17 @@ export function CarModelSelector({
       .sort((a, b) => a.dailyPrice - b.dailyPrice)
   }, [cars, categorySlug])
 
-  function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
-    if (disabled) return
-    if (e.pointerType === 'touch') return
-    if (e.button !== 0) return
-    const el = stripRef.current
-    if (!el) return
-    // Reset any stale suppress flag from a prior aborted gesture so a fresh
-    // click below the drag threshold is never accidentally swallowed.
-    suppressClick.current = false
-    drag.current = { startX: e.clientX, startScroll: el.scrollLeft, moved: false, pointerId: e.pointerId }
-    try { el.setPointerCapture(e.pointerId) } catch {}
-  }
-
-  function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
-    if (!drag.current) return
-    const dx = e.clientX - drag.current.startX
-    if (!drag.current.moved && Math.abs(dx) >= DRAG_THRESHOLD_PX) {
-      drag.current.moved = true
-      stripRef.current?.classList.add('is-dragging')
-    }
-    if (drag.current.moved && stripRef.current) {
-      stripRef.current.scrollLeft = drag.current.startScroll - dx
-    }
-  }
-
-  function finishDrag(e: ReactPointerEvent<HTMLDivElement>) {
-    const state = drag.current
-    if (!state) return
-    drag.current = null
-    if (state.moved) suppressClick.current = true
-    stripRef.current?.classList.remove('is-dragging')
-    try { stripRef.current?.releasePointerCapture(state.pointerId) } catch {}
-  }
-
-  function handleSelect(slug: string) {
-    if (suppressClick.current) {
-      suppressClick.current = false
-      return
-    }
-    onChange(slug)
-  }
+  // Bring the selected car into view on mount, when the value changes, and
+  // when the filtered set changes (e.g. after a category swap). Skip when
+  // already fully visible so we don't fight manual user scroll.
+  useEffect(() => {
+    if (!value) return
+    const btn = btnRefs.current.get(value)
+    const strip = stripRef.current
+    if (!btn || !strip) return
+    if (isFullyVisibleWithin(btn, strip)) return
+    btn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' })
+  }, [value, filtered.length])
 
   if (!categorySlug) {
     return (
@@ -128,18 +101,15 @@ export function CarModelSelector({
         role="group"
         aria-labelledby={hasLabel ? 'car-model-label' : undefined}
         aria-label={hasLabel ? undefined : 'موديل السيارة'}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={finishDrag}
-        onPointerCancel={finishDrag}
       >
         {filtered.map(c => {
           const active = value === c.slug
           return (
             <button
               key={c.slug}
+              ref={(el) => { btnRefs.current.set(c.slug, el) }}
               type="button"
-              onClick={() => handleSelect(c.slug)}
+              onClick={() => onChange(c.slug)}
               disabled={disabled}
               aria-pressed={active}
               aria-label={`${c.nameAr} ${c.year} — من ${c.dailyPrice} ريال يومياً`}

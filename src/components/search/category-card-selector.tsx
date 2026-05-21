@@ -1,5 +1,5 @@
 'use client'
-import { useRef, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
+import { useEffect, useRef, type CSSProperties } from 'react'
 import type { Category } from '@/lib/data'
 
 type Props = {
@@ -9,8 +9,6 @@ type Props = {
   disabled?: boolean
   labelText?: string
 }
-
-const DRAG_THRESHOLD_PX = 6
 
 const cardStyle = (active: boolean, disabled: boolean): CSSProperties => ({
   flexShrink: 0,
@@ -34,6 +32,12 @@ const cardStyle = (active: boolean, disabled: boolean): CSSProperties => ({
   scrollSnapAlign: 'start',
 })
 
+function isFullyVisibleWithin(child: HTMLElement, parent: HTMLElement): boolean {
+  const cr = child.getBoundingClientRect()
+  const pr = parent.getBoundingClientRect()
+  return cr.left >= pr.left && cr.right <= pr.right
+}
+
 export function CategoryCardSelector({
   value,
   onChange,
@@ -43,53 +47,19 @@ export function CategoryCardSelector({
 }: Props) {
   const hasLabel = labelText.trim().length > 0
   const stripRef = useRef<HTMLDivElement>(null)
-  // Mouse-drag state. Touch pointers fall through to native overflow scrolling.
-  const drag = useRef<{ startX: number; startScroll: number; moved: boolean; pointerId: number } | null>(null)
-  // Set when the pointer was dragged past threshold; consumed by the next click
-  // so a drag-release on a card doesn't accidentally select it.
-  const suppressClick = useRef(false)
+  const btnRefs = useRef<Map<string, HTMLButtonElement | null>>(new Map())
 
-  function onPointerDown(e: ReactPointerEvent<HTMLDivElement>) {
-    if (disabled) return
-    if (e.pointerType === 'touch') return // native scroll on touch
-    if (e.button !== 0) return // primary mouse button only
-    const el = stripRef.current
-    if (!el) return
-    // Reset any stale suppress flag from a prior aborted gesture so a fresh
-    // click below the drag threshold is never accidentally swallowed.
-    suppressClick.current = false
-    drag.current = { startX: e.clientX, startScroll: el.scrollLeft, moved: false, pointerId: e.pointerId }
-    try { el.setPointerCapture(e.pointerId) } catch {}
-  }
-
-  function onPointerMove(e: ReactPointerEvent<HTMLDivElement>) {
-    if (!drag.current) return
-    const dx = e.clientX - drag.current.startX
-    if (!drag.current.moved && Math.abs(dx) >= DRAG_THRESHOLD_PX) {
-      drag.current.moved = true
-      stripRef.current?.classList.add('is-dragging')
-    }
-    if (drag.current.moved && stripRef.current) {
-      stripRef.current.scrollLeft = drag.current.startScroll - dx
-    }
-  }
-
-  function finishDrag(e: ReactPointerEvent<HTMLDivElement>) {
-    const state = drag.current
-    if (!state) return
-    drag.current = null
-    if (state.moved) suppressClick.current = true
-    stripRef.current?.classList.remove('is-dragging')
-    try { stripRef.current?.releasePointerCapture(state.pointerId) } catch {}
-  }
-
-  function handleSelect(slug: string) {
-    if (suppressClick.current) {
-      suppressClick.current = false
-      return
-    }
-    onChange(slug)
-  }
+  // Bring the selected card into view on mount and whenever the selection
+  // changes. We skip when the card is already fully visible so we don't
+  // fight a user who has manually scrolled to a different region.
+  useEffect(() => {
+    if (!value) return
+    const btn = btnRefs.current.get(value)
+    const strip = stripRef.current
+    if (!btn || !strip) return
+    if (isFullyVisibleWithin(btn, strip)) return
+    btn.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'auto' })
+  }, [value])
 
   return (
     <div className="form-group">
@@ -100,18 +70,15 @@ export function CategoryCardSelector({
         role="group"
         aria-labelledby={hasLabel ? 'category-card-label' : undefined}
         aria-label={hasLabel ? undefined : 'نوع السيارة'}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={finishDrag}
-        onPointerCancel={finishDrag}
       >
         {categories.map(c => {
           const active = value === c.slug
           return (
             <button
               key={c.slug}
+              ref={(el) => { btnRefs.current.set(c.slug, el) }}
               type="button"
-              onClick={() => handleSelect(c.slug)}
+              onClick={() => onChange(c.slug)}
               disabled={disabled}
               aria-pressed={active}
               aria-label={`${c.nameAr} — من ${c.minPrice} ريال يومياً`}
