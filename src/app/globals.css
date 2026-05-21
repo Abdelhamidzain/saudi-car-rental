@@ -245,6 +245,11 @@ h1,h2,h3,h4,h5,h6{font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif}
 .mobile-cta a{display:block;width:100%;text-align:center;background:#D4A853;color:#0D1B2A;padding:14px;border-radius:16px;font-family:var(--font-cairo),'Cairo','Tajawal',sans-serif;font-weight:800;font-size:1rem}
 .mobile-cta-hidden{transform:translateY(110%);opacity:0;pointer-events:none}
 @media(min-width:1024px){.mobile-cta{display:none}}
+/* TEMPORARY (Task 11.9 Part A): the mobile/tablet floating CTA is hidden on
+   all viewports pending a dedicated UX pass on its visibility behavior.
+   Remove this single rule to restore it — the show/hide logic in
+   footer-inner.tsx is left fully intact. */
+.mobile-cta{display:none!important}
 
 
 /* ===== CITY NAV DROPDOWN ===== */
